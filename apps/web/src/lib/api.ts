@@ -1,0 +1,29 @@
+import "server-only";
+import type { CatalogPage, Category, Product, Shop, ShopActivityReport } from "@vshop/contracts";
+import { getSession } from "./auth";
+export const apiBase = () => process.env.API_BASE_URL ?? "http://localhost:8081";
+export async function api<T>(path: string, authenticated = false): Promise<T> {
+  const session = authenticated ? await getSession() : null;
+  const response = await fetch(`${apiBase()}/api/v1${path}`, {
+    headers: session ? { Authorization: `Bearer ${session.accessToken}` } : {},
+    cache: "no-store",
+    signal: AbortSignal.timeout(6000),
+  });
+  if (!response.ok) throw new Error(`API_${response.status}`);
+  return response.json() as Promise<T>;
+}
+export const getCatalog = (q = "", category = "", options: Record<string, string> = {}) =>
+  api<CatalogPage>(`/catalog/products?${new URLSearchParams({ q, category, ...options })}`);
+export const getCategories = () => api<Category[]>("/catalog/categories");
+export const getProduct = (slug: string) =>
+  api<Product>(`/catalog/products/${encodeURIComponent(slug)}`);
+export const getMyShops = () => api<Shop[]>("/seller/shops", true);
+export const getShopQueue = () => api<Shop[]>("/admin/shops", true);
+export const getShopActivity = (days = 30) =>
+  api<ShopActivityReport>(`/admin/analytics/shop-activity?days=${days}`, true);
+export const money = (amount: number) =>
+  new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(amount);

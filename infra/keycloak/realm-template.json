@@ -1,0 +1,79 @@
+{
+  "realm": "vshop",
+  "enabled": true,
+  "displayName": "VShop",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 600,
+  "roles": {
+    "realm": [
+      {
+        "name": "BUYER"
+      },
+      {
+        "name": "SELLER"
+      },
+      {
+        "name": "ADMIN"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "vshop-web",
+      "name": "VShop",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:3100/api/auth/callback"],
+      "webOrigins": ["http://localhost:3100"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:3100/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "vshop-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "vshop-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "vshop-mobile",
+      "name": "VShop iOS & Android",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["vshop://auth/callback"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "vshop-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "vshop-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": []
+}

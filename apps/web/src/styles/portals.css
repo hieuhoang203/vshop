@@ -1,0 +1,267 @@
+.portal-intro {
+  max-width: 750px;
+  padding-top: 70px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.portal-symbol {
+  width: 78px;
+  height: 78px;
+  border-radius: 23px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: #eee7ff;
+  color: var(--purple);
+  transform: rotate(-6deg);
+}
+.portal-symbol > svg {
+  transform: rotate(6deg);
+}
+.portal-intro h1 {
+  font-size: 2.5rem;
+  line-height: 1.3;
+  letter-spacing: -1.4px;
+  font-weight: 800;
+}
+.portal-intro > p {
+  max-width: 580px;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+.subtle {
+  font-size: 0.8125rem;
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 21px;
+  border-radius: 10px;
+  min-height: 46px;
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+.button-dark {
+  color: #fff;
+  background: var(--purple);
+}
+.button-dark:hover {
+  background: var(--purple-dark);
+}
+.button-outline {
+  background: #fff;
+  border-color: var(--line);
+}
+.portal-heading {
+  margin-bottom: 29px;
+}
+.portal-heading h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -1.1px;
+  margin: 10px 0 8px;
+}
+.portal-heading p {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.portal-grid {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+.panel {
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: #fff;
+}
+.panel h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.panel > p {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-top: 9px;
+  line-height: 1.9;
+}
+.panel label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  display: block;
+  margin: 22px 0 8px;
+}
+.panel input:not(.rt-TextFieldInput),
+.panel textarea:not(.rt-TextAreaInput),
+.panel select {
+  border: 1px solid #e4dfea;
+  border-radius: 9px;
+  padding: 12px 13px;
+  width: 100%;
+  min-width: 0;
+  background: #fff;
+  color: var(--ink);
+}
+.panel .rt-TextFieldRoot {
+  width: 100%;
+  height: 45px;
+}
+.panel textarea {
+  resize: vertical;
+}
+.panel select {
+  appearance: none;
+  padding-right: 33px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23807589' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+.panel .form-note {
+  font-size: 0.75rem;
+  color: #a297aa;
+  margin-top: 8px;
+}
+.shop-form > .rt-Button,
+.shop-form > .button {
+  margin-top: 24px;
+}
+.error-message {
+  background: #fff0f4;
+  color: #a13a59;
+  padding: 12px;
+  border-radius: 9px;
+  font-size: 0.8125rem;
+  margin-top: 17px;
+}
+.guidance {
+  background: #f8f5fd;
+}
+.guidance h2 {
+  margin-top: 10px;
+}
+.guidance-step {
+  display: flex;
+  gap: 14px;
+  margin-top: 25px;
+}
+.guidance-step > svg {
+  width: 21px;
+  margin-top: 3px;
+  color: #9e84be;
+}
+.guidance-step strong {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.guidance-step p {
+  font-size: 0.8125rem;
+  color: #9a8aa8;
+  margin-top: 5px;
+  line-height: 1.8;
+}
+.panel-title {
+  display: flex;
+  gap: 17px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.small-symbol {
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+}
+.status {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 7px;
+  white-space: nowrap;
+}
+.status-submitted {
+  background: #f1eaff;
+  color: #8952c5;
+}
+.status-approved {
+  background: #eaf6da;
+  color: #6b873c;
+}
+.status-rejected {
+  background: #fff0f4;
+  color: #b76381;
+}
+.shop-summary + .shop-form {
+  margin-top: 24px;
+}
+.queue-summary {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  margin-bottom: 25px;
+  background: #f8f6fc;
+}
+.queue-summary strong {
+  font-size: 1.5rem;
+  display: block;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.queue-summary span:not(.portal-symbol) {
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+.review-card {
+  margin-bottom: 22px;
+}
+.review-card-header {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+}
+.review-card-header h2 {
+  overflow-wrap: anywhere;
+}
+.review-card-header p {
+  color: #a295ae;
+  font-size: 0.75rem;
+  margin-top: 5px;
+}
+.review-card .shop-description {
+  margin-top: 20px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.review-form {
+  border-top: 1px solid var(--line);
+  margin-top: 22px;
+}
+.review-fields {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+}
+.review-form > .rt-Button,
+.review-form > .button {
+  margin-top: 20px;
+}
+.review-fields .rt-SelectTrigger {
+  width: 100%;
+  height: 45px;
+}
+.admin-page {
+  max-width: 1120px;
+}

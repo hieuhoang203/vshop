@@ -1,0 +1,31 @@
+{
+  "name": "vshop",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/mobile",
+    "packages/contracts"
+  ],
+  "engines": {
+    "node": ">=22.0.0 <27"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace @vshop/web",
+    "build": "npm run build --workspace @vshop/web",
+    "typecheck": "npm run typecheck --workspace @vshop/web",
+    "mobile": "npm run start --workspace @vshop/mobile",
+    "mobile:android": "npm run android --workspace @vshop/mobile",
+    "mobile:ios": "npm run ios --workspace @vshop/mobile",
+    "mobile:typecheck": "npm run typecheck --workspace @vshop/mobile",
+    "mobile:test": "npm run test --workspace @vshop/mobile",
+    "mobile:export": "npm run export --workspace @vshop/mobile",
+    "test:e2e": "playwright test",
+    "format": "prettier --write apps/web/src apps/web/*.ts apps/web/*.json apps/mobile/src apps/mobile/tests apps/mobile/*.ts apps/mobile/*.js apps/mobile/*.json packages/contracts tests/e2e playwright.config.ts package.json .prettierrc.json .github/workflows/ci.yml compose.yaml infra",
+    "format:check": "prettier --check apps/web/src apps/web/*.ts apps/web/*.json apps/mobile/src apps/mobile/tests apps/mobile/*.ts apps/mobile/*.js apps/mobile/*.json packages/contracts tests/e2e playwright.config.ts package.json .prettierrc.json .github/workflows/ci.yml compose.yaml infra"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "prettier": "3.10.1"
+  }
+}

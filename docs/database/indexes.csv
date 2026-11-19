@@ -1,0 +1,189 @@
+﻿table_schema,table_name,indexname,indexdef
+aftersales,case_evidence,case_evidence_pkey,"CREATE UNIQUE INDEX case_evidence_pkey ON aftersales.case_evidence USING btree (return_case_id, asset_id)"
+aftersales,case_evidence,ix_evidence_asset,CREATE INDEX ix_evidence_asset ON aftersales.case_evidence USING btree (asset_id)
+aftersales,case_evidence,ix_evidence_submitter,CREATE INDEX ix_evidence_submitter ON aftersales.case_evidence USING btree (submitted_by)
+aftersales,return_case,ix_case_buyer,"CREATE INDEX ix_case_buyer ON aftersales.return_case USING btree (buyer_account_id, created_at DESC)"
+aftersales,return_case,ix_case_order,CREATE INDEX ix_case_order ON aftersales.return_case USING btree (seller_order_id)
+aftersales,return_case,ix_case_policy,CREATE INDEX ix_case_policy ON aftersales.return_case USING btree (policy_id)
+aftersales,return_case,ix_case_shipment,CREATE INDEX ix_case_shipment ON aftersales.return_case USING btree (return_shipment_id)
+aftersales,return_case,return_case_id_seller_order_id_key,"CREATE UNIQUE INDEX return_case_id_seller_order_id_key ON aftersales.return_case USING btree (id, seller_order_id)"
+aftersales,return_case,return_case_pkey,CREATE UNIQUE INDEX return_case_pkey ON aftersales.return_case USING btree (id)
+aftersales,return_line,ix_return_line_order,"CREATE INDEX ix_return_line_order ON aftersales.return_line USING btree (order_line_id, seller_order_id)"
+aftersales,return_line,return_line_pkey,"CREATE UNIQUE INDEX return_line_pkey ON aftersales.return_line USING btree (return_case_id, order_line_id)"
+catalog,category,category_pkey,CREATE UNIQUE INDEX category_pkey ON catalog.category USING btree (id)
+catalog,category,category_slug_key,CREATE UNIQUE INDEX category_slug_key ON catalog.category USING btree (slug)
+catalog,category,ix_category_parent,CREATE INDEX ix_category_parent ON catalog.category USING btree (parent_id)
+catalog,option_value,option_value_pkey,CREATE UNIQUE INDEX option_value_pkey ON catalog.option_value USING btree (id)
+catalog,option_value,uq_option_value_code,"CREATE UNIQUE INDEX uq_option_value_code ON catalog.option_value USING btree (option_id, code)"
+catalog,option_value,uq_option_value_id_option,"CREATE UNIQUE INDEX uq_option_value_id_option ON catalog.option_value USING btree (id, option_id)"
+catalog,product,ix_product_category,CREATE INDEX ix_product_category ON catalog.product USING btree (category_id)
+catalog,product,ix_product_shop,"CREATE INDEX ix_product_shop ON catalog.product USING btree (shop_id, created_at DESC, id)"
+catalog,product,product_active_category,"CREATE INDEX product_active_category ON catalog.product USING btree (category_id, created_at DESC, id) WHERE ((status)::text = 'ACTIVE'::text)"
+catalog,product,product_pkey,CREATE UNIQUE INDEX product_pkey ON catalog.product USING btree (id)
+catalog,product,product_slug_key,CREATE UNIQUE INDEX product_slug_key ON catalog.product USING btree (slug)
+catalog,product,uq_product_id_shop,"CREATE UNIQUE INDEX uq_product_id_shop ON catalog.product USING btree (id, shop_id)"
+catalog,product_media,ix_product_media_asset,CREATE INDEX ix_product_media_asset ON catalog.product_media USING btree (asset_id)
+catalog,product_media,product_media_pkey,"CREATE UNIQUE INDEX product_media_pkey ON catalog.product_media USING btree (product_id, asset_id)"
+catalog,product_option,product_option_pkey,CREATE UNIQUE INDEX product_option_pkey ON catalog.product_option USING btree (id)
+catalog,product_option,uq_product_option_code,"CREATE UNIQUE INDEX uq_product_option_code ON catalog.product_option USING btree (product_id, code)"
+catalog,product_option,uq_product_option_id_product,"CREATE UNIQUE INDEX uq_product_option_id_product ON catalog.product_option USING btree (id, product_id)"
+catalog,product_sku,ix_sku_product_active,"CREATE INDEX ix_sku_product_active ON catalog.product_sku USING btree (product_id, price, id) WHERE ((status)::text = 'ACTIVE'::text)"
+catalog,product_sku,ix_sku_product_shop,"CREATE INDEX ix_sku_product_shop ON catalog.product_sku USING btree (product_id, shop_id)"
+catalog,product_sku,product_sku_pkey,CREATE UNIQUE INDEX product_sku_pkey ON catalog.product_sku USING btree (id)
+catalog,product_sku,uq_sku_id_product,"CREATE UNIQUE INDEX uq_sku_id_product ON catalog.product_sku USING btree (id, product_id)"
+catalog,product_sku,uq_sku_id_shop,"CREATE UNIQUE INDEX uq_sku_id_shop ON catalog.product_sku USING btree (id, shop_id)"
+catalog,product_sku,uq_sku_product_variant,"CREATE UNIQUE INDEX uq_sku_product_variant ON catalog.product_sku USING btree (product_id, variant_signature)"
+catalog,product_sku,uq_sku_shop_code,"CREATE UNIQUE INDEX uq_sku_shop_code ON catalog.product_sku USING btree (shop_id, seller_sku)"
+catalog,sku_option_value,ix_sku_option_option_product,"CREATE INDEX ix_sku_option_option_product ON catalog.sku_option_value USING btree (option_id, product_id)"
+catalog,sku_option_value,ix_sku_option_product,CREATE INDEX ix_sku_option_product ON catalog.sku_option_value USING btree (product_id)
+catalog,sku_option_value,ix_sku_option_value_option,"CREATE INDEX ix_sku_option_value_option ON catalog.sku_option_value USING btree (option_value_id, option_id)"
+catalog,sku_option_value,sku_option_value_pkey,"CREATE UNIQUE INDEX sku_option_value_pkey ON catalog.sku_option_value USING btree (sku_id, option_id)"
+checkout,cart,cart_buyer_account_id_key,CREATE UNIQUE INDEX cart_buyer_account_id_key ON checkout.cart USING btree (buyer_account_id)
+checkout,cart,cart_pkey,CREATE UNIQUE INDEX cart_pkey ON checkout.cart USING btree (id)
+checkout,cart_line,cart_line_pkey,"CREATE UNIQUE INDEX cart_line_pkey ON checkout.cart_line USING btree (cart_id, sku_id)"
+checkout,cart_line,ix_cart_line_sku,CREATE INDEX ix_cart_line_sku ON checkout.cart_line USING btree (sku_id)
+checkout,quote,ix_quote_buyer,"CREATE INDEX ix_quote_buyer ON checkout.quote USING btree (buyer_account_id, created_at DESC)"
+checkout,quote,ix_quote_policy,CREATE INDEX ix_quote_policy ON checkout.quote USING btree (price_policy_id)
+checkout,quote,quote_pkey,CREATE UNIQUE INDEX quote_pkey ON checkout.quote USING btree (id)
+engagement,review,ix_review_buyer,CREATE INDEX ix_review_buyer ON engagement.review USING btree (buyer_account_id)
+engagement,review,review_order_line_id_key,CREATE UNIQUE INDEX review_order_line_id_key ON engagement.review USING btree (order_line_id)
+engagement,review,review_pkey,CREATE UNIQUE INDEX review_pkey ON engagement.review USING btree (id)
+engagement,support_ticket,ix_ticket_assignee,"CREATE INDEX ix_ticket_assignee ON engagement.support_ticket USING btree (assigned_to, status)"
+engagement,support_ticket,ix_ticket_opener,CREATE INDEX ix_ticket_opener ON engagement.support_ticket USING btree (opened_by)
+engagement,support_ticket,ix_ticket_order,CREATE INDEX ix_ticket_order ON engagement.support_ticket USING btree (seller_order_id)
+engagement,support_ticket,support_ticket_pkey,CREATE UNIQUE INDEX support_ticket_pkey ON engagement.support_ticket USING btree (id)
+engagement,ticket_message,ix_ticket_message_attachment,CREATE INDEX ix_ticket_message_attachment ON engagement.ticket_message USING btree (attachment_id)
+engagement,ticket_message,ix_ticket_message_author,CREATE INDEX ix_ticket_message_author ON engagement.ticket_message USING btree (author_account_id)
+engagement,ticket_message,ix_ticket_message_ticket,"CREATE INDEX ix_ticket_message_ticket ON engagement.ticket_message USING btree (ticket_id, created_at)"
+engagement,ticket_message,ticket_message_pkey,CREATE UNIQUE INDEX ticket_message_pkey ON engagement.ticket_message USING btree (id)
+finance,journal_entry,ix_journal_reversal,CREATE INDEX ix_journal_reversal ON finance.journal_entry USING btree (reversal_of)
+finance,journal_entry,journal_entry_business_event_key_key,CREATE UNIQUE INDEX journal_entry_business_event_key_key ON finance.journal_entry USING btree (business_event_key)
+finance,journal_entry,journal_entry_id_currency_key,"CREATE UNIQUE INDEX journal_entry_id_currency_key ON finance.journal_entry USING btree (id, currency)"
+finance,journal_entry,journal_entry_pkey,CREATE UNIQUE INDEX journal_entry_pkey ON finance.journal_entry USING btree (id)
+finance,journal_line,ix_journal_line_account,"CREATE INDEX ix_journal_line_account ON finance.journal_line USING btree (account_id, currency)"
+finance,journal_line,ix_journal_line_entry,"CREATE INDEX ix_journal_line_entry ON finance.journal_line USING btree (entry_id, currency)"
+finance,journal_line,journal_line_pkey,CREATE UNIQUE INDEX journal_line_pkey ON finance.journal_line USING btree (id)
+finance,ledger_account,ix_ledger_account_shop,CREATE INDEX ix_ledger_account_shop ON finance.ledger_account USING btree (shop_id)
+finance,ledger_account,ledger_account_code_shop_id_currency_key,"CREATE UNIQUE INDEX ledger_account_code_shop_id_currency_key ON finance.ledger_account USING btree (code, shop_id, currency) NULLS NOT DISTINCT"
+finance,ledger_account,ledger_account_id_currency_key,"CREATE UNIQUE INDEX ledger_account_id_currency_key ON finance.ledger_account USING btree (id, currency)"
+finance,ledger_account,ledger_account_pkey,CREATE UNIQUE INDEX ledger_account_pkey ON finance.ledger_account USING btree (id)
+finance,payout,ix_payout_bank_shop,"CREATE INDEX ix_payout_bank_shop ON finance.payout USING btree (bank_account_id, shop_id)"
+finance,payout,ix_payout_shop_created,"CREATE INDEX ix_payout_shop_created ON finance.payout USING btree (shop_id, created_at DESC)"
+finance,payout,payout_idempotency_key_key,CREATE UNIQUE INDEX payout_idempotency_key_key ON finance.payout USING btree (idempotency_key)
+finance,payout,payout_pkey,CREATE UNIQUE INDEX payout_pkey ON finance.payout USING btree (id)
+finance,payout,payout_provider_reference_key,CREATE UNIQUE INDEX payout_provider_reference_key ON finance.payout USING btree (provider_reference)
+finance,reconciliation_batch,reconciliation_batch_pkey,CREATE UNIQUE INDEX reconciliation_batch_pkey ON finance.reconciliation_batch USING btree (id)
+finance,reconciliation_batch,reconciliation_batch_provider_source_checksum_key,"CREATE UNIQUE INDEX reconciliation_batch_provider_source_checksum_key ON finance.reconciliation_batch USING btree (provider, source_checksum)"
+finance,reconciliation_item,ix_reconciliation_journal,CREATE INDEX ix_reconciliation_journal ON finance.reconciliation_item USING btree (journal_entry_id)
+finance,reconciliation_item,reconciliation_item_batch_id_provider_reference_key,"CREATE UNIQUE INDEX reconciliation_item_batch_id_provider_reference_key ON finance.reconciliation_item USING btree (batch_id, provider_reference)"
+finance,reconciliation_item,reconciliation_item_pkey,CREATE UNIQUE INDEX reconciliation_item_pkey ON finance.reconciliation_item USING btree (id)
+finance,settlement,settlement_id_shop_id_key,"CREATE UNIQUE INDEX settlement_id_shop_id_key ON finance.settlement USING btree (id, shop_id)"
+finance,settlement,settlement_pkey,CREATE UNIQUE INDEX settlement_pkey ON finance.settlement USING btree (id)
+finance,settlement,settlement_shop_id_period_start_period_end_key,"CREATE UNIQUE INDEX settlement_shop_id_period_start_period_end_key ON finance.settlement USING btree (shop_id, period_start, period_end)"
+finance,settlement_line,ix_settlement_line_order,CREATE INDEX ix_settlement_line_order ON finance.settlement_line USING btree (seller_order_id)
+finance,settlement_line,settlement_line_pkey,"CREATE UNIQUE INDEX settlement_line_pkey ON finance.settlement_line USING btree (settlement_id, seller_order_id)"
+fulfillment,cod_receivable,cod_receivable_pkey,CREATE UNIQUE INDEX cod_receivable_pkey ON fulfillment.cod_receivable USING btree (shipment_id)
+fulfillment,shipment,ix_shipment_order_shop,"CREATE INDEX ix_shipment_order_shop ON fulfillment.shipment USING btree (seller_order_id, shop_id)"
+fulfillment,shipment,ix_shipment_warehouse_shop,"CREATE INDEX ix_shipment_warehouse_shop ON fulfillment.shipment USING btree (warehouse_id, shop_id)"
+fulfillment,shipment,shipment_carrier_code_tracking_number_key,"CREATE UNIQUE INDEX shipment_carrier_code_tracking_number_key ON fulfillment.shipment USING btree (carrier_code, tracking_number)"
+fulfillment,shipment,shipment_id_seller_order_id_key,"CREATE UNIQUE INDEX shipment_id_seller_order_id_key ON fulfillment.shipment USING btree (id, seller_order_id)"
+fulfillment,shipment,shipment_pkey,CREATE UNIQUE INDEX shipment_pkey ON fulfillment.shipment USING btree (id)
+fulfillment,shipment_event,shipment_event_pkey,CREATE UNIQUE INDEX shipment_event_pkey ON fulfillment.shipment_event USING btree (id)
+fulfillment,shipment_event,shipment_event_shipment_id_provider_event_id_key,"CREATE UNIQUE INDEX shipment_event_shipment_id_provider_event_id_key ON fulfillment.shipment_event USING btree (shipment_id, provider_event_id)"
+fulfillment,shipment_line,ix_shipment_line_order,"CREATE INDEX ix_shipment_line_order ON fulfillment.shipment_line USING btree (order_line_id, seller_order_id)"
+fulfillment,shipment_line,shipment_line_pkey,"CREATE UNIQUE INDEX shipment_line_pkey ON fulfillment.shipment_line USING btree (shipment_id, order_line_id)"
+identity,account,account_pkey,CREATE UNIQUE INDEX account_pkey ON identity.account USING btree (id)
+identity,account,uq_account_external_subject,CREATE UNIQUE INDEX uq_account_external_subject ON identity.account USING btree (external_subject)
+identity,address,address_pkey,CREATE UNIQUE INDEX address_pkey ON identity.address USING btree (id)
+identity,address,ix_address_account,CREATE INDEX ix_address_account ON identity.address USING btree (account_id)
+inventory,stock_balance,ix_stock_shop,CREATE INDEX ix_stock_shop ON inventory.stock_balance USING btree (shop_id)
+inventory,stock_balance,ix_stock_sku_shop,"CREATE INDEX ix_stock_sku_shop ON inventory.stock_balance USING btree (sku_id, shop_id)"
+inventory,stock_balance,ix_stock_warehouse_shop,"CREATE INDEX ix_stock_warehouse_shop ON inventory.stock_balance USING btree (warehouse_id, shop_id)"
+inventory,stock_balance,stock_balance_pkey,"CREATE UNIQUE INDEX stock_balance_pkey ON inventory.stock_balance USING btree (sku_id, warehouse_id)"
+inventory,stock_movement,ix_movement_stock_created,"CREATE INDEX ix_movement_stock_created ON inventory.stock_movement USING btree (sku_id, warehouse_id, created_at DESC)"
+inventory,stock_movement,stock_movement_idempotency_key_key,CREATE UNIQUE INDEX stock_movement_idempotency_key_key ON inventory.stock_movement USING btree (idempotency_key)
+inventory,stock_movement,stock_movement_pkey,CREATE UNIQUE INDEX stock_movement_pkey ON inventory.stock_movement USING btree (id)
+inventory,stock_reservation,ix_reservation_expiry,"CREATE INDEX ix_reservation_expiry ON inventory.stock_reservation USING btree (expires_at, id) WHERE ((status)::text = 'HELD'::text)"
+inventory,stock_reservation,ix_reservation_reference,CREATE INDEX ix_reservation_reference ON inventory.stock_reservation USING btree (reference_id)
+inventory,stock_reservation,ix_reservation_stock,"CREATE INDEX ix_reservation_stock ON inventory.stock_reservation USING btree (sku_id, warehouse_id)"
+inventory,stock_reservation,stock_reservation_idempotency_key_key,CREATE UNIQUE INDEX stock_reservation_idempotency_key_key ON inventory.stock_reservation USING btree (idempotency_key)
+inventory,stock_reservation,stock_reservation_pkey,CREATE UNIQUE INDEX stock_reservation_pkey ON inventory.stock_reservation USING btree (id)
+inventory,warehouse,uq_warehouse_id_shop,"CREATE UNIQUE INDEX uq_warehouse_id_shop ON inventory.warehouse USING btree (id, shop_id)"
+inventory,warehouse,uq_warehouse_shop_code,"CREATE UNIQUE INDEX uq_warehouse_shop_code ON inventory.warehouse USING btree (shop_id, code)"
+inventory,warehouse,warehouse_pkey,CREATE UNIQUE INDEX warehouse_pkey ON inventory.warehouse USING btree (id)
+media,asset,asset_object_key_key,CREATE UNIQUE INDEX asset_object_key_key ON media.asset USING btree (object_key)
+media,asset,asset_pkey,CREATE UNIQUE INDEX asset_pkey ON media.asset USING btree (id)
+media,asset,ix_asset_owner,CREATE INDEX ix_asset_owner ON media.asset USING btree (owner_account_id)
+media,asset,ix_asset_shop,CREATE INDEX ix_asset_shop ON media.asset USING btree (shop_id)
+merchant,bank_account,bank_account_id_shop_id_key,"CREATE UNIQUE INDEX bank_account_id_shop_id_key ON merchant.bank_account USING btree (id, shop_id)"
+merchant,bank_account,bank_account_pkey,CREATE UNIQUE INDEX bank_account_pkey ON merchant.bank_account USING btree (id)
+merchant,bank_account,ix_bank_account_shop,CREATE INDEX ix_bank_account_shop ON merchant.bank_account USING btree (shop_id)
+merchant,shop,shop_pkey,CREATE UNIQUE INDEX shop_pkey ON merchant.shop USING btree (id)
+merchant,shop,shop_review_queue,CREATE INDEX shop_review_queue ON merchant.shop USING btree (created_at) WHERE ((status)::text = 'SUBMITTED'::text)
+merchant,shop,uq_shop_id_owner,"CREATE UNIQUE INDEX uq_shop_id_owner ON merchant.shop USING btree (id, owner_account_id)"
+merchant,shop,uq_shop_owner_pilot,CREATE UNIQUE INDEX uq_shop_owner_pilot ON merchant.shop USING btree (owner_account_id)
+merchant,shop_member,ix_shop_member_account,"CREATE INDEX ix_shop_member_account ON merchant.shop_member USING btree (account_id, shop_id)"
+merchant,shop_member,ix_shop_member_owner_link,"CREATE INDEX ix_shop_member_owner_link ON merchant.shop_member USING btree (shop_id, owner_link_account_id)"
+merchant,shop_member,shop_member_pkey,"CREATE UNIQUE INDEX shop_member_pkey ON merchant.shop_member USING btree (shop_id, account_id)"
+merchant,shop_member,uq_shop_member_owner,CREATE UNIQUE INDEX uq_shop_member_owner ON merchant.shop_member USING btree (shop_id) WHERE ((role)::text = 'OWNER'::text)
+merchant,shop_review,ix_shop_review_reviewer,CREATE INDEX ix_shop_review_reviewer ON merchant.shop_review USING btree (reviewer_account_id)
+merchant,shop_review,ix_shop_review_shop_created,"CREATE INDEX ix_shop_review_shop_created ON merchant.shop_review USING btree (shop_id, created_at DESC)"
+merchant,shop_review,shop_review_pkey,CREATE UNIQUE INDEX shop_review_pkey ON merchant.shop_review USING btree (id)
+payment,allocation,allocation_charge_id_seller_order_id_key,"CREATE UNIQUE INDEX allocation_charge_id_seller_order_id_key ON payment.allocation USING btree (charge_id, seller_order_id)"
+payment,allocation,allocation_id_charge_id_key,"CREATE UNIQUE INDEX allocation_id_charge_id_key ON payment.allocation USING btree (id, charge_id)"
+payment,allocation,allocation_pkey,CREATE UNIQUE INDEX allocation_pkey ON payment.allocation USING btree (id)
+payment,allocation,ix_payment_allocation_order,CREATE INDEX ix_payment_allocation_order ON payment.allocation USING btree (seller_order_id)
+payment,attempt,attempt_id_checkout_group_id_key,"CREATE UNIQUE INDEX attempt_id_checkout_group_id_key ON payment.attempt USING btree (id, checkout_group_id)"
+payment,attempt,attempt_merchant_attempt_reference_key,CREATE UNIQUE INDEX attempt_merchant_attempt_reference_key ON payment.attempt USING btree (merchant_attempt_reference)
+payment,attempt,attempt_pkey,CREATE UNIQUE INDEX attempt_pkey ON payment.attempt USING btree (id)
+payment,attempt,attempt_provider_provider_reference_key,"CREATE UNIQUE INDEX attempt_provider_provider_reference_key ON payment.attempt USING btree (provider, provider_reference)"
+payment,attempt,ix_payment_attempt_intent,"CREATE INDEX ix_payment_attempt_intent ON payment.attempt USING btree (intent_id, created_at DESC)"
+payment,charge,charge_id_checkout_group_id_key,"CREATE UNIQUE INDEX charge_id_checkout_group_id_key ON payment.charge USING btree (id, checkout_group_id)"
+payment,charge,charge_pkey,CREATE UNIQUE INDEX charge_pkey ON payment.charge USING btree (id)
+payment,charge,charge_provider_provider_charge_reference_key,"CREATE UNIQUE INDEX charge_provider_provider_charge_reference_key ON payment.charge USING btree (provider, provider_charge_reference)"
+payment,charge,ix_payment_charge_attempt,CREATE INDEX ix_payment_charge_attempt ON payment.charge USING btree (attempt_id)
+payment,intent,intent_id_checkout_group_id_key,"CREATE UNIQUE INDEX intent_id_checkout_group_id_key ON payment.intent USING btree (id, checkout_group_id)"
+payment,intent,intent_merchant_reference_key,CREATE UNIQUE INDEX intent_merchant_reference_key ON payment.intent USING btree (merchant_reference)
+payment,intent,intent_pkey,CREATE UNIQUE INDEX intent_pkey ON payment.intent USING btree (id)
+payment,intent,ix_payment_intent_checkout,CREATE INDEX ix_payment_intent_checkout ON payment.intent USING btree (checkout_group_id)
+payment,refund,ix_payment_refund_case,CREATE INDEX ix_payment_refund_case ON payment.refund USING btree (return_case_id)
+payment,refund,refund_charge_id_provider_refund_reference_key,"CREATE UNIQUE INDEX refund_charge_id_provider_refund_reference_key ON payment.refund USING btree (charge_id, provider_refund_reference)"
+payment,refund,refund_id_charge_id_key,"CREATE UNIQUE INDEX refund_id_charge_id_key ON payment.refund USING btree (id, charge_id)"
+payment,refund,refund_idempotency_key_key,CREATE UNIQUE INDEX refund_idempotency_key_key ON payment.refund USING btree (idempotency_key)
+payment,refund,refund_pkey,CREATE UNIQUE INDEX refund_pkey ON payment.refund USING btree (id)
+payment,refund_allocation,ix_refund_allocation_charge,"CREATE INDEX ix_refund_allocation_charge ON payment.refund_allocation USING btree (allocation_id, charge_id)"
+payment,refund_allocation,refund_allocation_pkey,"CREATE UNIQUE INDEX refund_allocation_pkey ON payment.refund_allocation USING btree (refund_id, allocation_id)"
+platform,audit_event,audit_event_pkey,CREATE UNIQUE INDEX audit_event_pkey ON platform.audit_event USING btree (id)
+platform,audit_event,ix_audit_actor_created,"CREATE INDEX ix_audit_actor_created ON platform.audit_event USING btree (actor_subject, created_at DESC)"
+platform,audit_event,ix_audit_resource_created,"CREATE INDEX ix_audit_resource_created ON platform.audit_event USING btree (resource_id, created_at DESC)"
+platform,event_receipt,platform_event_receipt_pkey,CREATE UNIQUE INDEX platform_event_receipt_pkey ON platform.event_receipt USING btree (event_id)
+platform,outbox_event,ix_outbox_aggregate_created,"CREATE INDEX ix_outbox_aggregate_created ON platform.outbox_event USING btree (aggregate_id, created_at)"
+platform,outbox_event,outbox_event_pkey,CREATE UNIQUE INDEX outbox_event_pkey ON platform.outbox_event USING btree (id)
+platform,outbox_event,outbox_pending,CREATE INDEX outbox_pending ON platform.outbox_event USING btree (created_at) WHERE (processed_at IS NULL)
+platform,policy_version,policy_version_pkey,CREATE UNIQUE INDEX policy_version_pkey ON platform.policy_version USING btree (id)
+platform,policy_version,policy_version_policy_type_version_key,"CREATE UNIQUE INDEX policy_version_policy_type_version_key ON platform.policy_version USING btree (policy_type, version)"
+promotion,redemption,ix_redemption_checkout,CREATE INDEX ix_redemption_checkout ON promotion.redemption USING btree (checkout_group_id)
+promotion,redemption,redemption_pkey,CREATE UNIQUE INDEX redemption_pkey ON promotion.redemption USING btree (id)
+promotion,redemption,redemption_voucher_id_checkout_group_id_key,"CREATE UNIQUE INDEX redemption_voucher_id_checkout_group_id_key ON promotion.redemption USING btree (voucher_id, checkout_group_id)"
+promotion,voucher,ix_voucher_policy,CREATE INDEX ix_voucher_policy ON promotion.voucher USING btree (policy_id)
+promotion,voucher,ix_voucher_shop,CREATE INDEX ix_voucher_shop ON promotion.voucher USING btree (shop_id)
+promotion,voucher,voucher_code_key,CREATE UNIQUE INDEX voucher_code_key ON promotion.voucher USING btree (code)
+promotion,voucher,voucher_pkey,CREATE UNIQUE INDEX voucher_pkey ON promotion.voucher USING btree (id)
+sales,checkout_group,checkout_group_buyer_account_id_idempotency_key_key,"CREATE UNIQUE INDEX checkout_group_buyer_account_id_idempotency_key_key ON sales.checkout_group USING btree (buyer_account_id, idempotency_key)"
+sales,checkout_group,checkout_group_pkey,CREATE UNIQUE INDEX checkout_group_pkey ON sales.checkout_group USING btree (id)
+sales,checkout_group,checkout_group_quote_id_key,CREATE UNIQUE INDEX checkout_group_quote_id_key ON sales.checkout_group USING btree (quote_id)
+sales,order_adjustment,ix_adjustment_line_order,"CREATE INDEX ix_adjustment_line_order ON sales.order_adjustment USING btree (order_line_id, seller_order_id)"
+sales,order_adjustment,ix_adjustment_order,CREATE INDEX ix_adjustment_order ON sales.order_adjustment USING btree (seller_order_id)
+sales,order_adjustment,ix_adjustment_policy,CREATE INDEX ix_adjustment_policy ON sales.order_adjustment USING btree (policy_id)
+sales,order_adjustment,order_adjustment_pkey,CREATE UNIQUE INDEX order_adjustment_pkey ON sales.order_adjustment USING btree (id)
+sales,order_line,ix_order_line_order_shop,"CREATE INDEX ix_order_line_order_shop ON sales.order_line USING btree (seller_order_id, shop_id)"
+sales,order_line,ix_order_line_sku_shop,"CREATE INDEX ix_order_line_sku_shop ON sales.order_line USING btree (sku_id, shop_id)"
+sales,order_line,order_line_id_seller_order_id_key,"CREATE UNIQUE INDEX order_line_id_seller_order_id_key ON sales.order_line USING btree (id, seller_order_id)"
+sales,order_line,order_line_pkey,CREATE UNIQUE INDEX order_line_pkey ON sales.order_line USING btree (id)
+sales,seller_order,ix_order_policy,CREATE INDEX ix_order_policy ON sales.seller_order USING btree (return_policy_id)
+sales,seller_order,ix_order_shop_created,"CREATE INDEX ix_order_shop_created ON sales.seller_order USING btree (shop_id, created_at DESC)"
+sales,seller_order,seller_order_checkout_group_id_shop_id_key,"CREATE UNIQUE INDEX seller_order_checkout_group_id_shop_id_key ON sales.seller_order USING btree (checkout_group_id, shop_id)"
+sales,seller_order,seller_order_id_checkout_group_id_key,"CREATE UNIQUE INDEX seller_order_id_checkout_group_id_key ON sales.seller_order USING btree (id, checkout_group_id)"
+sales,seller_order,seller_order_id_shop_id_key,"CREATE UNIQUE INDEX seller_order_id_shop_id_key ON sales.seller_order USING btree (id, shop_id)"
+sales,seller_order,seller_order_order_number_key,CREATE UNIQUE INDEX seller_order_order_number_key ON sales.seller_order USING btree (order_number)
+sales,seller_order,seller_order_pkey,CREATE UNIQUE INDEX seller_order_pkey ON sales.seller_order USING btree (id)

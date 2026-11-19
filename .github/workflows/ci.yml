@@ -1,0 +1,60 @@
+name: Verify VShop
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: vshop_test
+          POSTGRES_USER: vshop
+          POSTGRES_PASSWORD: ci-test-only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U vshop -d vshop_test"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+      - name: Backend integration tests and package
+        working-directory: backend
+        env:
+          DB_PASSWORD: ci-test-only
+          VSHOP_TEST_DATABASE_URL: jdbc:postgresql://localhost:5432/vshop_test
+          SPRING_PROFILES_ACTIVE: test
+        run: sh ./mvnw --batch-mode verify
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm run mobile:typecheck
+      - run: npm run mobile:test
+      - run: npm run mobile:export
+      - name: Validate reference database design
+        env:
+          PGPASSWORD: ci-test-only
+        run: |
+          createdb -h localhost -U vshop vshop_design_ci
+          for ddl in \
+            backend/src/main/resources/db/migration/V1__platform_merchant_catalog.sql \
+            backend/src/main/resources/db/migration/V2__event_receipts.sql \
+            backend/src/main/resources/db/migration/V1001__normalize_accounts_skus_and_inventory.sql \
+            backend/src/main/resources/db/migration/V1002__enforce_owner_membership_and_event_naming.sql \
+            docs/database/target-commerce.sql \
+            docs/database/target-design-checks.sql; do
+            psql -v ON_ERROR_STOP=1 -h localhost -U vshop -d vshop_design_ci -f "$ddl"
+          done
+      # Browser tests require a running API, imported Keycloak realm and local test accounts.
+      # They are exercised by the documented local integration run; no false CI E2E success.

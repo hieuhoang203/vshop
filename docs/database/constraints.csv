@@ -1,0 +1,698 @@
+﻿table_schema,table_name,constraint_name,constraint_type,definition
+aftersales,case_evidence,case_evidence_asset_id_fkey,f,FOREIGN KEY (asset_id) REFERENCES media.asset(id)
+aftersales,case_evidence,case_evidence_asset_id_not_null,n,NOT NULL asset_id
+aftersales,case_evidence,case_evidence_pkey,p,"PRIMARY KEY (return_case_id, asset_id)"
+aftersales,case_evidence,case_evidence_return_case_id_fkey,f,FOREIGN KEY (return_case_id) REFERENCES aftersales.return_case(id)
+aftersales,case_evidence,case_evidence_return_case_id_not_null,n,NOT NULL return_case_id
+aftersales,case_evidence,case_evidence_submitted_by_fkey,f,FOREIGN KEY (submitted_by) REFERENCES identity.account(id)
+aftersales,case_evidence,case_evidence_submitted_by_not_null,n,NOT NULL submitted_by
+aftersales,return_case,return_case_buyer_account_id_fkey,f,FOREIGN KEY (buyer_account_id) REFERENCES identity.account(id)
+aftersales,return_case,return_case_buyer_account_id_not_null,n,NOT NULL buyer_account_id
+aftersales,return_case,return_case_created_at_not_null,n,NOT NULL created_at
+aftersales,return_case,return_case_deadline_at_not_null,n,NOT NULL deadline_at
+aftersales,return_case,return_case_id_not_null,n,NOT NULL id
+aftersales,return_case,return_case_id_seller_order_id_key,u,"UNIQUE (id, seller_order_id)"
+aftersales,return_case,return_case_pkey,p,PRIMARY KEY (id)
+aftersales,return_case,return_case_policy_id_fkey,f,FOREIGN KEY (policy_id) REFERENCES platform.policy_version(id)
+aftersales,return_case,return_case_policy_id_not_null,n,NOT NULL policy_id
+aftersales,return_case,return_case_reason_code_not_null,n,NOT NULL reason_code
+aftersales,return_case,return_case_resolution_check,c,"CHECK (((resolution)::text = ANY ((ARRAY['REFUND_ONLY'::character varying, 'RETURN_AND_REFUND'::character varying, 'REJECT'::character varying])::text[])))"
+aftersales,return_case,return_case_return_shipment_id_fkey,f,FOREIGN KEY (return_shipment_id) REFERENCES fulfillment.shipment(id)
+aftersales,return_case,return_case_seller_order_id_fkey,f,FOREIGN KEY (seller_order_id) REFERENCES sales.seller_order(id)
+aftersales,return_case,return_case_seller_order_id_not_null,n,NOT NULL seller_order_id
+aftersales,return_case,return_case_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['REQUESTED'::character varying, 'REVIEWING'::character varying, 'RETURN_REQUIRED'::character varying, 'AWAITING_RETURN'::character varying, 'IN_RETURN'::character varying, 'INSPECTING'::character varying, 'REFUND_APPROVED'::character varying, 'REJECTED'::character varying, 'DISPUTED'::character varying, 'CLOSED'::character varying, 'CANCELED'::character varying])::text[])))"
+aftersales,return_case,return_case_status_not_null,n,NOT NULL status
+aftersales,return_line,return_line_order_line_id_not_null,n,NOT NULL order_line_id
+aftersales,return_line,return_line_order_line_id_seller_order_id_fkey,f,"FOREIGN KEY (order_line_id, seller_order_id) REFERENCES sales.order_line(id, seller_order_id)"
+aftersales,return_line,return_line_pkey,p,"PRIMARY KEY (return_case_id, order_line_id)"
+aftersales,return_line,return_line_quantity_check,c,CHECK ((quantity > 0))
+aftersales,return_line,return_line_quantity_not_null,n,NOT NULL quantity
+aftersales,return_line,return_line_return_case_id_not_null,n,NOT NULL return_case_id
+aftersales,return_line,return_line_return_case_id_seller_order_id_fkey,f,"FOREIGN KEY (return_case_id, seller_order_id) REFERENCES aftersales.return_case(id, seller_order_id)"
+aftersales,return_line,return_line_seller_order_id_not_null,n,NOT NULL seller_order_id
+catalog,category,category_created_at_not_null,n,NOT NULL created_at
+catalog,category,category_id_not_null,n,NOT NULL id
+catalog,category,category_name_not_null,n,NOT NULL name
+catalog,category,category_parent_id_fkey,f,FOREIGN KEY (parent_id) REFERENCES catalog.category(id)
+catalog,category,category_pkey,p,PRIMARY KEY (id)
+catalog,category,category_slug_key,u,UNIQUE (slug)
+catalog,category,category_slug_not_null,n,NOT NULL slug
+catalog,category,category_sort_order_not_null,n,NOT NULL sort_order
+catalog,category,category_updated_at_not_null,n,NOT NULL updated_at
+catalog,category,ck_category_name,c,CHECK ((length(btrim((name)::text)) > 0))
+catalog,category,ck_category_not_self_parent,c,CHECK (((parent_id IS NULL) OR (parent_id <> id)))
+catalog,option_value,ck_option_value_code,c,CHECK ((length(btrim((code)::text)) > 0))
+catalog,option_value,ck_option_value_label,c,CHECK ((length(btrim((label)::text)) > 0))
+catalog,option_value,option_value_code_not_null,n,NOT NULL code
+catalog,option_value,option_value_id_not_null,n,NOT NULL id
+catalog,option_value,option_value_label_not_null,n,NOT NULL label
+catalog,option_value,option_value_option_id_fkey,f,FOREIGN KEY (option_id) REFERENCES catalog.product_option(id)
+catalog,option_value,option_value_option_id_not_null,n,NOT NULL option_id
+catalog,option_value,option_value_pkey,p,PRIMARY KEY (id)
+catalog,option_value,option_value_sort_order_not_null,n,NOT NULL sort_order
+catalog,option_value,uq_option_value_code,u,"UNIQUE (option_id, code)"
+catalog,option_value,uq_option_value_id_option,u,"UNIQUE (id, option_id)"
+catalog,product,ck_product_name,c,CHECK ((length(btrim((name)::text)) > 0))
+catalog,product,ck_product_version,c,CHECK ((version >= 0))
+catalog,product,product_category_id_fkey,f,FOREIGN KEY (category_id) REFERENCES catalog.category(id)
+catalog,product,product_category_id_not_null,n,NOT NULL category_id
+catalog,product,product_created_at_not_null,n,NOT NULL created_at
+catalog,product,product_description_not_null,n,NOT NULL description
+catalog,product,product_id_not_null,n,NOT NULL id
+catalog,product,product_image_key_not_null,n,NOT NULL image_key
+catalog,product,product_name_not_null,n,NOT NULL name
+catalog,product,product_pkey,p,PRIMARY KEY (id)
+catalog,product,product_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
+catalog,product,product_shop_id_not_null,n,NOT NULL shop_id
+catalog,product,product_slug_key,u,UNIQUE (slug)
+catalog,product,product_slug_not_null,n,NOT NULL slug
+catalog,product,product_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['DRAFT'::character varying, 'ACTIVE'::character varying, 'HIDDEN'::character varying])::text[])))"
+catalog,product,product_status_not_null,n,NOT NULL status
+catalog,product,product_updated_at_not_null,n,NOT NULL updated_at
+catalog,product,product_version_not_null,n,NOT NULL version
+catalog,product,uq_product_id_shop,u,"UNIQUE (id, shop_id)"
+catalog,product_media,product_media_asset_id_fkey,f,FOREIGN KEY (asset_id) REFERENCES media.asset(id)
+catalog,product_media,product_media_asset_id_not_null,n,NOT NULL asset_id
+catalog,product_media,product_media_pkey,p,"PRIMARY KEY (product_id, asset_id)"
+catalog,product_media,product_media_product_id_fkey,f,FOREIGN KEY (product_id) REFERENCES catalog.product(id)
+catalog,product_media,product_media_product_id_not_null,n,NOT NULL product_id
+catalog,product_media,product_media_sort_order_not_null,n,NOT NULL sort_order
+catalog,product_option,ck_product_option_code,c,CHECK ((length(btrim((code)::text)) > 0))
+catalog,product_option,ck_product_option_name,c,CHECK ((length(btrim((name)::text)) > 0))
+catalog,product_option,product_option_code_not_null,n,NOT NULL code
+catalog,product_option,product_option_id_not_null,n,NOT NULL id
+catalog,product_option,product_option_name_not_null,n,NOT NULL name
+catalog,product_option,product_option_pkey,p,PRIMARY KEY (id)
+catalog,product_option,product_option_product_id_fkey,f,FOREIGN KEY (product_id) REFERENCES catalog.product(id)
+catalog,product_option,product_option_product_id_not_null,n,NOT NULL product_id
+catalog,product_option,product_option_sort_order_not_null,n,NOT NULL sort_order
+catalog,product_option,uq_product_option_code,u,"UNIQUE (product_id, code)"
+catalog,product_option,uq_product_option_id_product,u,"UNIQUE (id, product_id)"
+catalog,product_sku,ck_sku_code,c,CHECK ((length(btrim((seller_sku)::text)) > 0))
+catalog,product_sku,ck_sku_currency,c,CHECK ((currency = 'VND'::bpchar))
+catalog,product_sku,ck_sku_price,c,CHECK ((price > 0))
+catalog,product_sku,ck_sku_signature,c,CHECK ((length(btrim((variant_signature)::text)) > 0))
+catalog,product_sku,ck_sku_status,c,"CHECK (((status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying])::text[])))"
+catalog,product_sku,ck_sku_version,c,CHECK ((version >= 0))
+catalog,product_sku,fk_sku_product_shop,f,"FOREIGN KEY (product_id, shop_id) REFERENCES catalog.product(id, shop_id)"
+catalog,product_sku,product_sku_created_at_not_null,n,NOT NULL created_at
+catalog,product_sku,product_sku_currency_not_null,n,NOT NULL currency
+catalog,product_sku,product_sku_id_not_null,n,NOT NULL id
+catalog,product_sku,product_sku_pkey,p,PRIMARY KEY (id)
+catalog,product_sku,product_sku_price_not_null,n,NOT NULL price
+catalog,product_sku,product_sku_product_id_not_null,n,NOT NULL product_id
+catalog,product_sku,product_sku_seller_sku_not_null,n,NOT NULL seller_sku
+catalog,product_sku,product_sku_shop_id_not_null,n,NOT NULL shop_id
+catalog,product_sku,product_sku_status_not_null,n,NOT NULL status
+catalog,product_sku,product_sku_updated_at_not_null,n,NOT NULL updated_at
+catalog,product_sku,product_sku_variant_signature_not_null,n,NOT NULL variant_signature
+catalog,product_sku,product_sku_version_not_null,n,NOT NULL version
+catalog,product_sku,uq_sku_id_product,u,"UNIQUE (id, product_id)"
+catalog,product_sku,uq_sku_id_shop,u,"UNIQUE (id, shop_id)"
+catalog,product_sku,uq_sku_product_variant,u,"UNIQUE (product_id, variant_signature)"
+catalog,product_sku,uq_sku_shop_code,u,"UNIQUE (shop_id, seller_sku)"
+catalog,sku_option_value,fk_sku_option_product,f,"FOREIGN KEY (option_id, product_id) REFERENCES catalog.product_option(id, product_id)"
+catalog,sku_option_value,fk_sku_option_sku_product,f,"FOREIGN KEY (sku_id, product_id) REFERENCES catalog.product_sku(id, product_id)"
+catalog,sku_option_value,fk_sku_option_value,f,"FOREIGN KEY (option_value_id, option_id) REFERENCES catalog.option_value(id, option_id)"
+catalog,sku_option_value,sku_option_value_option_id_not_null,n,NOT NULL option_id
+catalog,sku_option_value,sku_option_value_option_value_id_not_null,n,NOT NULL option_value_id
+catalog,sku_option_value,sku_option_value_pkey,p,"PRIMARY KEY (sku_id, option_id)"
+catalog,sku_option_value,sku_option_value_product_id_not_null,n,NOT NULL product_id
+catalog,sku_option_value,sku_option_value_sku_id_not_null,n,NOT NULL sku_id
+checkout,cart,cart_buyer_account_id_fkey,f,FOREIGN KEY (buyer_account_id) REFERENCES identity.account(id)
+checkout,cart,cart_buyer_account_id_key,u,UNIQUE (buyer_account_id)
+checkout,cart,cart_buyer_account_id_not_null,n,NOT NULL buyer_account_id
+checkout,cart,cart_id_not_null,n,NOT NULL id
+checkout,cart,cart_pkey,p,PRIMARY KEY (id)
+checkout,cart,cart_updated_at_not_null,n,NOT NULL updated_at
+checkout,cart,cart_version_check,c,CHECK ((version >= 0))
+checkout,cart,cart_version_not_null,n,NOT NULL version
+checkout,cart_line,cart_line_cart_id_fkey,f,FOREIGN KEY (cart_id) REFERENCES checkout.cart(id)
+checkout,cart_line,cart_line_cart_id_not_null,n,NOT NULL cart_id
+checkout,cart_line,cart_line_pkey,p,"PRIMARY KEY (cart_id, sku_id)"
+checkout,cart_line,cart_line_quantity_check,c,CHECK ((quantity > 0))
+checkout,cart_line,cart_line_quantity_not_null,n,NOT NULL quantity
+checkout,cart_line,cart_line_sku_id_fkey,f,FOREIGN KEY (sku_id) REFERENCES catalog.product_sku(id)
+checkout,cart_line,cart_line_sku_id_not_null,n,NOT NULL sku_id
+checkout,quote,quote_buyer_account_id_fkey,f,FOREIGN KEY (buyer_account_id) REFERENCES identity.account(id)
+checkout,quote,quote_buyer_account_id_not_null,n,NOT NULL buyer_account_id
+checkout,quote,quote_check,c,CHECK ((expires_at > created_at))
+checkout,quote,quote_created_at_not_null,n,NOT NULL created_at
+checkout,quote,quote_currency_check,c,CHECK ((currency = 'VND'::bpchar))
+checkout,quote,quote_currency_not_null,n,NOT NULL currency
+checkout,quote,quote_expires_at_not_null,n,NOT NULL expires_at
+checkout,quote,quote_id_not_null,n,NOT NULL id
+checkout,quote,quote_pkey,p,PRIMARY KEY (id)
+checkout,quote,quote_price_policy_id_fkey,f,FOREIGN KEY (price_policy_id) REFERENCES platform.policy_version(id)
+checkout,quote,quote_price_policy_id_not_null,n,NOT NULL price_policy_id
+checkout,quote,quote_snapshot_check,c,CHECK ((jsonb_typeof(snapshot) = 'object'::text))
+checkout,quote,quote_snapshot_not_null,n,NOT NULL snapshot
+checkout,quote,quote_total_amount_check,c,CHECK ((total_amount >= 0))
+checkout,quote,quote_total_amount_not_null,n,NOT NULL total_amount
+checkout,quote,quote_version_check,c,CHECK ((version > 0))
+checkout,quote,quote_version_not_null,n,NOT NULL version
+engagement,review,review_buyer_account_id_fkey,f,FOREIGN KEY (buyer_account_id) REFERENCES identity.account(id)
+engagement,review,review_buyer_account_id_not_null,n,NOT NULL buyer_account_id
+engagement,review,review_check,c,CHECK ((((status)::text <> 'HIDDEN'::text) OR (moderation_reason IS NOT NULL)))
+engagement,review,review_content_not_null,n,NOT NULL content
+engagement,review,review_created_at_not_null,n,NOT NULL created_at
+engagement,review,review_id_not_null,n,NOT NULL id
+engagement,review,review_order_line_id_fkey,f,FOREIGN KEY (order_line_id) REFERENCES sales.order_line(id)
+engagement,review,review_order_line_id_key,u,UNIQUE (order_line_id)
+engagement,review,review_order_line_id_not_null,n,NOT NULL order_line_id
+engagement,review,review_pkey,p,PRIMARY KEY (id)
+engagement,review,review_rating_check,c,CHECK (((rating >= 1) AND (rating <= 5)))
+engagement,review,review_rating_not_null,n,NOT NULL rating
+engagement,review,review_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['VISIBLE'::character varying, 'HIDDEN'::character varying])::text[])))"
+engagement,review,review_status_not_null,n,NOT NULL status
+engagement,support_ticket,support_ticket_assigned_to_fkey,f,FOREIGN KEY (assigned_to) REFERENCES identity.account(id)
+engagement,support_ticket,support_ticket_created_at_not_null,n,NOT NULL created_at
+engagement,support_ticket,support_ticket_id_not_null,n,NOT NULL id
+engagement,support_ticket,support_ticket_opened_by_fkey,f,FOREIGN KEY (opened_by) REFERENCES identity.account(id)
+engagement,support_ticket,support_ticket_opened_by_not_null,n,NOT NULL opened_by
+engagement,support_ticket,support_ticket_pkey,p,PRIMARY KEY (id)
+engagement,support_ticket,support_ticket_seller_order_id_fkey,f,FOREIGN KEY (seller_order_id) REFERENCES sales.seller_order(id)
+engagement,support_ticket,support_ticket_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['OPEN'::character varying, 'IN_PROGRESS'::character varying, 'RESOLVED'::character varying, 'CLOSED'::character varying])::text[])))"
+engagement,support_ticket,support_ticket_status_not_null,n,NOT NULL status
+engagement,support_ticket,support_ticket_subject_not_null,n,NOT NULL subject
+engagement,ticket_message,ticket_message_attachment_id_fkey,f,FOREIGN KEY (attachment_id) REFERENCES media.asset(id)
+engagement,ticket_message,ticket_message_author_account_id_fkey,f,FOREIGN KEY (author_account_id) REFERENCES identity.account(id)
+engagement,ticket_message,ticket_message_author_account_id_not_null,n,NOT NULL author_account_id
+engagement,ticket_message,ticket_message_body_not_null,n,NOT NULL body
+engagement,ticket_message,ticket_message_created_at_not_null,n,NOT NULL created_at
+engagement,ticket_message,ticket_message_id_not_null,n,NOT NULL id
+engagement,ticket_message,ticket_message_pkey,p,PRIMARY KEY (id)
+engagement,ticket_message,ticket_message_ticket_id_fkey,f,FOREIGN KEY (ticket_id) REFERENCES engagement.support_ticket(id)
+engagement,ticket_message,ticket_message_ticket_id_not_null,n,NOT NULL ticket_id
+finance,journal_entry,journal_entry_balanced,t,TRIGGER DEFERRABLE INITIALLY DEFERRED
+finance,journal_entry,journal_entry_business_event_key_key,u,UNIQUE (business_event_key)
+finance,journal_entry,journal_entry_business_event_key_not_null,n,NOT NULL business_event_key
+finance,journal_entry,journal_entry_check,c,CHECK (((reversal_of IS NULL) OR (reversal_of <> id)))
+finance,journal_entry,journal_entry_created_at_not_null,n,NOT NULL created_at
+finance,journal_entry,journal_entry_created_transaction_not_null,n,NOT NULL created_transaction
+finance,journal_entry,journal_entry_currency_check,c,CHECK ((currency = 'VND'::bpchar))
+finance,journal_entry,journal_entry_currency_not_null,n,NOT NULL currency
+finance,journal_entry,journal_entry_id_currency_key,u,"UNIQUE (id, currency)"
+finance,journal_entry,journal_entry_id_not_null,n,NOT NULL id
+finance,journal_entry,journal_entry_pkey,p,PRIMARY KEY (id)
+finance,journal_entry,journal_entry_reversal_of_fkey,f,FOREIGN KEY (reversal_of) REFERENCES finance.journal_entry(id)
+finance,journal_line,journal_line_account_id_currency_fkey,f,"FOREIGN KEY (account_id, currency) REFERENCES finance.ledger_account(id, currency)"
+finance,journal_line,journal_line_account_id_not_null,n,NOT NULL account_id
+finance,journal_line,journal_line_balanced,t,TRIGGER DEFERRABLE INITIALLY DEFERRED
+finance,journal_line,journal_line_check,c,CHECK ((((debit > 0) AND (credit = 0)) OR ((credit > 0) AND (debit = 0))))
+finance,journal_line,journal_line_credit_not_null,n,NOT NULL credit
+finance,journal_line,journal_line_currency_not_null,n,NOT NULL currency
+finance,journal_line,journal_line_debit_not_null,n,NOT NULL debit
+finance,journal_line,journal_line_entry_id_currency_fkey,f,"FOREIGN KEY (entry_id, currency) REFERENCES finance.journal_entry(id, currency)"
+finance,journal_line,journal_line_entry_id_not_null,n,NOT NULL entry_id
+finance,journal_line,journal_line_id_not_null,n,NOT NULL id
+finance,journal_line,journal_line_pkey,p,PRIMARY KEY (id)
+finance,ledger_account,ledger_account_account_type_check,c,"CHECK (((account_type)::text = ANY ((ARRAY['ASSET'::character varying, 'LIABILITY'::character varying, 'REVENUE'::character varying, 'EXPENSE'::character varying, 'EQUITY'::character varying])::text[])))"
+finance,ledger_account,ledger_account_account_type_not_null,n,NOT NULL account_type
+finance,ledger_account,ledger_account_code_not_null,n,NOT NULL code
+finance,ledger_account,ledger_account_code_shop_id_currency_key,u,"UNIQUE NULLS NOT DISTINCT (code, shop_id, currency)"
+finance,ledger_account,ledger_account_currency_check,c,CHECK ((currency = 'VND'::bpchar))
+finance,ledger_account,ledger_account_currency_not_null,n,NOT NULL currency
+finance,ledger_account,ledger_account_id_currency_key,u,"UNIQUE (id, currency)"
+finance,ledger_account,ledger_account_id_not_null,n,NOT NULL id
+finance,ledger_account,ledger_account_pkey,p,PRIMARY KEY (id)
+finance,ledger_account,ledger_account_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
+finance,payout,payout_amount_check,c,CHECK ((amount > 0))
+finance,payout,payout_amount_not_null,n,NOT NULL amount
+finance,payout,payout_bank_account_id_not_null,n,NOT NULL bank_account_id
+finance,payout,payout_bank_account_id_shop_id_fkey,f,"FOREIGN KEY (bank_account_id, shop_id) REFERENCES merchant.bank_account(id, shop_id)"
+finance,payout,payout_beneficiary_snapshot_ciphertext_not_null,n,NOT NULL beneficiary_snapshot_ciphertext
+finance,payout,payout_created_at_not_null,n,NOT NULL created_at
+finance,payout,payout_currency_check,c,CHECK ((currency = 'VND'::bpchar))
+finance,payout,payout_currency_not_null,n,NOT NULL currency
+finance,payout,payout_id_not_null,n,NOT NULL id
+finance,payout,payout_idempotency_key_key,u,UNIQUE (idempotency_key)
+finance,payout,payout_idempotency_key_not_null,n,NOT NULL idempotency_key
+finance,payout,payout_pkey,p,PRIMARY KEY (id)
+finance,payout,payout_provider_reference_key,u,UNIQUE (provider_reference)
+finance,payout,payout_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
+finance,payout,payout_shop_id_not_null,n,NOT NULL shop_id
+finance,payout,payout_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['REQUESTED'::character varying, 'REVIEWING'::character varying, 'APPROVED'::character varying, 'SUBMITTED'::character varying, 'SUCCEEDED'::character varying, 'FAILED'::character varying, 'UNKNOWN'::character varying, 'REJECTED'::character varying])::text[])))"
+finance,payout,payout_status_not_null,n,NOT NULL status
+finance,reconciliation_batch,reconciliation_batch_business_date_not_null,n,NOT NULL business_date
+finance,reconciliation_batch,reconciliation_batch_created_at_not_null,n,NOT NULL created_at
+finance,reconciliation_batch,reconciliation_batch_id_not_null,n,NOT NULL id
+finance,reconciliation_batch,reconciliation_batch_pkey,p,PRIMARY KEY (id)
+finance,reconciliation_batch,reconciliation_batch_provider_not_null,n,NOT NULL provider
+finance,reconciliation_batch,reconciliation_batch_provider_source_checksum_key,u,"UNIQUE (provider, source_checksum)"
+finance,reconciliation_batch,reconciliation_batch_source_checksum_not_null,n,NOT NULL source_checksum
+finance,reconciliation_item,reconciliation_item_amount_not_null,n,NOT NULL amount
+finance,reconciliation_item,reconciliation_item_batch_id_fkey,f,FOREIGN KEY (batch_id) REFERENCES finance.reconciliation_batch(id)
+finance,reconciliation_item,reconciliation_item_batch_id_not_null,n,NOT NULL batch_id
+finance,reconciliation_item,reconciliation_item_batch_id_provider_reference_key,u,"UNIQUE (batch_id, provider_reference)"
+finance,reconciliation_item,reconciliation_item_currency_check,c,CHECK ((currency = 'VND'::bpchar))
+finance,reconciliation_item,reconciliation_item_currency_not_null,n,NOT NULL currency
+finance,reconciliation_item,reconciliation_item_id_not_null,n,NOT NULL id
+finance,reconciliation_item,reconciliation_item_journal_entry_id_fkey,f,FOREIGN KEY (journal_entry_id) REFERENCES finance.journal_entry(id)
+finance,reconciliation_item,reconciliation_item_match_status_check,c,"CHECK (((match_status)::text = ANY ((ARRAY['UNMATCHED'::character varying, 'MATCHED'::character varying, 'MISMATCH'::character varying, 'REVIEWED'::character varying])::text[])))"
+finance,reconciliation_item,reconciliation_item_match_status_not_null,n,NOT NULL match_status
+finance,reconciliation_item,reconciliation_item_pkey,p,PRIMARY KEY (id)
+finance,reconciliation_item,reconciliation_item_provider_reference_not_null,n,NOT NULL provider_reference
+finance,settlement,settlement_check,c,CHECK ((period_end > period_start))
+finance,settlement,settlement_id_not_null,n,NOT NULL id
+finance,settlement,settlement_id_shop_id_key,u,"UNIQUE (id, shop_id)"
+finance,settlement,settlement_period_end_not_null,n,NOT NULL period_end
+finance,settlement,settlement_period_start_not_null,n,NOT NULL period_start
+finance,settlement,settlement_pkey,p,PRIMARY KEY (id)
+finance,settlement,settlement_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
+finance,settlement,settlement_shop_id_not_null,n,NOT NULL shop_id
+finance,settlement,settlement_shop_id_period_start_period_end_key,u,"UNIQUE (shop_id, period_start, period_end)"
+finance,settlement,settlement_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['DRAFT'::character varying, 'RECONCILED'::character varying, 'APPROVED'::character varying, 'CLOSED'::character varying])::text[])))"
+finance,settlement,settlement_status_not_null,n,NOT NULL status
+finance,settlement_line,settlement_line_calculation_snapshot_not_null,n,NOT NULL calculation_snapshot
+finance,settlement_line,settlement_line_net_payable_not_null,n,NOT NULL net_payable
+finance,settlement_line,settlement_line_pkey,p,"PRIMARY KEY (settlement_id, seller_order_id)"
+finance,settlement_line,settlement_line_seller_order_id_fkey,f,FOREIGN KEY (seller_order_id) REFERENCES sales.seller_order(id)
+finance,settlement_line,settlement_line_seller_order_id_not_null,n,NOT NULL seller_order_id
+finance,settlement_line,settlement_line_seller_order_id_shop_id_fkey,f,"FOREIGN KEY (seller_order_id, shop_id) REFERENCES sales.seller_order(id, shop_id)"
+finance,settlement_line,settlement_line_settlement_id_fkey,f,FOREIGN KEY (settlement_id) REFERENCES finance.settlement(id)
+finance,settlement_line,settlement_line_settlement_id_not_null,n,NOT NULL settlement_id
+finance,settlement_line,settlement_line_settlement_id_shop_id_fkey,f,"FOREIGN KEY (settlement_id, shop_id) REFERENCES finance.settlement(id, shop_id)"
+finance,settlement_line,settlement_line_shop_id_not_null,n,NOT NULL shop_id
+fulfillment,cod_receivable,cod_receivable_check,c,CHECK ((remitted_amount <= collected_amount))
+fulfillment,cod_receivable,cod_receivable_collected_amount_check,c,CHECK ((collected_amount >= 0))
+fulfillment,cod_receivable,cod_receivable_collected_amount_not_null,n,NOT NULL collected_amount
+fulfillment,cod_receivable,cod_receivable_expected_amount_check,c,CHECK ((expected_amount >= 0))
+fulfillment,cod_receivable,cod_receivable_expected_amount_not_null,n,NOT NULL expected_amount
+fulfillment,cod_receivable,cod_receivable_pkey,p,PRIMARY KEY (shipment_id)
+fulfillment,cod_receivable,cod_receivable_remitted_amount_check,c,CHECK ((remitted_amount >= 0))
+fulfillment,cod_receivable,cod_receivable_remitted_amount_not_null,n,NOT NULL remitted_amount
+fulfillment,cod_receivable,cod_receivable_shipment_id_fkey,f,FOREIGN KEY (shipment_id) REFERENCES fulfillment.shipment(id)
+fulfillment,cod_receivable,cod_receivable_shipment_id_not_null,n,NOT NULL shipment_id
+fulfillment,shipment,shipment_carrier_code_not_null,n,NOT NULL carrier_code
+fulfillment,shipment,shipment_carrier_code_tracking_number_key,u,"UNIQUE (carrier_code, tracking_number)"
+fulfillment,shipment,shipment_cod_amount_check,c,CHECK ((cod_amount >= 0))
+fulfillment,shipment,shipment_cod_amount_not_null,n,NOT NULL cod_amount
+fulfillment,shipment,shipment_created_at_not_null,n,NOT NULL created_at
+fulfillment,shipment,shipment_direction_check,c,"CHECK (((direction)::text = ANY ((ARRAY['FORWARD'::character varying, 'RETURN'::character varying])::text[])))"
+fulfillment,shipment,shipment_direction_not_null,n,NOT NULL direction
+fulfillment,shipment,shipment_id_not_null,n,NOT NULL id
+fulfillment,shipment,shipment_id_seller_order_id_key,u,"UNIQUE (id, seller_order_id)"
+fulfillment,shipment,shipment_pkey,p,PRIMARY KEY (id)
+fulfillment,shipment,shipment_recipient_snapshot_ciphertext_not_null,n,NOT NULL recipient_snapshot_ciphertext
+fulfillment,shipment,shipment_seller_order_id_not_null,n,NOT NULL seller_order_id
+fulfillment,shipment,shipment_seller_order_id_shop_id_fkey,f,"FOREIGN KEY (seller_order_id, shop_id) REFERENCES sales.seller_order(id, shop_id)"
+fulfillment,shipment,shipment_shop_id_not_null,n,NOT NULL shop_id
+fulfillment,shipment,shipment_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['CREATED'::character varying, 'READY'::character varying, 'PICKED_UP'::character varying, 'IN_TRANSIT'::character varying, 'OUT_FOR_DELIVERY'::character varying, 'DELIVERED'::character varying, 'DELIVERY_FAILED'::character varying, 'RETURNING'::character varying, 'RETURNED'::character varying, 'LOST'::character varying, 'CANCELED'::character varying])::text[])))"
+fulfillment,shipment,shipment_status_not_null,n,NOT NULL status
+fulfillment,shipment,shipment_warehouse_id_not_null,n,NOT NULL warehouse_id
+fulfillment,shipment,shipment_warehouse_id_shop_id_fkey,f,"FOREIGN KEY (warehouse_id, shop_id) REFERENCES inventory.warehouse(id, shop_id)"
+fulfillment,shipment_event,shipment_event_id_not_null,n,NOT NULL id
+fulfillment,shipment_event,shipment_event_normalized_status_not_null,n,NOT NULL normalized_status
+fulfillment,shipment_event,shipment_event_occurred_at_not_null,n,NOT NULL occurred_at
+fulfillment,shipment_event,shipment_event_pkey,p,PRIMARY KEY (id)
+fulfillment,shipment_event,shipment_event_provider_event_id_not_null,n,NOT NULL provider_event_id
+fulfillment,shipment_event,shipment_event_raw_status_not_null,n,NOT NULL raw_status
+fulfillment,shipment_event,shipment_event_received_at_not_null,n,NOT NULL received_at
+fulfillment,shipment_event,shipment_event_redacted_payload_not_null,n,NOT NULL redacted_payload
+fulfillment,shipment_event,shipment_event_shipment_id_fkey,f,FOREIGN KEY (shipment_id) REFERENCES fulfillment.shipment(id)
+fulfillment,shipment_event,shipment_event_shipment_id_not_null,n,NOT NULL shipment_id
+fulfillment,shipment_event,shipment_event_shipment_id_provider_event_id_key,u,"UNIQUE (shipment_id, provider_event_id)"
+fulfillment,shipment_line,shipment_line_order_line_id_not_null,n,NOT NULL order_line_id
+fulfillment,shipment_line,shipment_line_order_line_id_seller_order_id_fkey,f,"FOREIGN KEY (order_line_id, seller_order_id) REFERENCES sales.order_line(id, seller_order_id)"
+fulfillment,shipment_line,shipment_line_pkey,p,"PRIMARY KEY (shipment_id, order_line_id)"
+fulfillment,shipment_line,shipment_line_quantity_check,c,CHECK ((quantity > 0))
+fulfillment,shipment_line,shipment_line_quantity_not_null,n,NOT NULL quantity
+fulfillment,shipment_line,shipment_line_seller_order_id_not_null,n,NOT NULL seller_order_id
+fulfillment,shipment_line,shipment_line_shipment_id_not_null,n,NOT NULL shipment_id
+fulfillment,shipment_line,shipment_line_shipment_id_seller_order_id_fkey,f,"FOREIGN KEY (shipment_id, seller_order_id) REFERENCES fulfillment.shipment(id, seller_order_id)"
+identity,account,account_created_at_not_null,n,NOT NULL created_at
+identity,account,account_external_subject_not_null,n,NOT NULL external_subject
+identity,account,account_id_not_null,n,NOT NULL id
+identity,account,account_pkey,p,PRIMARY KEY (id)
+identity,account,account_status_not_null,n,NOT NULL status
+identity,account,account_updated_at_not_null,n,NOT NULL updated_at
+identity,account,ck_account_status,c,"CHECK (((status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'SUSPENDED'::character varying, 'ANONYMIZED'::character varying])::text[])))"
+identity,account,ck_account_subject_nonblank,c,CHECK ((length(btrim((external_subject)::text)) > 0))
+identity,account,uq_account_external_subject,u,UNIQUE (external_subject)
+identity,address,address_account_id_fkey,f,FOREIGN KEY (account_id) REFERENCES identity.account(id)
+identity,address,address_account_id_not_null,n,NOT NULL account_id
+identity,address,address_address_ciphertext_not_null,n,NOT NULL address_ciphertext
+identity,address,address_administrative_code_not_null,n,NOT NULL administrative_code
+identity,address,address_created_at_not_null,n,NOT NULL created_at
+identity,address,address_id_not_null,n,NOT NULL id
+identity,address,address_phone_ciphertext_not_null,n,NOT NULL phone_ciphertext
+identity,address,address_pkey,p,PRIMARY KEY (id)
+identity,address,address_recipient_name_not_null,n,NOT NULL recipient_name
+inventory,stock_balance,ck_stock_available,c,CHECK (((reserved <= on_hand) AND (blocked <= (on_hand - reserved))))
+inventory,stock_balance,ck_stock_nonnegative,c,CHECK (((on_hand >= 0) AND (reserved >= 0) AND (blocked >= 0)))
+inventory,stock_balance,ck_stock_version,c,CHECK ((version >= 0))
+inventory,stock_balance,fk_stock_sku_shop,f,"FOREIGN KEY (sku_id, shop_id) REFERENCES catalog.product_sku(id, shop_id)"
+inventory,stock_balance,fk_stock_warehouse_shop,f,"FOREIGN KEY (warehouse_id, shop_id) REFERENCES inventory.warehouse(id, shop_id)"
+inventory,stock_balance,stock_balance_blocked_not_null,n,NOT NULL blocked
+inventory,stock_balance,stock_balance_on_hand_not_null,n,NOT NULL on_hand
+inventory,stock_balance,stock_balance_pkey,p,"PRIMARY KEY (sku_id, warehouse_id)"
+inventory,stock_balance,stock_balance_reserved_not_null,n,NOT NULL reserved
+inventory,stock_balance,stock_balance_shop_id_not_null,n,NOT NULL shop_id
+inventory,stock_balance,stock_balance_sku_id_not_null,n,NOT NULL sku_id
+inventory,stock_balance,stock_balance_updated_at_not_null,n,NOT NULL updated_at
+inventory,stock_balance,stock_balance_version_not_null,n,NOT NULL version
+inventory,stock_balance,stock_balance_warehouse_id_not_null,n,NOT NULL warehouse_id
+inventory,stock_movement,ck_movement_key,c,CHECK ((length(btrim((idempotency_key)::text)) > 0))
+inventory,stock_movement,ck_movement_nonzero,c,CHECK (((delta_on_hand <> 0) OR (delta_reserved <> 0) OR (delta_blocked <> 0)))
+inventory,stock_movement,ck_movement_reason,c,CHECK ((length(btrim((reason)::text)) > 0))
+inventory,stock_movement,ck_movement_type,c,"CHECK (((movement_type)::text = ANY ((ARRAY['MIGRATION'::character varying, 'RECEIPT'::character varying, 'RESERVE'::character varying, 'RELEASE'::character varying, 'COMMIT'::character varying, 'RETURN'::character varying, 'ADJUSTMENT'::character varying])::text[])))"
+inventory,stock_movement,fk_movement_stock,f,"FOREIGN KEY (sku_id, warehouse_id) REFERENCES inventory.stock_balance(sku_id, warehouse_id)"
+inventory,stock_movement,stock_movement_created_at_not_null,n,NOT NULL created_at
+inventory,stock_movement,stock_movement_delta_blocked_not_null,n,NOT NULL delta_blocked
+inventory,stock_movement,stock_movement_delta_on_hand_not_null,n,NOT NULL delta_on_hand
+inventory,stock_movement,stock_movement_delta_reserved_not_null,n,NOT NULL delta_reserved
+inventory,stock_movement,stock_movement_id_not_null,n,NOT NULL id
+inventory,stock_movement,stock_movement_idempotency_key_key,u,UNIQUE (idempotency_key)
+inventory,stock_movement,stock_movement_idempotency_key_not_null,n,NOT NULL idempotency_key
+inventory,stock_movement,stock_movement_movement_type_not_null,n,NOT NULL movement_type
+inventory,stock_movement,stock_movement_pkey,p,PRIMARY KEY (id)
+inventory,stock_movement,stock_movement_reason_not_null,n,NOT NULL reason
+inventory,stock_movement,stock_movement_sku_id_not_null,n,NOT NULL sku_id
+inventory,stock_movement,stock_movement_warehouse_id_not_null,n,NOT NULL warehouse_id
+inventory,stock_reservation,ck_reservation_expiry,c,CHECK ((expires_at > created_at))
+inventory,stock_reservation,ck_reservation_key,c,CHECK ((length(btrim((idempotency_key)::text)) > 0))
+inventory,stock_reservation,ck_reservation_quantity,c,CHECK ((quantity > 0))
+inventory,stock_reservation,ck_reservation_status,c,"CHECK (((status)::text = ANY ((ARRAY['HELD'::character varying, 'COMMITTED'::character varying, 'RELEASED'::character varying, 'EXPIRED'::character varying])::text[])))"
+inventory,stock_reservation,fk_reservation_stock,f,"FOREIGN KEY (sku_id, warehouse_id) REFERENCES inventory.stock_balance(sku_id, warehouse_id)"
+inventory,stock_reservation,stock_reservation_created_at_not_null,n,NOT NULL created_at
+inventory,stock_reservation,stock_reservation_expires_at_not_null,n,NOT NULL expires_at
+inventory,stock_reservation,stock_reservation_id_not_null,n,NOT NULL id
+inventory,stock_reservation,stock_reservation_idempotency_key_key,u,UNIQUE (idempotency_key)
+inventory,stock_reservation,stock_reservation_idempotency_key_not_null,n,NOT NULL idempotency_key
+inventory,stock_reservation,stock_reservation_pkey,p,PRIMARY KEY (id)
+inventory,stock_reservation,stock_reservation_quantity_not_null,n,NOT NULL quantity
+inventory,stock_reservation,stock_reservation_reference_id_not_null,n,NOT NULL reference_id
+inventory,stock_reservation,stock_reservation_sku_id_not_null,n,NOT NULL sku_id
+inventory,stock_reservation,stock_reservation_status_not_null,n,NOT NULL status
+inventory,stock_reservation,stock_reservation_updated_at_not_null,n,NOT NULL updated_at
+inventory,stock_reservation,stock_reservation_warehouse_id_not_null,n,NOT NULL warehouse_id
+inventory,warehouse,ck_warehouse_code,c,CHECK ((length(btrim((code)::text)) > 0))
+inventory,warehouse,ck_warehouse_name,c,CHECK ((length(btrim((name)::text)) > 0))
+inventory,warehouse,ck_warehouse_status,c,"CHECK (((status)::text = ANY ((ARRAY['ACTIVE'::character varying, 'INACTIVE'::character varying])::text[])))"
+inventory,warehouse,uq_warehouse_id_shop,u,"UNIQUE (id, shop_id)"
+inventory,warehouse,uq_warehouse_shop_code,u,"UNIQUE (shop_id, code)"
+inventory,warehouse,warehouse_code_not_null,n,NOT NULL code
+inventory,warehouse,warehouse_created_at_not_null,n,NOT NULL created_at
+inventory,warehouse,warehouse_id_not_null,n,NOT NULL id
+inventory,warehouse,warehouse_name_not_null,n,NOT NULL name
+inventory,warehouse,warehouse_pkey,p,PRIMARY KEY (id)
+inventory,warehouse,warehouse_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
+inventory,warehouse,warehouse_shop_id_not_null,n,NOT NULL shop_id
+inventory,warehouse,warehouse_status_not_null,n,NOT NULL status
+media,asset,asset_byte_size_check,c,CHECK ((byte_size > 0))
+media,asset,asset_byte_size_not_null,n,NOT NULL byte_size
+media,asset,asset_check,c,CHECK ((((visibility)::text <> 'PUBLIC'::text) OR ((scan_status)::text = 'SAFE'::text)))
+media,asset,asset_checksum_not_null,n,NOT NULL checksum
+media,asset,asset_created_at_not_null,n,NOT NULL created_at
+media,asset,asset_id_not_null,n,NOT NULL id
+media,asset,asset_mime_type_not_null,n,NOT NULL mime_type
+media,asset,asset_object_key_key,u,UNIQUE (object_key)
+media,asset,asset_object_key_not_null,n,NOT NULL object_key
+media,asset,asset_owner_account_id_fkey,f,FOREIGN KEY (owner_account_id) REFERENCES identity.account(id)
+media,asset,asset_owner_account_id_not_null,n,NOT NULL owner_account_id
+media,asset,asset_pkey,p,PRIMARY KEY (id)
+media,asset,asset_scan_status_check,c,"CHECK (((scan_status)::text = ANY ((ARRAY['QUARANTINED'::character varying, 'SAFE'::character varying, 'BLOCKED'::character varying])::text[])))"
+media,asset,asset_scan_status_not_null,n,NOT NULL scan_status
+media,asset,asset_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
+media,asset,asset_visibility_check,c,"CHECK (((visibility)::text = ANY ((ARRAY['PRIVATE'::character varying, 'PUBLIC'::character varying])::text[])))"
+media,asset,asset_visibility_not_null,n,NOT NULL visibility
+merchant,bank_account,bank_account_account_ciphertext_not_null,n,NOT NULL account_ciphertext
+merchant,bank_account,bank_account_bank_code_not_null,n,NOT NULL bank_code
+merchant,bank_account,bank_account_beneficiary_ciphertext_not_null,n,NOT NULL beneficiary_ciphertext
+merchant,bank_account,bank_account_check,c,CHECK ((((verification_status)::text <> 'VERIFIED'::text) OR (verified_at IS NOT NULL)))
+merchant,bank_account,bank_account_created_at_not_null,n,NOT NULL created_at
+merchant,bank_account,bank_account_id_not_null,n,NOT NULL id
+merchant,bank_account,bank_account_id_shop_id_key,u,"UNIQUE (id, shop_id)"
+merchant,bank_account,bank_account_masked_account_not_null,n,NOT NULL masked_account
+merchant,bank_account,bank_account_pkey,p,PRIMARY KEY (id)
+merchant,bank_account,bank_account_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
+merchant,bank_account,bank_account_shop_id_not_null,n,NOT NULL shop_id
+merchant,bank_account,bank_account_verification_status_check,c,"CHECK (((verification_status)::text = ANY ((ARRAY['PENDING'::character varying, 'VERIFIED'::character varying, 'REJECTED'::character varying, 'REVOKED'::character varying])::text[])))"
+merchant,bank_account,bank_account_verification_status_not_null,n,NOT NULL verification_status
+merchant,shop,ck_shop_rejection_reason,c,CHECK (((((status)::text = 'REJECTED'::text) AND (length(btrim((rejection_reason)::text)) >= 5)) OR (((status)::text <> 'REJECTED'::text) AND (rejection_reason IS NULL))))
+merchant,shop,ck_shop_version,c,CHECK ((version >= 0))
+merchant,shop,fk_shop_owner,f,FOREIGN KEY (owner_account_id) REFERENCES identity.account(id)
+merchant,shop,shop_check,c,CHECK ((((status)::text <> 'REJECTED'::text) OR (rejection_reason IS NOT NULL)))
+merchant,shop,shop_created_at_not_null,n,NOT NULL created_at
+merchant,shop,shop_description_check,c,CHECK ((length(TRIM(BOTH FROM description)) >= 20))
+merchant,shop,shop_description_not_null,n,NOT NULL description
+merchant,shop,shop_id_not_null,n,NOT NULL id
+merchant,shop,shop_name_check,c,CHECK ((length(TRIM(BOTH FROM name)) >= 3))
+merchant,shop,shop_name_not_null,n,NOT NULL name
+merchant,shop,shop_owner_account_id_not_null,n,NOT NULL owner_account_id
+merchant,shop,shop_pkey,p,PRIMARY KEY (id)
+merchant,shop,shop_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['SUBMITTED'::character varying, 'APPROVED'::character varying, 'REJECTED'::character varying])::text[])))"
+merchant,shop,shop_status_not_null,n,NOT NULL status
+merchant,shop,shop_updated_at_not_null,n,NOT NULL updated_at
+merchant,shop,shop_version_not_null,n,NOT NULL version
+merchant,shop,uq_shop_id_owner,u,"UNIQUE (id, owner_account_id)"
+merchant,shop,uq_shop_owner_pilot,u,UNIQUE (owner_account_id)
+merchant,shop_member,ck_shop_member_role,c,"CHECK (((role)::text = ANY ((ARRAY['OWNER'::character varying, 'CATALOG_MANAGER'::character varying, 'FULFILLMENT'::character varying, 'SUPPORT'::character varying, 'FINANCE'::character varying])::text[])))"
+merchant,shop_member,fk_shop_member_owner_consistency,f,"FOREIGN KEY (shop_id, owner_link_account_id) REFERENCES merchant.shop(id, owner_account_id)"
+merchant,shop_member,shop_member_account_id_fkey,f,FOREIGN KEY (account_id) REFERENCES identity.account(id)
+merchant,shop_member,shop_member_account_id_not_null,n,NOT NULL account_id
+merchant,shop_member,shop_member_created_at_not_null,n,NOT NULL created_at
+merchant,shop_member,shop_member_pkey,p,"PRIMARY KEY (shop_id, account_id)"
+merchant,shop_member,shop_member_role_not_null,n,NOT NULL role
+merchant,shop_member,shop_member_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
+merchant,shop_member,shop_member_shop_id_not_null,n,NOT NULL shop_id
+merchant,shop_review,ck_shop_review_decision,c,"CHECK (((decision)::text = ANY ((ARRAY['APPROVED'::character varying, 'REJECTED'::character varying])::text[])))"
+merchant,shop_review,ck_shop_review_reason,c,CHECK ((length(btrim((reason)::text)) >= 5))
+merchant,shop_review,shop_review_created_at_not_null,n,NOT NULL created_at
+merchant,shop_review,shop_review_decision_not_null,n,NOT NULL decision
+merchant,shop_review,shop_review_id_not_null,n,NOT NULL id
+merchant,shop_review,shop_review_pkey,p,PRIMARY KEY (id)
+merchant,shop_review,shop_review_reason_not_null,n,NOT NULL reason
+merchant,shop_review,shop_review_reviewer_account_id_fkey,f,FOREIGN KEY (reviewer_account_id) REFERENCES identity.account(id)
+merchant,shop_review,shop_review_reviewer_account_id_not_null,n,NOT NULL reviewer_account_id
+merchant,shop_review,shop_review_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
+merchant,shop_review,shop_review_shop_id_not_null,n,NOT NULL shop_id
+payment,allocation,allocation_amount_check,c,CHECK ((amount > 0))
+payment,allocation,allocation_amount_not_null,n,NOT NULL amount
+payment,allocation,allocation_charge_id_checkout_group_id_fkey,f,"FOREIGN KEY (charge_id, checkout_group_id) REFERENCES payment.charge(id, checkout_group_id)"
+payment,allocation,allocation_charge_id_fkey,f,FOREIGN KEY (charge_id) REFERENCES payment.charge(id)
+payment,allocation,allocation_charge_id_not_null,n,NOT NULL charge_id
+payment,allocation,allocation_charge_id_seller_order_id_key,u,"UNIQUE (charge_id, seller_order_id)"
+payment,allocation,allocation_checkout_group_id_not_null,n,NOT NULL checkout_group_id
+payment,allocation,allocation_id_charge_id_key,u,"UNIQUE (id, charge_id)"
+payment,allocation,allocation_id_not_null,n,NOT NULL id
+payment,allocation,allocation_pkey,p,PRIMARY KEY (id)
+payment,allocation,allocation_seller_order_id_checkout_group_id_fkey,f,"FOREIGN KEY (seller_order_id, checkout_group_id) REFERENCES sales.seller_order(id, checkout_group_id)"
+payment,allocation,allocation_seller_order_id_fkey,f,FOREIGN KEY (seller_order_id) REFERENCES sales.seller_order(id)
+payment,allocation,allocation_seller_order_id_not_null,n,NOT NULL seller_order_id
+payment,attempt,attempt_checkout_group_id_not_null,n,NOT NULL checkout_group_id
+payment,attempt,attempt_created_at_not_null,n,NOT NULL created_at
+payment,attempt,attempt_id_checkout_group_id_key,u,"UNIQUE (id, checkout_group_id)"
+payment,attempt,attempt_id_not_null,n,NOT NULL id
+payment,attempt,attempt_intent_id_checkout_group_id_fkey,f,"FOREIGN KEY (intent_id, checkout_group_id) REFERENCES payment.intent(id, checkout_group_id)"
+payment,attempt,attempt_intent_id_fkey,f,FOREIGN KEY (intent_id) REFERENCES payment.intent(id)
+payment,attempt,attempt_intent_id_not_null,n,NOT NULL intent_id
+payment,attempt,attempt_merchant_attempt_reference_key,u,UNIQUE (merchant_attempt_reference)
+payment,attempt,attempt_merchant_attempt_reference_not_null,n,NOT NULL merchant_attempt_reference
+payment,attempt,attempt_pkey,p,PRIMARY KEY (id)
+payment,attempt,attempt_provider_not_null,n,NOT NULL provider
+payment,attempt,attempt_provider_provider_reference_key,u,"UNIQUE (provider, provider_reference)"
+payment,attempt,attempt_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['CREATED'::character varying, 'PENDING'::character varying, 'SUCCEEDED'::character varying, 'FAILED'::character varying, 'EXPIRED'::character varying, 'UNKNOWN'::character varying])::text[])))"
+payment,attempt,attempt_status_not_null,n,NOT NULL status
+payment,charge,charge_amount_check,c,CHECK ((amount > 0))
+payment,charge,charge_amount_not_null,n,NOT NULL amount
+payment,charge,charge_attempt_id_checkout_group_id_fkey,f,"FOREIGN KEY (attempt_id, checkout_group_id) REFERENCES payment.attempt(id, checkout_group_id)"
+payment,charge,charge_attempt_id_fkey,f,FOREIGN KEY (attempt_id) REFERENCES payment.attempt(id)
+payment,charge,charge_attempt_id_not_null,n,NOT NULL attempt_id
+payment,charge,charge_captured_at_not_null,n,NOT NULL captured_at
+payment,charge,charge_checkout_group_id_not_null,n,NOT NULL checkout_group_id
+payment,charge,charge_currency_check,c,CHECK ((currency = 'VND'::bpchar))
+payment,charge,charge_currency_not_null,n,NOT NULL currency
+payment,charge,charge_id_checkout_group_id_key,u,"UNIQUE (id, checkout_group_id)"
+payment,charge,charge_id_not_null,n,NOT NULL id
+payment,charge,charge_pkey,p,PRIMARY KEY (id)
+payment,charge,charge_provider_charge_reference_not_null,n,NOT NULL provider_charge_reference
+payment,charge,charge_provider_not_null,n,NOT NULL provider
+payment,charge,charge_provider_provider_charge_reference_key,u,"UNIQUE (provider, provider_charge_reference)"
+payment,intent,intent_checkout_group_id_fkey,f,FOREIGN KEY (checkout_group_id) REFERENCES sales.checkout_group(id)
+payment,intent,intent_checkout_group_id_not_null,n,NOT NULL checkout_group_id
+payment,intent,intent_created_at_not_null,n,NOT NULL created_at
+payment,intent,intent_currency_check,c,CHECK ((currency = 'VND'::bpchar))
+payment,intent,intent_currency_not_null,n,NOT NULL currency
+payment,intent,intent_id_checkout_group_id_key,u,"UNIQUE (id, checkout_group_id)"
+payment,intent,intent_id_not_null,n,NOT NULL id
+payment,intent,intent_merchant_reference_key,u,UNIQUE (merchant_reference)
+payment,intent,intent_merchant_reference_not_null,n,NOT NULL merchant_reference
+payment,intent,intent_pkey,p,PRIMARY KEY (id)
+payment,intent,intent_requested_amount_check,c,CHECK ((requested_amount > 0))
+payment,intent,intent_requested_amount_not_null,n,NOT NULL requested_amount
+payment,intent,intent_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['CREATED'::character varying, 'PENDING'::character varying, 'PAID'::character varying, 'FAILED'::character varying, 'UNKNOWN'::character varying, 'CANCELED'::character varying])::text[])))"
+payment,intent,intent_status_not_null,n,NOT NULL status
+payment,refund,refund_amount_check,c,CHECK ((amount > 0))
+payment,refund,refund_amount_not_null,n,NOT NULL amount
+payment,refund,refund_charge_id_fkey,f,FOREIGN KEY (charge_id) REFERENCES payment.charge(id)
+payment,refund,refund_charge_id_not_null,n,NOT NULL charge_id
+payment,refund,refund_charge_id_provider_refund_reference_key,u,"UNIQUE (charge_id, provider_refund_reference)"
+payment,refund,refund_created_at_not_null,n,NOT NULL created_at
+payment,refund,refund_id_charge_id_key,u,"UNIQUE (id, charge_id)"
+payment,refund,refund_id_not_null,n,NOT NULL id
+payment,refund,refund_idempotency_key_key,u,UNIQUE (idempotency_key)
+payment,refund,refund_idempotency_key_not_null,n,NOT NULL idempotency_key
+payment,refund,refund_pkey,p,PRIMARY KEY (id)
+payment,refund,refund_return_case_id_fkey,f,FOREIGN KEY (return_case_id) REFERENCES aftersales.return_case(id)
+payment,refund,refund_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['APPROVED'::character varying, 'SUBMITTED'::character varying, 'PENDING'::character varying, 'SUCCEEDED'::character varying, 'FAILED'::character varying, 'UNKNOWN'::character varying])::text[])))"
+payment,refund,refund_status_not_null,n,NOT NULL status
+payment,refund_allocation,refund_allocation_allocation_id_charge_id_fkey,f,"FOREIGN KEY (allocation_id, charge_id) REFERENCES payment.allocation(id, charge_id)"
+payment,refund_allocation,refund_allocation_allocation_id_not_null,n,NOT NULL allocation_id
+payment,refund_allocation,refund_allocation_amount_check,c,CHECK ((amount > 0))
+payment,refund_allocation,refund_allocation_amount_not_null,n,NOT NULL amount
+payment,refund_allocation,refund_allocation_charge_id_not_null,n,NOT NULL charge_id
+payment,refund_allocation,refund_allocation_pkey,p,"PRIMARY KEY (refund_id, allocation_id)"
+payment,refund_allocation,refund_allocation_refund_id_charge_id_fkey,f,"FOREIGN KEY (refund_id, charge_id) REFERENCES payment.refund(id, charge_id)"
+payment,refund_allocation,refund_allocation_refund_id_not_null,n,NOT NULL refund_id
+platform,audit_event,audit_event_action_not_null,n,NOT NULL action
+platform,audit_event,audit_event_actor_subject_not_null,n,NOT NULL actor_subject
+platform,audit_event,audit_event_created_at_not_null,n,NOT NULL created_at
+platform,audit_event,audit_event_id_not_null,n,NOT NULL id
+platform,audit_event,audit_event_pkey,p,PRIMARY KEY (id)
+platform,audit_event,audit_event_reason_not_null,n,NOT NULL reason
+platform,audit_event,audit_event_resource_id_not_null,n,NOT NULL resource_id
+platform,event_receipt,platform_event_receipt_event_id_fkey,f,FOREIGN KEY (event_id) REFERENCES platform.outbox_event(id)
+platform,event_receipt,platform_event_receipt_event_id_not_null,n,NOT NULL event_id
+platform,event_receipt,platform_event_receipt_event_type_not_null,n,NOT NULL event_type
+platform,event_receipt,platform_event_receipt_pkey,p,PRIMARY KEY (event_id)
+platform,event_receipt,platform_event_receipt_received_at_not_null,n,NOT NULL received_at
+platform,outbox_event,outbox_event_aggregate_id_not_null,n,NOT NULL aggregate_id
+platform,outbox_event,outbox_event_created_at_not_null,n,NOT NULL created_at
+platform,outbox_event,outbox_event_event_type_not_null,n,NOT NULL event_type
+platform,outbox_event,outbox_event_id_not_null,n,NOT NULL id
+platform,outbox_event,outbox_event_payload_not_null,n,NOT NULL payload
+platform,outbox_event,outbox_event_pkey,p,PRIMARY KEY (id)
+platform,outbox_event,outbox_event_schema_version_not_null,n,NOT NULL schema_version
+platform,policy_version,policy_version_check,c,CHECK (((effective_to IS NULL) OR (effective_to > effective_from)))
+platform,policy_version,policy_version_content_check,c,CHECK ((jsonb_typeof(content) = 'object'::text))
+platform,policy_version,policy_version_content_not_null,n,NOT NULL content
+platform,policy_version,policy_version_created_at_not_null,n,NOT NULL created_at
+platform,policy_version,policy_version_effective_from_not_null,n,NOT NULL effective_from
+platform,policy_version,policy_version_id_not_null,n,NOT NULL id
+platform,policy_version,policy_version_pkey,p,PRIMARY KEY (id)
+platform,policy_version,policy_version_policy_type_not_null,n,NOT NULL policy_type
+platform,policy_version,policy_version_policy_type_version_key,u,"UNIQUE (policy_type, version)"
+platform,policy_version,policy_version_version_check,c,CHECK ((version > 0))
+platform,policy_version,policy_version_version_not_null,n,NOT NULL version
+promotion,redemption,redemption_allocated_amount_check,c,CHECK ((allocated_amount >= 0))
+promotion,redemption,redemption_allocated_amount_not_null,n,NOT NULL allocated_amount
+promotion,redemption,redemption_checkout_group_id_fkey,f,FOREIGN KEY (checkout_group_id) REFERENCES sales.checkout_group(id)
+promotion,redemption,redemption_checkout_group_id_not_null,n,NOT NULL checkout_group_id
+promotion,redemption,redemption_expires_at_not_null,n,NOT NULL expires_at
+promotion,redemption,redemption_id_not_null,n,NOT NULL id
+promotion,redemption,redemption_pkey,p,PRIMARY KEY (id)
+promotion,redemption,redemption_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['HELD'::character varying, 'CONSUMED'::character varying, 'RELEASED'::character varying])::text[])))"
+promotion,redemption,redemption_status_not_null,n,NOT NULL status
+promotion,redemption,redemption_voucher_id_checkout_group_id_key,u,"UNIQUE (voucher_id, checkout_group_id)"
+promotion,redemption,redemption_voucher_id_fkey,f,FOREIGN KEY (voucher_id) REFERENCES promotion.voucher(id)
+promotion,redemption,redemption_voucher_id_not_null,n,NOT NULL voucher_id
+promotion,voucher,voucher_budget_amount_check,c,CHECK ((budget_amount >= 0))
+promotion,voucher,voucher_budget_amount_not_null,n,NOT NULL budget_amount
+promotion,voucher,voucher_check,c,CHECK (((((scope)::text = 'SHOP'::text) AND (shop_id IS NOT NULL)) OR (((scope)::text <> 'SHOP'::text) AND (shop_id IS NULL))))
+promotion,voucher,voucher_check1,c,CHECK ((ends_at > starts_at))
+promotion,voucher,voucher_check2,c,CHECK ((((discount_type)::text <> 'PERCENT'::text) OR (discount_value <= (100)::numeric)))
+promotion,voucher,voucher_code_key,u,UNIQUE (code)
+promotion,voucher,voucher_code_not_null,n,NOT NULL code
+promotion,voucher,voucher_discount_type_check,c,"CHECK (((discount_type)::text = ANY ((ARRAY['FIXED'::character varying, 'PERCENT'::character varying])::text[])))"
+promotion,voucher,voucher_discount_type_not_null,n,NOT NULL discount_type
+promotion,voucher,voucher_discount_value_check,c,CHECK ((discount_value > (0)::numeric))
+promotion,voucher,voucher_discount_value_not_null,n,NOT NULL discount_value
+promotion,voucher,voucher_ends_at_not_null,n,NOT NULL ends_at
+promotion,voucher,voucher_funding_party_check,c,"CHECK (((funding_party)::text = ANY ((ARRAY['SELLER'::character varying, 'PLATFORM'::character varying, 'PARTNER'::character varying])::text[])))"
+promotion,voucher,voucher_funding_party_not_null,n,NOT NULL funding_party
+promotion,voucher,voucher_id_not_null,n,NOT NULL id
+promotion,voucher,voucher_max_discount_check,c,CHECK ((max_discount > 0))
+promotion,voucher,voucher_min_spend_check,c,CHECK ((min_spend >= 0))
+promotion,voucher,voucher_min_spend_not_null,n,NOT NULL min_spend
+promotion,voucher,voucher_pkey,p,PRIMARY KEY (id)
+promotion,voucher,voucher_policy_id_fkey,f,FOREIGN KEY (policy_id) REFERENCES platform.policy_version(id)
+promotion,voucher,voucher_policy_id_not_null,n,NOT NULL policy_id
+promotion,voucher,voucher_scope_check,c,"CHECK (((scope)::text = ANY ((ARRAY['SHOP'::character varying, 'PLATFORM'::character varying, 'SHIPPING'::character varying])::text[])))"
+promotion,voucher,voucher_scope_not_null,n,NOT NULL scope
+promotion,voucher,voucher_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
+promotion,voucher,voucher_starts_at_not_null,n,NOT NULL starts_at
+sales,checkout_group,checkout_group_buyer_account_id_fkey,f,FOREIGN KEY (buyer_account_id) REFERENCES identity.account(id)
+sales,checkout_group,checkout_group_buyer_account_id_idempotency_key_key,u,"UNIQUE (buyer_account_id, idempotency_key)"
+sales,checkout_group,checkout_group_buyer_account_id_not_null,n,NOT NULL buyer_account_id
+sales,checkout_group,checkout_group_created_at_not_null,n,NOT NULL created_at
+sales,checkout_group,checkout_group_currency_check,c,CHECK ((currency = 'VND'::bpchar))
+sales,checkout_group,checkout_group_currency_not_null,n,NOT NULL currency
+sales,checkout_group,checkout_group_id_not_null,n,NOT NULL id
+sales,checkout_group,checkout_group_idempotency_key_not_null,n,NOT NULL idempotency_key
+sales,checkout_group,checkout_group_payment_method_check,c,"CHECK (((payment_method)::text = ANY ((ARRAY['COD'::character varying, 'PSP'::character varying])::text[])))"
+sales,checkout_group,checkout_group_payment_method_not_null,n,NOT NULL payment_method
+sales,checkout_group,checkout_group_pkey,p,PRIMARY KEY (id)
+sales,checkout_group,checkout_group_quote_id_fkey,f,FOREIGN KEY (quote_id) REFERENCES checkout.quote(id)
+sales,checkout_group,checkout_group_quote_id_key,u,UNIQUE (quote_id)
+sales,checkout_group,checkout_group_quote_id_not_null,n,NOT NULL quote_id
+sales,checkout_group,checkout_group_request_hash_not_null,n,NOT NULL request_hash
+sales,checkout_group,checkout_group_total_amount_check,c,CHECK ((total_amount >= 0))
+sales,checkout_group,checkout_group_total_amount_not_null,n,NOT NULL total_amount
+sales,order_adjustment,order_adjustment_adjustment_type_check,c,"CHECK (((adjustment_type)::text = ANY ((ARRAY['SELLER_DISCOUNT'::character varying, 'PLATFORM_DISCOUNT'::character varying, 'SHIP_SUBSIDY'::character varying, 'FEE'::character varying, 'TAX'::character varying])::text[])))"
+sales,order_adjustment,order_adjustment_adjustment_type_not_null,n,NOT NULL adjustment_type
+sales,order_adjustment,order_adjustment_amount_check,c,CHECK ((amount >= 0))
+sales,order_adjustment,order_adjustment_amount_not_null,n,NOT NULL amount
+sales,order_adjustment,order_adjustment_basis_snapshot_not_null,n,NOT NULL basis_snapshot
+sales,order_adjustment,order_adjustment_funding_party_check,c,"CHECK (((funding_party)::text = ANY ((ARRAY['BUYER'::character varying, 'SELLER'::character varying, 'PLATFORM'::character varying, 'CARRIER'::character varying, 'PARTNER'::character varying])::text[])))"
+sales,order_adjustment,order_adjustment_funding_party_not_null,n,NOT NULL funding_party
+sales,order_adjustment,order_adjustment_id_not_null,n,NOT NULL id
+sales,order_adjustment,order_adjustment_order_line_id_seller_order_id_fkey,f,"FOREIGN KEY (order_line_id, seller_order_id) REFERENCES sales.order_line(id, seller_order_id)"
+sales,order_adjustment,order_adjustment_pkey,p,PRIMARY KEY (id)
+sales,order_adjustment,order_adjustment_policy_id_fkey,f,FOREIGN KEY (policy_id) REFERENCES platform.policy_version(id)
+sales,order_adjustment,order_adjustment_policy_id_not_null,n,NOT NULL policy_id
+sales,order_adjustment,order_adjustment_seller_order_id_fkey,f,FOREIGN KEY (seller_order_id) REFERENCES sales.seller_order(id)
+sales,order_adjustment,order_adjustment_seller_order_id_not_null,n,NOT NULL seller_order_id
+sales,order_line,order_line_check,c,CHECK ((gross_amount = (unit_price * quantity)))
+sales,order_line,order_line_check1,c,CHECK ((net_amount = (gross_amount - discount_amount)))
+sales,order_line,order_line_discount_amount_check,c,CHECK ((discount_amount >= 0))
+sales,order_line,order_line_discount_amount_not_null,n,NOT NULL discount_amount
+sales,order_line,order_line_gross_amount_check,c,CHECK ((gross_amount > 0))
+sales,order_line,order_line_gross_amount_not_null,n,NOT NULL gross_amount
+sales,order_line,order_line_id_not_null,n,NOT NULL id
+sales,order_line,order_line_id_seller_order_id_key,u,"UNIQUE (id, seller_order_id)"
+sales,order_line,order_line_net_amount_check,c,CHECK ((net_amount >= 0))
+sales,order_line,order_line_net_amount_not_null,n,NOT NULL net_amount
+sales,order_line,order_line_pkey,p,PRIMARY KEY (id)
+sales,order_line,order_line_product_name_snapshot_not_null,n,NOT NULL product_name_snapshot
+sales,order_line,order_line_quantity_check,c,CHECK ((quantity > 0))
+sales,order_line,order_line_quantity_not_null,n,NOT NULL quantity
+sales,order_line,order_line_seller_order_id_not_null,n,NOT NULL seller_order_id
+sales,order_line,order_line_seller_order_id_shop_id_fkey,f,"FOREIGN KEY (seller_order_id, shop_id) REFERENCES sales.seller_order(id, shop_id)"
+sales,order_line,order_line_shop_id_not_null,n,NOT NULL shop_id
+sales,order_line,order_line_sku_id_not_null,n,NOT NULL sku_id
+sales,order_line,order_line_sku_id_shop_id_fkey,f,"FOREIGN KEY (sku_id, shop_id) REFERENCES catalog.product_sku(id, shop_id)"
+sales,order_line,order_line_unit_price_check,c,CHECK ((unit_price > 0))
+sales,order_line,order_line_unit_price_not_null,n,NOT NULL unit_price
+sales,order_line,order_line_variant_snapshot_not_null,n,NOT NULL variant_snapshot
+sales,seller_order,seller_order_check,c,CHECK ((discount_amount <= item_amount))
+sales,seller_order,seller_order_check1,c,CHECK ((payable_amount = ((item_amount - discount_amount) + shipping_amount)))
+sales,seller_order,seller_order_checkout_group_id_fkey,f,FOREIGN KEY (checkout_group_id) REFERENCES sales.checkout_group(id)
+sales,seller_order,seller_order_checkout_group_id_not_null,n,NOT NULL checkout_group_id
+sales,seller_order,seller_order_checkout_group_id_shop_id_key,u,"UNIQUE (checkout_group_id, shop_id)"
+sales,seller_order,seller_order_created_at_not_null,n,NOT NULL created_at
+sales,seller_order,seller_order_discount_amount_check,c,CHECK ((discount_amount >= 0))
+sales,seller_order,seller_order_discount_amount_not_null,n,NOT NULL discount_amount
+sales,seller_order,seller_order_id_checkout_group_id_key,u,"UNIQUE (id, checkout_group_id)"
+sales,seller_order,seller_order_id_not_null,n,NOT NULL id
+sales,seller_order,seller_order_id_shop_id_key,u,"UNIQUE (id, shop_id)"
+sales,seller_order,seller_order_item_amount_check,c,CHECK ((item_amount >= 0))
+sales,seller_order,seller_order_item_amount_not_null,n,NOT NULL item_amount
+sales,seller_order,seller_order_order_number_key,u,UNIQUE (order_number)
+sales,seller_order,seller_order_order_number_not_null,n,NOT NULL order_number
+sales,seller_order,seller_order_payable_amount_check,c,CHECK ((payable_amount >= 0))
+sales,seller_order,seller_order_payable_amount_not_null,n,NOT NULL payable_amount
+sales,seller_order,seller_order_pkey,p,PRIMARY KEY (id)
+sales,seller_order,seller_order_recipient_snapshot_ciphertext_not_null,n,NOT NULL recipient_snapshot_ciphertext
+sales,seller_order,seller_order_return_policy_id_fkey,f,FOREIGN KEY (return_policy_id) REFERENCES platform.policy_version(id)
+sales,seller_order,seller_order_return_policy_id_not_null,n,NOT NULL return_policy_id
+sales,seller_order,seller_order_shipping_amount_check,c,CHECK ((shipping_amount >= 0))
+sales,seller_order,seller_order_shipping_amount_not_null,n,NOT NULL shipping_amount
+sales,seller_order,seller_order_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
+sales,seller_order,seller_order_shop_id_not_null,n,NOT NULL shop_id
+sales,seller_order,seller_order_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['PENDING_PAYMENT'::character varying, 'AWAITING_SELLER'::character varying, 'CONFIRMED'::character varying, 'PACKING'::character varying, 'READY_TO_SHIP'::character varying, 'IN_FULFILLMENT'::character varying, 'DELIVERED'::character varying, 'COMPLETED'::character varying, 'CANCEL_REQUESTED'::character varying, 'CANCELED'::character varying, 'REJECTED'::character varying])::text[])))"
+sales,seller_order,seller_order_status_not_null,n,NOT NULL status
+sales,seller_order,seller_order_updated_at_not_null,n,NOT NULL updated_at
+sales,seller_order,seller_order_version_check,c,CHECK ((version >= 0))
+sales,seller_order,seller_order_version_not_null,n,NOT NULL version

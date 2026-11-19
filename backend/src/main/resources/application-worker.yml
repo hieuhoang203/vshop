@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: vshop-worker
+  main:
+    web-application-type: none
+vshop:
+  worker:
+    enabled: true
