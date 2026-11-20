@@ -17,22 +17,25 @@ public class JdbcNotificationRepository implements NotificationRepository {
     }
 
     @Override
-    public boolean insert(
+    public java.util.Optional<UUID> insert(
             UUID recipient, String kind, String title, String body, String link, String dedupeKey) {
-        return jdbc.sql(
-                                "INSERT INTO platform.notification (id, recipient_account_id, kind,"
-                                        + " title, body, link, dedupe_key)"
-                                        + " VALUES (:id, :recipient, :kind, :title, :body, :link, :key)"
-                                        + " ON CONFLICT (recipient_account_id, dedupe_key) DO NOTHING")
-                        .param("id", UUID.randomUUID())
-                        .param("recipient", recipient)
-                        .param("kind", kind)
-                        .param("title", title)
-                        .param("body", body)
-                        .param("link", link, Types.VARCHAR)
-                        .param("key", dedupeKey)
-                        .update()
-                == 1;
+        UUID id = UUID.randomUUID();
+        boolean fresh =
+                jdbc.sql(
+                                        "INSERT INTO platform.notification (id, recipient_account_id, kind,"
+                                                + " title, body, link, dedupe_key)"
+                                                + " VALUES (:id, :recipient, :kind, :title, :body, :link, :key)"
+                                                + " ON CONFLICT (recipient_account_id, dedupe_key) DO NOTHING")
+                                .param("id", id)
+                                .param("recipient", recipient)
+                                .param("kind", kind)
+                                .param("title", title)
+                                .param("body", body)
+                                .param("link", link, Types.VARCHAR)
+                                .param("key", dedupeKey)
+                                .update()
+                        == 1;
+        return fresh ? java.util.Optional.of(id) : java.util.Optional.empty();
     }
 
     @Override

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getNotifications } from "@/lib/api";
@@ -14,6 +15,9 @@ export default async function Notifications() {
         <span className="eyebrow">THÔNG BÁO</span>
         <h1>Thông báo của tôi</h1>
         <p>Cập nhật về đơn hàng, hoàn tiền và yêu cầu trả hàng của bạn.</p>
+        <p>
+          <Link href="/notifications/settings">Cài đặt thông báo email</Link>
+        </p>
       </div>
       {page.items.length ? (
         <NotificationList items={page.items} />

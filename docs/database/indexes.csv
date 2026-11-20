@@ -109,6 +109,7 @@ identity,account,uq_account_external_subject,CREATE UNIQUE INDEX uq_account_exte
 identity,address,address_pkey,CREATE UNIQUE INDEX address_pkey ON identity.address USING btree (id)
 identity,address,ix_address_account,"CREATE INDEX ix_address_account ON identity.address USING btree (account_id, created_at, id)"
 identity,address,uq_address_default,CREATE UNIQUE INDEX uq_address_default ON identity.address USING btree (account_id) WHERE is_default
+identity,notification_email,notification_email_pkey,CREATE UNIQUE INDEX notification_email_pkey ON identity.notification_email USING btree (account_id)
 inventory,stock_balance,ix_stock_shop,CREATE INDEX ix_stock_shop ON inventory.stock_balance USING btree (shop_id)
 inventory,stock_balance,ix_stock_sku_shop,"CREATE INDEX ix_stock_sku_shop ON inventory.stock_balance USING btree (sku_id, shop_id)"
 inventory,stock_balance,ix_stock_warehouse_shop,"CREATE INDEX ix_stock_warehouse_shop ON inventory.stock_balance USING btree (warehouse_id, shop_id)"
@@ -177,6 +178,10 @@ payment,review_case,uq_review_charge_reason,"CREATE UNIQUE INDEX uq_review_charg
 platform,audit_event,audit_event_pkey,CREATE UNIQUE INDEX audit_event_pkey ON platform.audit_event USING btree (id)
 platform,audit_event,ix_audit_actor_created,"CREATE INDEX ix_audit_actor_created ON platform.audit_event USING btree (actor_subject, created_at DESC)"
 platform,audit_event,ix_audit_resource_created,"CREATE INDEX ix_audit_resource_created ON platform.audit_event USING btree (resource_id, created_at DESC)"
+platform,email_delivery,email_delivery_pkey,CREATE UNIQUE INDEX email_delivery_pkey ON platform.email_delivery USING btree (id)
+platform,email_delivery,ix_email_delivery_account,CREATE INDEX ix_email_delivery_account ON platform.email_delivery USING btree (account_id)
+platform,email_delivery,ix_email_delivery_due,"CREATE INDEX ix_email_delivery_due ON platform.email_delivery USING btree (next_attempt_at) WHERE ((status)::text = ANY ((ARRAY['PENDING'::character varying, 'SENDING'::character varying])::text[]))"
+platform,email_delivery,uq_email_delivery_notification,CREATE UNIQUE INDEX uq_email_delivery_notification ON platform.email_delivery USING btree (notification_id)
 platform,event_receipt,platform_event_receipt_pkey,CREATE UNIQUE INDEX platform_event_receipt_pkey ON platform.event_receipt USING btree (event_id)
 platform,notification,ix_notification_recipient,"CREATE INDEX ix_notification_recipient ON platform.notification USING btree (recipient_account_id, created_at DESC)"
 platform,notification,ix_notification_unread,CREATE INDEX ix_notification_unread ON platform.notification USING btree (recipient_account_id) WHERE (read_at IS NULL)

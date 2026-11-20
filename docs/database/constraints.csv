@@ -408,6 +408,13 @@ identity,address,ck_address_province,c,CHECK ((length(btrim((province)::text)) >
 identity,address,ck_address_recipient,c,CHECK ((length(btrim((recipient_name)::text)) >= 2))
 identity,address,ck_address_version,c,CHECK ((version >= 0))
 identity,address,ck_address_ward,c,CHECK ((length(btrim((ward)::text)) >= 1))
+identity,notification_email,notification_email_account_id_fkey,f,FOREIGN KEY (account_id) REFERENCES identity.account(id)
+identity,notification_email,notification_email_account_id_not_null,n,NOT NULL account_id
+identity,notification_email,notification_email_email_ciphertext_not_null,n,NOT NULL email_ciphertext
+identity,notification_email,notification_email_enabled_not_null,n,NOT NULL enabled
+identity,notification_email,notification_email_pkey,p,PRIMARY KEY (account_id)
+identity,notification_email,notification_email_updated_at_not_null,n,NOT NULL updated_at
+identity,notification_email,notification_email_verified_at_not_null,n,NOT NULL verified_at
 inventory,stock_balance,ck_stock_available,c,CHECK (((reserved <= on_hand) AND (blocked <= (on_hand - reserved))))
 inventory,stock_balance,ck_stock_nonnegative,c,CHECK (((on_hand >= 0) AND (reserved >= 0) AND (blocked >= 0)))
 inventory,stock_balance,ck_stock_version,c,CHECK ((version >= 0))
@@ -657,6 +664,20 @@ platform,audit_event,audit_event_id_not_null,n,NOT NULL id
 platform,audit_event,audit_event_pkey,p,PRIMARY KEY (id)
 platform,audit_event,audit_event_reason_not_null,n,NOT NULL reason
 platform,audit_event,audit_event_resource_id_not_null,n,NOT NULL resource_id
+platform,email_delivery,ck_email_sent,c,CHECK ((((status)::text <> 'SENT'::text) OR (sent_at IS NOT NULL)))
+platform,email_delivery,email_delivery_account_id_fkey,f,FOREIGN KEY (account_id) REFERENCES identity.account(id)
+platform,email_delivery,email_delivery_account_id_not_null,n,NOT NULL account_id
+platform,email_delivery,email_delivery_attempts_check,c,CHECK ((attempts >= 0))
+platform,email_delivery,email_delivery_attempts_not_null,n,NOT NULL attempts
+platform,email_delivery,email_delivery_created_at_not_null,n,NOT NULL created_at
+platform,email_delivery,email_delivery_id_not_null,n,NOT NULL id
+platform,email_delivery,email_delivery_next_attempt_at_not_null,n,NOT NULL next_attempt_at
+platform,email_delivery,email_delivery_notification_id_fkey,f,FOREIGN KEY (notification_id) REFERENCES platform.notification(id)
+platform,email_delivery,email_delivery_notification_id_not_null,n,NOT NULL notification_id
+platform,email_delivery,email_delivery_pkey,p,PRIMARY KEY (id)
+platform,email_delivery,email_delivery_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['PENDING'::character varying, 'SENDING'::character varying, 'SENT'::character varying, 'FAILED'::character varying, 'SKIPPED'::character varying])::text[])))"
+platform,email_delivery,email_delivery_status_not_null,n,NOT NULL status
+platform,email_delivery,uq_email_delivery_notification,u,UNIQUE (notification_id)
 platform,event_receipt,platform_event_receipt_event_id_fkey,f,FOREIGN KEY (event_id) REFERENCES platform.outbox_event(id)
 platform,event_receipt,platform_event_receipt_event_id_not_null,n,NOT NULL event_id
 platform,event_receipt,platform_event_receipt_event_type_not_null,n,NOT NULL event_type

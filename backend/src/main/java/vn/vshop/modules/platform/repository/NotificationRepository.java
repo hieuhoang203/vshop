@@ -6,7 +6,7 @@ import vn.vshop.modules.platform.entity.Notification;
 
 public interface NotificationRepository {
     /** False when the same dedupe key already exists for the recipient (a repeated event). */
-    boolean insert(
+    java.util.Optional<UUID> insert(
             UUID recipient, String kind, String title, String body, String link, String dedupeKey);
 
     List<Notification> list(UUID recipient, boolean unreadOnly, int limit, int offset);

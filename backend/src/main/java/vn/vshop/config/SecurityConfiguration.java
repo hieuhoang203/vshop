@@ -160,6 +160,7 @@ public class SecurityConfiguration {
                                                 "/api/v1/me/addresses/**",
                                                 "/api/v1/me/addresses",
                                                 "/api/v1/me/notifications/**",
+                                                "/api/v1/me/email-notifications",
                                                 "/api/v1/me/notifications")
                                         .hasAnyRole("BUYER", "SELLER")
                                         .requestMatchers("/api/v1/me")

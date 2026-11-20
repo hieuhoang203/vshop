@@ -390,6 +390,29 @@
         "required" : [ "decision", "note" ],
         "type" : "object"
       },
+      "EmailNotificationRequest" : {
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          }
+        },
+        "type" : "object"
+      },
+      "EmailNotificationResponse" : {
+        "properties" : {
+          "available" : {
+            "type" : "boolean"
+          },
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "maskedEmail" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "available", "enabled", "maskedEmail" ],
+        "type" : "object"
+      },
       "LineResponse" : {
         "properties" : {
           "availableQuantity" : {
@@ -3561,6 +3584,84 @@
           "bearerAuth" : [ ]
         } ],
         "tags" : [ "address-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/me/email-notifications" : {
+      "get" : {
+        "operationId" : "emailNotificationGet",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EmailNotificationResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "email-notification-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      },
+      "put" : {
+        "operationId" : "emailNotificationSet",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/EmailNotificationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/EmailNotificationResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "email-notification-controller" ],
         "x-vshop-access" : {
           "anyOfRoles" : [ "BUYER", "SELLER" ],
           "public" : false

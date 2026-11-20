@@ -108,3 +108,4 @@ export type DecideReturnInput = Schemas["DecideReturnRequest"];
 export type Notification = Schemas["NotificationResponse"];
 export type NotificationPage = Schemas["PageResponseNotificationResponse"];
 export type UnreadCount = Schemas["UnreadCountResponse"];
+export type EmailNotification = Schemas["EmailNotificationResponse"];

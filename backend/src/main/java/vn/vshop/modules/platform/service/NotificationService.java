@@ -18,17 +18,24 @@ import vn.vshop.modules.platform.repository.NotificationRepository;
 public class NotificationService {
     private final NotificationRepository notifications;
     private final AccountService accounts;
+    private final EmailDeliveryService emails;
 
-    NotificationService(NotificationRepository notifications, AccountService accounts) {
+    NotificationService(
+            NotificationRepository notifications,
+            AccountService accounts,
+            EmailDeliveryService emails) {
         this.notifications = notifications;
         this.accounts = accounts;
+        this.emails = emails;
     }
 
     /** Idempotent per recipient and dedupe key. */
     @Transactional
     public void notify(
             UUID recipient, String kind, String title, String body, String link, String dedupeKey) {
-        notifications.insert(recipient, kind, title, body, link, dedupeKey);
+        notifications
+                .insert(recipient, kind, title, body, link, dedupeKey)
+                .ifPresent(id -> emails.enqueue(id, recipient));
     }
 
     @Transactional

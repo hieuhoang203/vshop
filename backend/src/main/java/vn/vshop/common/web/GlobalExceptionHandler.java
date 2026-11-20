@@ -58,6 +58,7 @@ public class GlobalExceptionHandler {
                             INVALID_ORDER_STATE,
                             INVALID_REFUND_STATE,
                             INVALID_RETURN_STATE,
+                            EMAIL_NOT_VERIFIED,
                             RETURN_NOT_ALLOWED,
                             CARRIER_NOT_CONFIGURED,
                             CARRIER_REJECTED,

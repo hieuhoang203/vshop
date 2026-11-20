@@ -9,6 +9,7 @@ import type {
   OverdueOrders,
   NotificationPage,
   UnreadCount,
+  EmailNotification,
   ReturnCase,
   ReturnCasePage,
   AdminRefund,
@@ -103,5 +104,6 @@ export const getAdminReturnCases = () => api<ReturnCase[]>("/admin/return-cases"
 
 export const getUnreadCount = () =>
   api<UnreadCount>("/me/notifications/unread-count", true).then((r) => r.unread);
+export const getEmailNotifications = () => api<EmailNotification>("/me/email-notifications", true);
 export const getNotifications = (page = 0) =>
   api<NotificationPage>(`/me/notifications?page=${page}&size=30`, true);
