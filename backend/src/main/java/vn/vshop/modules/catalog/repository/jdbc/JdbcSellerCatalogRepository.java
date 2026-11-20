@@ -383,6 +383,15 @@ public class JdbcSellerCatalogRepository implements SellerCatalogRepository {
                             return row;
                         })
                 .list();
+        Map<UUID, String> shopNames = new HashMap<>();
+        jdbc.sql("SELECT id, name FROM merchant.shop WHERE id IN (:ids)")
+                .param("ids", products.stream().map(Product::shopId).distinct().toList())
+                .query(
+                        (rs, row) -> {
+                            shopNames.put(rs.getObject("id", UUID.class), rs.getString("name"));
+                            return row;
+                        })
+                .list();
         Map<UUID, Long> available = new HashMap<>();
         jdbc.sql(
                         """
@@ -422,6 +431,7 @@ public class JdbcSellerCatalogRepository implements SellerCatalogRepository {
             result.add(
                     new SellerProduct(
                             product,
+                            shopNames.getOrDefault(product.shopId(), ""),
                             optionsByProduct.getOrDefault(product.id(), List.of()),
                             skusByProduct.getOrDefault(product.id(), List.of())));
         }

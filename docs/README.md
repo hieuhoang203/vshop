@@ -14,26 +14,27 @@ Web người mua, cổng người bán, cổng admin dùng Next.js/TypeScript. A
 
 ## Tài liệu để duyệt
 
-| Tài liệu                                                             | Nội dung                                                                          |
-| -------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| [01-khao-sat-shopee.md](01-khao-sat-shopee.md)                       | Khảo sát chức năng công khai, nguồn tham chiếu, khoảng trống và cải tiến          |
-| [02-nghiep-vu-va-luong.md](02-nghiep-vu-va-luong.md)                 | Vai trò, phạm vi, quy tắc, trạng thái, luồng đúng/sai, mô hình dữ liệu            |
-| [03-kien-truc-cong-nghe.md](03-kien-truc-cong-nghe.md)               | Đánh giá stack, ranh giới module, bảo mật, lưu trữ, vận hành                      |
-| [04-lo-trinh-va-nghiem-thu.md](04-lo-trinh-va-nghiem-thu.md)         | Lộ trình 52 tuần, phạm vi ra mắt, nguồn lực, rủi ro, điều kiện nghiệm thu         |
-| [05-backlog.csv](05-backlog.csv)                                     | Công việc có ID, ưu tiên, phụ thuộc, đầu ra, điều kiện nghiệm thu và ước lượng    |
-| [06-uat.csv](06-uat.csv)                                             | Kịch bản nghiệm thu xuyên vai trò và các tình huống tranh chấp/race condition     |
-| [07-trien-khai-increment-01.md](07-trien-khai-increment-01.md)       | Nền tảng đã triển khai, bằng chứng kiểm thử và giới hạn hiện tại                  |
-| [08-chuan-hoa-db-va-kien-truc.md](08-chuan-hoa-db-va-kien-truc.md)   | Kết quả tái cấu trúc, migration bảo toàn dữ liệu và kiểm thử                      |
-| [09-giao-dien-radix-va-bieu-do.md](09-giao-dien-radix-va-bieu-do.md) | Giao diện mới, tương tác Radix, định nghĩa biểu đồ, API và kiểm thử               |
-| [10-ung-dung-mobile-native.md](10-ung-dung-mobile-native.md)         | App React Native/Expo riêng, luồng mobile, Keycloak PKCE và kiểm thử              |
-| [11-san-pham-la-trung-tam.md](11-san-pham-la-trung-tam.md)           | Bố cục hiện hành: sản phẩm trước banner, kiểm viewport web/native và APK cập nhật |
-| [12-catalog-seller-api.md](12-catalog-seller-api.md)                 | API seller ghi sản phẩm, biến thể, SKU, giá; quy tắc, giới hạn và kiểm chứng      |
-| [13-ton-kho-va-giu-hang.md](13-ton-kho-va-giu-hang.md)               | API nhập/điều chỉnh tồn, vòng đời reservation, bất biến, kiểm thử cạnh tranh      |
-| [14-kiem-duyet-san-pham.md](14-kiem-duyet-san-pham.md)               | Kiểm duyệt sản phẩm: máy trạng thái, API admin, ràng buộc phiên bản, giới hạn     |
-| [architecture/README.md](architecture/README.md)                     | Quy ước từng tầng, entity/DTO/repository, format và ArchUnit                      |
-| [database/README.md](database/README.md)                             | ERD, bảng/quan hệ, từ điển cột, DDL và invariant giao dịch                        |
+| Tài liệu                                                                       | Nội dung                                                                           |
+| ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| [01-khao-sat-shopee.md](01-khao-sat-shopee.md)                                 | Khảo sát chức năng công khai, nguồn tham chiếu, khoảng trống và cải tiến           |
+| [02-nghiep-vu-va-luong.md](02-nghiep-vu-va-luong.md)                           | Vai trò, phạm vi, quy tắc, trạng thái, luồng đúng/sai, mô hình dữ liệu             |
+| [03-kien-truc-cong-nghe.md](03-kien-truc-cong-nghe.md)                         | Đánh giá stack, ranh giới module, bảo mật, lưu trữ, vận hành                       |
+| [04-lo-trinh-va-nghiem-thu.md](04-lo-trinh-va-nghiem-thu.md)                   | Lộ trình 52 tuần, phạm vi ra mắt, nguồn lực, rủi ro, điều kiện nghiệm thu          |
+| [05-backlog.csv](05-backlog.csv)                                               | Công việc có ID, ưu tiên, phụ thuộc, đầu ra, điều kiện nghiệm thu và ước lượng     |
+| [06-uat.csv](06-uat.csv)                                                       | Kịch bản nghiệm thu xuyên vai trò và các tình huống tranh chấp/race condition      |
+| [07-trien-khai-increment-01.md](07-trien-khai-increment-01.md)                 | Nền tảng đã triển khai, bằng chứng kiểm thử và giới hạn hiện tại                   |
+| [08-chuan-hoa-db-va-kien-truc.md](08-chuan-hoa-db-va-kien-truc.md)             | Kết quả tái cấu trúc, migration bảo toàn dữ liệu và kiểm thử                       |
+| [09-giao-dien-radix-va-bieu-do.md](09-giao-dien-radix-va-bieu-do.md)           | Giao diện mới, tương tác Radix, định nghĩa biểu đồ, API và kiểm thử                |
+| [10-ung-dung-mobile-native.md](10-ung-dung-mobile-native.md)                   | App React Native/Expo riêng, luồng mobile, Keycloak PKCE và kiểm thử               |
+| [11-san-pham-la-trung-tam.md](11-san-pham-la-trung-tam.md)                     | Bố cục hiện hành: sản phẩm trước banner, kiểm viewport web/native và APK cập nhật  |
+| [12-catalog-seller-api.md](12-catalog-seller-api.md)                           | API seller ghi sản phẩm, biến thể, SKU, giá; quy tắc, giới hạn và kiểm chứng       |
+| [13-ton-kho-va-giu-hang.md](13-ton-kho-va-giu-hang.md)                         | API nhập/điều chỉnh tồn, vòng đời reservation, bất biến, kiểm thử cạnh tranh       |
+| [14-kiem-duyet-san-pham.md](14-kiem-duyet-san-pham.md)                         | Kiểm duyệt sản phẩm: máy trạng thái, API admin, ràng buộc phiên bản, giới hạn      |
+| [15-giao-dien-seller-admin-san-pham.md](15-giao-dien-seller-admin-san-pham.md) | UI web seller/admin: sản phẩm, SKU, tồn kho, duyệt hàng; BFF, giới hạn, kiểm chứng |
+| [architecture/README.md](architecture/README.md)                               | Quy ước từng tầng, entity/DTO/repository, format và ArchUnit                       |
+| [database/README.md](database/README.md)                                       | ERD, bảng/quan hệ, từ điển cột, DDL và invariant giao dịch                         |
 
-CSV dùng UTF-8 có BOM để mở tiếng Việt trong Excel. Import theo cột `ID`, `DependsOn`, `BusinessRules`, `Acceptance`; trạng thái được cập nhật theo increment. Hiện tại: 1 Done, 23 InProgress, 106 Planned (C06, C08, C09, C10 InProgress). Các ước lượng vẫn là kế hoạch ban đầu, không phải timesheet thực tế.
+CSV dùng UTF-8 có BOM để mở tiếng Việt trong Excel. Import theo cột `ID`, `DependsOn`, `BusinessRules`, `Acceptance`; trạng thái được cập nhật theo increment. Hiện tại: 1 Done, 24 InProgress, 105 Planned (C06–C10 InProgress). Các ước lượng vẫn là kế hoạch ban đầu, không phải timesheet thực tế.
 
 ## Ranh giới bằng chứng
 

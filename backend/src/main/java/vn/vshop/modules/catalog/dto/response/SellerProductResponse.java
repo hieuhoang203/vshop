@@ -8,6 +8,7 @@ import java.util.UUID;
 public record SellerProductResponse(
         UUID id,
         UUID shopId,
+        String shopName,
         UUID categoryId,
         String slug,
         String name,

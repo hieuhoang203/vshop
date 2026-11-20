@@ -1,0 +1,28 @@
+import Link from "next/link";
+
+const LINKS = {
+  seller: [
+    { href: "/seller", label: "Gian hàng" },
+    { href: "/seller/products", label: "Sản phẩm" },
+  ],
+  admin: [
+    { href: "/admin", label: "Hồ sơ gian hàng" },
+    { href: "/admin/products", label: "Duyệt sản phẩm" },
+  ],
+} as const;
+
+export function PortalNav({ portal, current }: { portal: "seller" | "admin"; current: string }) {
+  return (
+    <nav className="portal-nav" aria-label={portal === "seller" ? "Kênh người bán" : "Quản trị"}>
+      {LINKS[portal].map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          aria-current={link.href === current ? "page" : undefined}
+        >
+          {link.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}

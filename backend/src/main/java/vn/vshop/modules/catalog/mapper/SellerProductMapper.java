@@ -64,6 +64,7 @@ public final class SellerProductMapper {
         return new SellerProductResponse(
                 product.id(),
                 product.shopId(),
+                view.shopName(),
                 product.categoryId(),
                 product.slug(),
                 product.name(),

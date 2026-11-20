@@ -4,6 +4,7 @@ import { getShopQueue, getShopActivity } from "@/lib/api";
 import { ShopActivityChart } from "@/components/admin/shop-activity-chart";
 import { LoginPrompt } from "@/components/portal";
 import { ReviewForm } from "@/components/review-form";
+import { PortalNav } from "@/components/portal-nav";
 export const metadata = { title: "Quản trị" };
 export default async function Admin() {
   const session = await getSession();
@@ -25,6 +26,7 @@ export default async function Admin() {
         <h1>Xét duyệt gian hàng</h1>
         <p>Kiểm tra hồ sơ và ghi nhận quyết định trước khi gian hàng hoạt động.</p>
       </div>
+      <PortalNav portal="admin" current="/admin" />
       <ShopActivityChart initialReport={report} />
       <div className="queue-summary">
         <span className="portal-symbol small-symbol">

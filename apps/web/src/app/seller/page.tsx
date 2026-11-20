@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getMyShops } from "@/lib/api";
 import { LoginPrompt } from "@/components/portal";
 import { ShopForm } from "@/components/shop-form";
+import { PortalNav } from "@/components/portal-nav";
 export const metadata = { title: "Kênh người bán" };
 export default async function Seller() {
   const session = await getSession();
@@ -22,6 +23,7 @@ export default async function Seller() {
         <h1>Gian hàng của bạn</h1>
         <p>Mỗi hành trình đều bắt đầu từ một gian hàng.</p>
       </div>
+      <PortalNav portal="seller" current="/seller" />
       <div className="portal-grid">
         <div>
           {shop ? (
@@ -53,8 +55,8 @@ export default async function Seller() {
                   <div className="notice success">
                     <CircleCheck size={22} />
                     <p>
-                      Gian hàng đã được chấp thuận. Chức năng đăng sản phẩm và xử lý đơn sẽ được mở
-                      ở giai đoạn tiếp theo.
+                      Gian hàng đã được chấp thuận. Bạn có thể thêm sản phẩm, nhập kho và gửi duyệt
+                      tại mục Sản phẩm. Xử lý đơn sẽ được mở ở giai đoạn tiếp theo.
                     </p>
                   </div>
                 )}

@@ -45,3 +45,73 @@ export type ShopActivityReport = {
   timezone: string;
   points: { date: string; submitted: number; approved: number; rejected: number }[];
 };
+
+export type ProductStatus = "DRAFT" | "PENDING_REVIEW" | "REJECTED" | "ACTIVE" | "HIDDEN";
+export type SkuStatus = "ACTIVE" | "INACTIVE";
+export type SellerOption = {
+  code: string;
+  name: string;
+  values: { code: string; label: string }[];
+};
+export type SellerSku = {
+  id: string;
+  sellerSku: string;
+  price: number;
+  currency: "VND";
+  status: SkuStatus;
+  version: number;
+  /** option code -> value code */
+  optionValues: Record<string, string>;
+  /** on_hand - reserved - blocked across active warehouses */
+  available: number;
+};
+export type SellerProduct = {
+  id: string;
+  shopId: string;
+  shopName: string;
+  categoryId: string;
+  slug: string;
+  name: string;
+  description: string;
+  imageKey: string;
+  status: ProductStatus;
+  rejectionReason: string | null;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+  options: SellerOption[];
+  skus: SellerSku[];
+};
+export type SellerProductPage = {
+  items: SellerProduct[];
+  total: number;
+  page: number;
+  size: number;
+};
+export type NewProductInput = {
+  name: string;
+  description: string;
+  categoryId: string;
+  imageKey: string;
+  options: { code: string; name: string; values: { code: string; label: string }[] }[];
+  skus: { sellerSku: string; price: number; optionValues: Record<string, string> }[];
+};
+export type StockBalance = {
+  skuId: string;
+  warehouseId: string;
+  onHand: number;
+  reserved: number;
+  blocked: number;
+  available: number;
+  updatedAt: string;
+};
+export type StockMovement = {
+  id: string;
+  warehouseId: string;
+  type: string;
+  deltaOnHand: number;
+  deltaReserved: number;
+  deltaBlocked: number;
+  reason: string;
+  createdAt: string;
+};

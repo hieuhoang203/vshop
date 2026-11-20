@@ -8,7 +8,8 @@ import vn.vshop.modules.catalog.entity.ProductOption;
 import vn.vshop.modules.catalog.entity.ProductSku;
 
 /** Seller-side read model: product content, variant dimensions and SKUs with sellable stock. */
-public record SellerProduct(Product product, List<Option> options, List<Sku> skus) {
+public record SellerProduct(
+        Product product, String shopName, List<Option> options, List<Sku> skus) {
     public SellerProduct {
         options = List.copyOf(options);
         skus = List.copyOf(skus);

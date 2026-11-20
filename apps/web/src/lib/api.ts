@@ -1,5 +1,13 @@
 import "server-only";
-import type { CatalogPage, Category, Product, Shop, ShopActivityReport } from "@vshop/contracts";
+import type {
+  CatalogPage,
+  Category,
+  Product,
+  SellerProduct,
+  SellerProductPage,
+  Shop,
+  ShopActivityReport,
+} from "@vshop/contracts";
 import { getSession } from "./auth";
 export const apiBase = () => process.env.API_BASE_URL ?? "http://localhost:8081";
 export async function api<T>(path: string, authenticated = false): Promise<T> {
@@ -27,3 +35,10 @@ export const money = (amount: number) =>
     currency: "VND",
     maximumFractionDigits: 0,
   }).format(amount);
+
+export const getSellerProducts = (shopId: string, page = 0, size = 20) =>
+  api<SellerProductPage>(`/seller/shops/${shopId}/products?page=${page}&size=${size}`, true);
+export const getSellerProduct = (shopId: string, productId: string) =>
+  api<SellerProduct>(`/seller/shops/${shopId}/products/${productId}`, true);
+export const getReviewQueue = (page = 0, size = 20) =>
+  api<SellerProductPage>(`/admin/products/review-queue?page=${page}&size=${size}`, true);
