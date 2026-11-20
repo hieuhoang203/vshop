@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   FLOW_COOKIE,
   SESSION_COOKIE,
+  SESSION_MAX_SECONDS,
   cookieOptions,
+  createSession,
   issuer,
   safeReturnTo,
-  seal,
   unseal,
   verifyTokens,
   webBase,
@@ -38,26 +39,14 @@ export async function GET(request: NextRequest) {
     if (!result.ok) throw new Error("Token exchange failed");
     const tokens = await result.json();
     const verified = await verifyTokens(tokens.access_token, tokens.id_token, String(flow.nonce));
-    const remaining = Math.min(
-      Number(tokens.expires_in),
-      Number(verified.token.exp) - Math.floor(Date.now() / 1000),
-    );
-    if (!Number.isFinite(remaining) || remaining < 1) throw new Error("Expired token");
+    if (!tokens.refresh_token) throw new Error("Missing refresh token");
+    const sessionId = await createSession(tokens, verified);
     const response = NextResponse.redirect(new URL(safeReturnTo(String(flow.returnTo)), webBase()));
-    response.cookies.set(
-      SESSION_COOKIE,
-      await seal(
-        {
-          accessToken: tokens.access_token,
-          idToken: tokens.id_token,
-          subject: verified.token.sub,
-          name: verified.identity.preferred_username ?? "Tài khoản",
-          roles: verified.roles,
-        },
-        remaining,
-      ),
-      { ...cookieOptions(), maxAge: remaining },
-    );
+    // The cookie is only an opaque id; tokens live in the server-side session store.
+    response.cookies.set(SESSION_COOKIE, sessionId, {
+      ...cookieOptions(),
+      maxAge: SESSION_MAX_SECONDS,
+    });
     response.cookies.delete(FLOW_COOKIE);
     response.headers.set("Cache-Control", "no-store");
     return response;

@@ -1,17 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
-type Account = { username: string; password: string };
-const accounts: Account[] = JSON.parse(
-  readFileSync(".local/accounts.json", "utf8").replace(/^\uFEFF/, ""),
-);
-
+import { account, login } from "./support/auth";
 async function adminLogin(page: Page) {
-  const account = accounts.find((value) => value.username === "admin.local")!;
-  await page.goto("/api/auth/login?returnTo=/admin");
-  await page.locator("#username").fill(account.username);
-  await page.locator("#password").fill(account.password);
-  await page.locator("#kc-login").click();
-  await expect(page).toHaveURL("http://localhost:3100/admin");
+  await login(page, account("admin.local"), "/admin");
 }
 
 test("saved products persist locally and Radix dialog supports removal", async ({ page }) => {

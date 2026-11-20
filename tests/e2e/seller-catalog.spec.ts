@@ -1,19 +1,7 @@
 import { test, expect, type Browser, type APIRequestContext, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
+import { account as findAccount, login, type Account } from "./support/auth";
 import { randomBytes } from "node:crypto";
-
-type Account = { username: string; password: string; roles: string[] };
-const accounts: Account[] = JSON.parse(
-  readFileSync(".local/accounts.json", "utf8").replace(/^﻿/, ""),
-);
-
-async function login(page: Page, account: Account, target: string) {
-  await page.goto(`/api/auth/login?returnTo=${encodeURIComponent(target)}`);
-  await page.locator("#username").fill(account.username);
-  await page.locator("#password").fill(account.password);
-  await page.locator("#kc-login").click();
-  await expect(page).toHaveURL(`http://localhost:3100${target}`);
-}
 
 async function createSeller(request: APIRequestContext): Promise<Account> {
   const env = Object.fromEntries(
@@ -126,11 +114,7 @@ test("seller builds a variant product, stocks it, and admin moderation publishes
       .fill("Gian hàng kiểm thử catalog tự động E2E VShop. Không phục vụ mua bán thật.");
     await seller.getByRole("button", { name: "Gửi hồ sơ gian hàng", exact: true }).click();
     await expect(seller.getByText("Đang xét duyệt", { exact: true })).toBeVisible();
-    await login(
-      admin,
-      accounts.find((a) => a.username === "admin.local")!,
-      "/admin",
-    );
+    await login(admin, findAccount("admin.local"), "/admin");
     await approveShop(admin, shopName);
 
     // Create a product with two variants and prices.
@@ -271,11 +255,7 @@ test("product portals reject unauthenticated and unauthorised callers", async ({
   const context = await browser.newContext();
   try {
     const buyer = await context.newPage();
-    await login(
-      buyer,
-      accounts.find((a) => a.username === "buyer.local")!,
-      "/admin",
-    );
+    await login(buyer, findAccount("buyer.local"), "/admin");
     await buyer.goto("/admin/products");
     await expect(buyer.getByRole("heading", { name: "Bạn không có quyền truy cập" })).toBeVisible();
     const forbidden = await buyer.request.post(

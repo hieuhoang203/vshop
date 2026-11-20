@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getShopQueue, getShopActivity } from "@/lib/api";
 import { ShopActivityChart } from "@/components/admin/shop-activity-chart";
 import { LoginPrompt } from "@/components/portal";
+import { MfaRequired } from "@/components/admin/mfa-required";
 import { ReviewForm } from "@/components/review-form";
 import { PortalNav } from "@/components/portal-nav";
 export const metadata = { title: "Quản trị" };
@@ -17,6 +18,7 @@ export default async function Admin() {
         <p>Khu vực này dành cho tài khoản quản trị được phân quyền.</p>
       </div>
     );
+  if (!session.mfa) return <MfaRequired />;
   const shops = await getShopQueue();
   const report = await getShopActivity(30).catch(() => null);
   return (

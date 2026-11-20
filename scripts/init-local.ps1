@@ -31,7 +31,7 @@ foreach ($role in @('buyer', 'seller', 'admin')) {
 }
 $realm | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath (Join-Path $root '.local/keycloak/vshop-realm.json') -Encoding utf8
 $accounts | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $root '.local/accounts.json') -Encoding utf8
-$webEnv = @('API_BASE_URL=http://localhost:8081', 'KEYCLOAK_ISSUER=http://localhost:8180/realms/vshop', 'WEB_BASE_URL=http://localhost:3100', "SESSION_SECRET=$session")
+$webEnv = @('API_BASE_URL=http://localhost:8081', 'KEYCLOAK_ISSUER=http://localhost:8180/realms/vshop', 'WEB_BASE_URL=http://localhost:3100', "SESSION_SECRET=$session", "REDIS_URL=redis://:$redis@localhost:6380")
 $webEnv | Set-Content -LiteralPath (Join-Path $root 'apps/web/.env.local') -Encoding utf8
 $lines | Set-Content -LiteralPath $envFile -Encoding utf8
 Write-Host 'Local configuration generated. Credentials are in .local/accounts.json (ignored by Git).'

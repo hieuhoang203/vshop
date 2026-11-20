@@ -1,17 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { accounts, login as signIn, type Account } from "./support/auth";
 import { randomBytes } from "node:crypto";
-type Account = { username: string; password: string; roles: string[] };
-const accounts: Account[] = JSON.parse(
-  readFileSync(".local/accounts.json", "utf8").replace(/^\uFEFF/, ""),
-);
-async function login(page: Page, account: Account, target = "/") {
-  await page.goto(`/api/auth/login?returnTo=${encodeURIComponent(target)}`);
-  await page.locator("#username").fill(account.username);
-  await page.locator("#password").fill(account.password);
-  await page.locator("#kc-login").click();
-  await expect(page).toHaveURL(`http://localhost:3100${target}`);
-  await expect(page.getByText(account.username, { exact: true })).toBeVisible();
+async function login(page: Page, who: Account, target = "/") {
+  await signIn(page, who, target);
+  await expect(page.getByText(who.username, { exact: true })).toBeVisible();
 }
 test("catalog search categories and detail use persisted data", async ({ page }) => {
   await page.goto("/");

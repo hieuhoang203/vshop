@@ -41,3 +41,7 @@ logging:
   pattern:
     correlation: "[${spring.application.name:},%X{correlationId:-}] "
 debug: false
+vshop:
+  security:
+    # ADMIN tokens must carry amr=otp (Keycloak OTP form). Disable only in isolated tests.
+    admin-mfa-required: true

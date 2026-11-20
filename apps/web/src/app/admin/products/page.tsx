@@ -4,6 +4,7 @@ import { getReviewQueue } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
 import { IMAGE_CHOICES } from "@/lib/catalog-labels";
 import { LoginPrompt } from "@/components/portal";
+import { MfaRequired } from "@/components/admin/mfa-required";
 import { PortalNav } from "@/components/portal-nav";
 import { ProductReviewForm } from "@/components/admin/product-review-form";
 
@@ -26,6 +27,7 @@ export default async function AdminProducts() {
         <p>Khu vực này dành cho tài khoản quản trị được phân quyền.</p>
       </div>
     );
+  if (!session.mfa) return <MfaRequired />;
   const queue = await getReviewQueue();
   return (
     <div className="container page-space admin-page">

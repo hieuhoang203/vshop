@@ -46,7 +46,9 @@ Script init sinh mật khẩu ngẫu nhiên vào `.local/accounts.json`, thông 
 
 Tài khoản Keycloak console là `vshop-local-admin`; mật khẩu bootstrap nằm trong `.env`. Realm template được copy/import lần đầu. Sửa realm JSON không tự cập nhật realm đã tồn tại; thay đổi qua console hoặc migration realm có kiểm soát, không xóa volumes để cập nhật.
 
-Phiên web hiện có thời hạn tương ứng access token, mặc định 10 phút; hết hạn yêu cầu đăng nhập lại. Auto-refresh, MFA bắt buộc admin và đăng ký tài khoản công khai chưa hoàn thành.
+Phiên web được giữ **phía server trong Redis**; trình duyệt chỉ có cookie HttpOnly chứa mã phiên ngẫu nhiên. Access token ngắn hạn được làm mới tự động bằng refresh token; phiên hết hạn sau 30 phút không hoạt động hoặc tối đa 8 giờ. Web cần Redis đang chạy (`REDIS_URL` trong `apps/web/.env.local`, do `init-local.ps1` tạo); nếu Redis mất, người dùng bị đăng xuất, không ảnh hưởng dữ liệu. Chi tiết: [docs/17](docs/17-phien-dang-nhap-va-mfa.md). Đăng ký tài khoản công khai chưa hoàn thành.
+
+**Admin bắt buộc xác thực hai bước (TOTP).** Realm mới nhận cấu hình từ template. Realm local đã tồn tại cần chạy một lần `pwsh -File scripts/init-admin-mfa.ps1` (đăng xuất mọi phiên đang có). Lần đăng nhập đầu, tài khoản ADMIN phải thêm ứng dụng xác thực; phiên ngay sau khi thiết lập chưa tính là đã xác thực OTP nên hãy đăng xuất rồi đăng nhập lại. API từ chối token admin không có `amr=otp`. Test E2E tự thiết lập TOTP cho `admin.local` và lưu khóa vào `.local/totp.json` (bị Git ignore); dùng `scripts/reset-otp.ps1 -Username <tên>` để xóa OTP của một tài khoản.
 
 Terminal 3 — worker nhận sự kiện nội bộ (tùy chọn):
 

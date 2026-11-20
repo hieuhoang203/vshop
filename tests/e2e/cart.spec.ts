@@ -1,18 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
-
-type Account = { username: string; password: string; roles: string[] };
-const accounts: Account[] = JSON.parse(
-  readFileSync(".local/accounts.json", "utf8").replace(/^﻿/, ""),
-);
-
-async function login(page: Page, account: Account, target: string) {
-  await page.goto(`/api/auth/login?returnTo=${encodeURIComponent(target)}`);
-  await page.locator("#username").fill(account.username);
-  await page.locator("#password").fill(account.password);
-  await page.locator("#kc-login").click();
-  await expect(page).toHaveURL(`http://localhost:3100${target}`);
-}
+import { account, login } from "./support/auth";
 
 async function emptyCart(page: Page) {
   await page.goto("/cart");
@@ -48,11 +35,7 @@ test("buyer fills the cart, sees exact totals and locks a quote that goes stale 
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   try {
     const page = await context.newPage();
-    await login(
-      page,
-      accounts.find((a) => a.username === "buyer.local")!,
-      "/cart",
-    );
+    await login(page, account("buyer.local"), "/cart");
     await emptyCart(page);
 
     // Add two different fixture products from their detail pages.

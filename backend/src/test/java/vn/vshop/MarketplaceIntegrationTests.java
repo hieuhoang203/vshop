@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
             "spring.datasource.url=${VSHOP_TEST_DATABASE_URL:jdbc:postgresql://localhost:15433/vshop_test}",
             "spring.flyway.locations=classpath:db/migration",
             "vshop.worker.enabled=true",
+            "vshop.security.admin-mfa-required=false",
             "vshop.worker.poll-ms=86400000"
         })
 @AutoConfigureMockMvc

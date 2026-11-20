@@ -32,6 +32,7 @@ Web người mua, cổng người bán, cổng admin dùng Next.js/TypeScript. A
 | [14-kiem-duyet-san-pham.md](14-kiem-duyet-san-pham.md)                         | Kiểm duyệt sản phẩm: máy trạng thái, API admin, ràng buộc phiên bản, giới hạn      |
 | [15-giao-dien-seller-admin-san-pham.md](15-giao-dien-seller-admin-san-pham.md) | UI web seller/admin: sản phẩm, SKU, tồn kho, duyệt hàng; BFF, giới hạn, kiểm chứng |
 | [16-gio-hang-va-bao-gia.md](16-gio-hang-va-bao-gia.md)                         | Giỏ hàng và báo giá: API, quy tắc giá, UI web, giới hạn, kiểm chứng                |
+| [17-phien-dang-nhap-va-mfa.md](17-phien-dang-nhap-va-mfa.md)                   | Phiên lưu ở Redis, refresh token, MFA bắt buộc cho admin, vận hành local           |
 | [architecture/README.md](architecture/README.md)                               | Quy ước từng tầng, entity/DTO/repository, format và ArchUnit                       |
 | [database/README.md](database/README.md)                                       | ERD, bảng/quan hệ, từ điển cột, DDL và invariant giao dịch                         |
 
