@@ -19,10 +19,20 @@ public class GlobalExceptionHandler {
             BusinessException exception, HttpServletRequest request) {
         HttpStatus status =
                 switch (exception.errorCode()) {
-                    case SHOP_NOT_FOUND, PRODUCT_NOT_FOUND -> HttpStatus.NOT_FOUND;
+                    case SHOP_NOT_FOUND, PRODUCT_NOT_FOUND, RESERVATION_NOT_FOUND ->
+                            HttpStatus.NOT_FOUND;
                     case ACCOUNT_SUSPENDED -> HttpStatus.FORBIDDEN;
-                    case INVALID_CATALOG_FILTER -> HttpStatus.BAD_REQUEST;
-                    case SHOP_ALREADY_EXISTS, INVALID_SHOP_STATE -> HttpStatus.CONFLICT;
+                    case INVALID_CATALOG_FILTER, INVALID_PRODUCT_INPUT, INVALID_STOCK_INPUT ->
+                            HttpStatus.BAD_REQUEST;
+                    case SHOP_ALREADY_EXISTS,
+                            INVALID_SHOP_STATE,
+                            INVALID_PRODUCT_STATE,
+                            DUPLICATE_SKU,
+                            VERSION_CONFLICT,
+                            INSUFFICIENT_STOCK,
+                            IDEMPOTENCY_CONFLICT,
+                            INVALID_RESERVATION_STATE ->
+                            HttpStatus.CONFLICT;
                 };
         return ResponseEntity.status(status)
                 .body(
@@ -34,7 +44,8 @@ public class GlobalExceptionHandler {
         MethodArgumentNotValidException.class,
         HandlerMethodValidationException.class,
         MethodArgumentTypeMismatchException.class,
-        HttpMessageNotReadableException.class
+        HttpMessageNotReadableException.class,
+        org.springframework.web.bind.MissingRequestHeaderException.class
     })
     public ResponseEntity<ApiErrorResponse> invalid(
             Exception exception, HttpServletRequest request) {

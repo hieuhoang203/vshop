@@ -15,6 +15,9 @@ spring:
           audiences: vshop-api
   jackson:
     time-zone: UTC
+    deserialization:
+      # Money is integer VND; reject 1000.5 instead of silently truncating it.
+      accept-float-as-int: false
 server:
   port: ${PORT:8081}
   error:

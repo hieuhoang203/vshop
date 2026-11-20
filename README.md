@@ -75,16 +75,16 @@ E2E cần API/Keycloak đang chạy và `.local/accounts.json`. Playwright dùng
 
 ## Cấu trúc
 
-| Thư mục | Vai trò |
-|---|---|
-| `apps/web` | Next.js buyer/seller/admin; BFF giữ token trong cookie mã hóa HttpOnly |
-| `apps/mobile` | App React Native/Expo iOS/Android: native routes, screens, API, auth và storage |
-| `packages/contracts` | DTO TypeScript hiện dùng; OpenAPI generation là bước tiếp theo |
-| `backend` | `common`, `config`, `modules/{identity,merchant,catalog,inventory,platform}`; mỗi module có các tầng riêng |
-| `infra` | Realm template và Kong DB-less config |
-| `scripts` | Khởi tạo local, chạy backend/worker, test DB riêng |
-| `tests/e2e` | Browser test OIDC và luồng xét duyệt xuyên vai trò |
-| `docs` | Khảo sát, quy tắc, backlog, UAT và bằng chứng triển khai |
+| Thư mục              | Vai trò                                                                                                    |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `apps/web`           | Next.js buyer/seller/admin; BFF giữ token trong cookie mã hóa HttpOnly                                     |
+| `apps/mobile`        | App React Native/Expo iOS/Android: native routes, screens, API, auth và storage                            |
+| `packages/contracts` | DTO TypeScript hiện dùng; OpenAPI generation là bước tiếp theo                                             |
+| `backend`            | `common`, `config`, `modules/{identity,merchant,catalog,inventory,platform}`; mỗi module có các tầng riêng |
+| `infra`              | Realm template và Kong DB-less config                                                                      |
+| `scripts`            | Khởi tạo local, chạy backend/worker, test DB riêng                                                         |
+| `tests/e2e`          | Browser test OIDC và luồng xét duyệt xuyên vai trò                                                         |
+| `docs`               | Khảo sát, quy tắc, backlog, UAT và bằng chứng triển khai                                                   |
 
 `application-local.yml` nạp 1 shop mẫu, 3 danh mục, 6 sản phẩm mẫu. Các fixture nằm ngoài migration production và không được nạp nếu không bật profile `local`. Không chạy production bằng profile local. V1000 được giữ nguyên lịch sử; migration lõi tiếp tục V1001/V1002 để tách account/SKU/inventory và không còn cần out-of-order.
 
@@ -111,4 +111,4 @@ Nhấn `Ctrl+C` ở terminal web/backend/worker. Nếu Windows còn giữ child 
 
 ## Phạm vi tiếp theo
 
-Hoàn thiện nền tảng: refresh session, MFA admin và OpenAPI; tiếp đó hồ sơ seller/thuế/ngân hàng, API quản lý SKU/variant và command tồn/reservation. Cấu trúc code, entity và schema lõi đã có; API ghi SKU/tồn chưa được triển khai. Tích hợp PSP/carrier chỉ khi có tài liệu sandbox và mô hình tiền được xác nhận. Chưa triển khai checkout, payment, shipping, refund, settlement hoặc production deployment. App native mới có phạm vi ghi trong báo cáo mobile.
+Hoàn thiện nền tảng: refresh session, MFA admin và OpenAPI; tiếp đó hồ sơ seller/thuế/ngân hàng, kiểm duyệt hàng hóa, UI editor sản phẩm/tồn kho và checkout giữ tồn. Backend đã có API ghi sản phẩm/biến thể/SKU/giá ([docs/12](docs/12-catalog-seller-api.md)) và tồn kho/reservation ([docs/13](docs/13-ton-kho-va-giu-hang.md)); kiểm duyệt, UI và checkout chưa được triển khai. Tích hợp PSP/carrier chỉ khi có tài liệu sandbox và mô hình tiền được xác nhận. Chưa triển khai checkout, payment, shipping, refund, settlement hoặc production deployment. App native mới có phạm vi ghi trong báo cáo mobile.

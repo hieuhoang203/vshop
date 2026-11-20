@@ -17,7 +17,7 @@ backend/src/main/java/vn/vshop/
     ├── identity/
     ├── merchant/
     ├── catalog/
-    ├── inventory/                # Entity hiện tại; chưa có API ghi tồn
+    ├── inventory/                # Nhập/điều chỉnh tồn (seller API) và vòng đời reservation (service nội bộ)
     └── platform/
         └── worker/               # Scheduler gọi service, không chứa SQL
 ```
@@ -46,18 +46,18 @@ Không tạo `controller/` toàn cục gom mọi domain. Cũng không tạo hàn
 
 ## 2. Trách nhiệm và giới hạn từng tầng
 
-| Tầng | Được làm | Không được làm |
-|---|---|---|
-| Controller | Đọc HTTP, xác thực dữ liệu request, lấy danh tính, gọi service, trả response | SQL, JdbcClient, transaction điều phối, tự duyệt quyền shop dựa vào client |
-| DTO request | Kiểu dữ liệu đầu vào, giới hạn độ dài/số lượng, chuẩn hóa khoảng trắng | Entity database, thực hiện query hoặc chứa secret |
-| DTO response | Hợp đồng JSON được công bố | Đưa toàn entity ra ngoài, lộ owner account, version nội bộ hoặc token |
-| Mapper | Chuyển dữ liệu giữa request/query model/entity/projection/response | Gọi DB hoặc thực hiện quyết định nghiệp vụ |
-| Service | Guard nghiệp vụ, ownership, state transition, orchestration, transaction | SQL, HttpStatus, servlet/JWT hoặc phụ thuộc implementation repository |
-| Repository interface | Mô tả thao tác lưu/đọc theo nhu cầu use case | Quy tắc HTTP, DTO giao diện, gửi notification |
-| JDBC repository | SQL có bind parameter, row mapping, row lock, persistence | Quyết định actor được duyệt shop hay không; trả DTO HTTP |
-| Entity | Dữ liệu và kiểu nghiệp vụ tương ứng persistence identity | Phụ thuộc Spring MVC, DTO, JdbcClient hoặc annotation serialize dành riêng API |
-| Query model/projection | Dữ liệu đọc tổng hợp có tên/kiểu rõ | Giả làm một entity dùng để ghi nguyên aggregate |
-| Worker | Lịch chạy, gọi application service | Truy cập JdbcClient hoặc giữ transaction khi gọi dịch vụ ngoài |
+| Tầng                   | Được làm                                                                     | Không được làm                                                                 |
+| ---------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Controller             | Đọc HTTP, xác thực dữ liệu request, lấy danh tính, gọi service, trả response | SQL, JdbcClient, transaction điều phối, tự duyệt quyền shop dựa vào client     |
+| DTO request            | Kiểu dữ liệu đầu vào, giới hạn độ dài/số lượng, chuẩn hóa khoảng trắng       | Entity database, thực hiện query hoặc chứa secret                              |
+| DTO response           | Hợp đồng JSON được công bố                                                   | Đưa toàn entity ra ngoài, lộ owner account, version nội bộ hoặc token          |
+| Mapper                 | Chuyển dữ liệu giữa request/query model/entity/projection/response           | Gọi DB hoặc thực hiện quyết định nghiệp vụ                                     |
+| Service                | Guard nghiệp vụ, ownership, state transition, orchestration, transaction     | SQL, HttpStatus, servlet/JWT hoặc phụ thuộc implementation repository          |
+| Repository interface   | Mô tả thao tác lưu/đọc theo nhu cầu use case                                 | Quy tắc HTTP, DTO giao diện, gửi notification                                  |
+| JDBC repository        | SQL có bind parameter, row mapping, row lock, persistence                    | Quyết định actor được duyệt shop hay không; trả DTO HTTP                       |
+| Entity                 | Dữ liệu và kiểu nghiệp vụ tương ứng persistence identity                     | Phụ thuộc Spring MVC, DTO, JdbcClient hoặc annotation serialize dành riêng API |
+| Query model/projection | Dữ liệu đọc tổng hợp có tên/kiểu rõ                                          | Giả làm một entity dùng để ghi nguyên aggregate                                |
+| Worker                 | Lịch chạy, gọi application service                                           | Truy cập JdbcClient hoặc giữ transaction khi gọi dịch vụ ngoài                 |
 
 Luồng phụ thuộc:
 
@@ -105,16 +105,16 @@ Các rule kiểm tra bytecode khi `mvn test/verify`; không chỉ là quy ước
 
 ## 6. Chuẩn format và đặt tên
 
-| Nội dung | Quy ước đang áp dụng |
-|---|---|
-| Java | Spotless + google-java-format 1.28.0, AOSP, 4 spaces; kiểm ở Maven `validate` |
-| TypeScript/TSX/CSS/JSON/YAML | Prettier, 2 spaces, print width 100; `npm run format:check` trong CI |
-| File Java | Một public top-level type/file; tên file khớp tên lớp; không wildcard import trong production code |
-| Class | PascalCase; hậu tố `Controller`, `Service`, `Repository`, `Request`, `Response`, `Mapper` theo vai trò |
-| Method/field | camelCase; tên mô tả hành vi, không viết tắt tùy tiện |
-| SQL | Schema theo domain, snake_case; SQL nhiều dòng dùng text block trong repository |
-| Tiền/thời gian | Tiền VND integer ở DB/Java; timestamp có timezone/UTC; hiển thị múi giờ Việt Nam ở UI |
-| Lỗi | ErrorCode nghiệp vụ → handler ánh xạ HTTP; response lỗi có correlation ID |
+| Nội dung                     | Quy ước đang áp dụng                                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Java                         | Spotless + google-java-format 1.28.0, AOSP, 4 spaces; kiểm ở Maven `validate`                          |
+| TypeScript/TSX/CSS/JSON/YAML | Prettier, 2 spaces, print width 100; `npm run format:check` trong CI                                   |
+| File Java                    | Một public top-level type/file; tên file khớp tên lớp; không wildcard import trong production code     |
+| Class                        | PascalCase; hậu tố `Controller`, `Service`, `Repository`, `Request`, `Response`, `Mapper` theo vai trò |
+| Method/field                 | camelCase; tên mô tả hành vi, không viết tắt tùy tiện                                                  |
+| SQL                          | Schema theo domain, snake_case; SQL nhiều dòng dùng text block trong repository                        |
+| Tiền/thời gian               | Tiền VND integer ở DB/Java; timestamp có timezone/UTC; hiển thị múi giờ Việt Nam ở UI                  |
+| Lỗi                          | ErrorCode nghiệp vụ → handler ánh xạ HTTP; response lỗi có correlation ID                              |
 
 Không format lại các migration đã được áp dụng. Checksum của migration là một phần lịch sử DB.
 

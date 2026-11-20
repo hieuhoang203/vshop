@@ -4,13 +4,13 @@ Ngày cập nhật: **19/11/2026**. PostgreSQL **18**, modular monolith, marketp
 
 ## 1. Phạm vi và trạng thái
 
-| Phạm vi | Trạng thái | Nguồn kiểm chứng |
-|---|---|---|
-| Identity, merchant, catalog/SKU, inventory, platform | **17 bảng đã có migration thực** | Flyway V1, V2, V1001, V1002; local có thêm fixture V1000 |
-| Checkout, đơn, khuyến mãi, giao nhận, hậu mãi, tiền, hỗ trợ và file | **38 bảng thiết kế tham chiếu** | `target-commerce.sql`, chạy kiểm cấu trúc ở DB riêng |
-| Toàn mô hình tham chiếu | **55 bảng, 14 schema, 389 cột** | Dictionary được xuất từ PostgreSQL sau khi thực thi DDL |
+| Phạm vi                                                             | Trạng thái                       | Nguồn kiểm chứng                                         |
+| ------------------------------------------------------------------- | -------------------------------- | -------------------------------------------------------- |
+| Identity, merchant, catalog/SKU, inventory, platform                | **17 bảng đã có migration thực** | Flyway V1, V2, V1001, V1002; local có thêm fixture V1000 |
+| Checkout, đơn, khuyến mãi, giao nhận, hậu mãi, tiền, hỗ trợ và file | **38 bảng thiết kế tham chiếu**  | `target-commerce.sql`, chạy kiểm cấu trúc ở DB riêng     |
+| Toàn mô hình tham chiếu                                             | **55 bảng, 14 schema, 389 cột**  | Dictionary được xuất từ PostgreSQL sau khi thực thi DDL  |
 
-`ImplementedSchema` nghĩa là bảng đã được tạo bằng migration, **không đồng nghĩa mọi API/use case của bảng đã được triển khai**. Inventory reservation/movement mới có nền dữ liệu; chưa có command checkout giữ tồn. `ReferenceDesign` chưa được đưa vào DB ứng dụng hoặc dùng để giao dịch tiền thật.
+`ImplementedSchema` nghĩa là bảng đã được tạo bằng migration, **không đồng nghĩa mọi API/use case của bảng đã được triển khai**. Inventory có seller API nhập/điều chỉnh tồn và `ReservationService` (hold/commit/release/expire); chưa có checkout gọi giữ tồn. `ReferenceDesign` chưa được đưa vào DB ứng dụng hoặc dùng để giao dịch tiền thật.
 
 Các file để review:
 
@@ -62,43 +62,43 @@ erDiagram
 
 Shop phải có owner account ở DB; service tạo owner membership cùng transaction. Ký hiệu membership `|{` biểu diễn kỳ vọng use case; FK hiện bảo vệ danh tính OWNER khớp shop nhưng không cưỡng chế mọi shop được tạo bằng SQL thủ công phải có ít nhất một membership.
 
-| Bảng | Ý nghĩa, khóa và bất biến chính |
-|---|---|
-| `identity.account` | Mapping subject → UUID account, trạng thái domain; không lưu mật khẩu/token |
-| `merchant.shop` | Shop và owner; unique owner là **giới hạn pilot một shop/account**, không phải luật marketplace vĩnh viễn |
-| `merchant.shop_member` | Quan hệ account–shop và role; OWNER phải trùng owner của shop qua generated column + FK ghép; phân quyền staff chưa mở API |
-| `merchant.shop_review` | Quyết định admin, lý do, reviewer và thời điểm; audit cũ không được giả lập thành review mới |
-| `catalog.category` | Danh mục có parent; cấm tự làm parent; ngăn chu trình nhiều cấp là trách nhiệm service khi có editor |
-| `catalog.product` | Nội dung hàng hóa, shop, ngành, slug, trạng thái, version; không lưu giá/tồn |
-| `catalog.product_sku` | Đơn vị bán được; SKU code unique/shop, variant signature unique/product, giá/currency riêng; FK bảo vệ SKU thuộc đúng shop của product |
-| `catalog.product_option` | Chiều phân loại của một sản phẩm, như màu/kích cỡ |
-| `catalog.option_value` | Giá trị hợp lệ của từng chiều phân loại |
-| `catalog.sku_option_value` | Một giá trị/chiều cho SKU; FK ghép không cho gắn option của sản phẩm khác; chữ ký biến thể phải được command service tạo nhất quán |
-| `inventory.warehouse` | Kho thuộc shop; dữ liệu chuyển đổi dùng kho DEFAULT, chưa đại diện địa chỉ xuất hàng đã xác minh |
-| `inventory.stock_balance` | PK `(sku_id, warehouse_id)`; cùng shop với SKU/kho; `available = on_hand - reserved - blocked >= 0` |
-| `inventory.stock_reservation` | Quantity, TTL, state và idempotency key; `reference_id` chờ checkout module có FK; chưa có API giữ tồn |
-| `inventory.stock_movement` | Delta và reason theo nghiệp vụ; idempotency key unique; cần hạn chế UPDATE/DELETE của runtime role khi harden production |
-| `platform.audit_event` | Actor, action, resource, reason và thời điểm; index phục vụ truy vết actor/resource |
-| `platform.outbox_event` | Domain event cùng commit với mutation; có schema version, aggregate và processing marker |
-| `platform.event_receipt` | Một receipt/event; worker replay không tạo receipt thứ hai |
+| Bảng                          | Ý nghĩa, khóa và bất biến chính                                                                                                                                        |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `identity.account`            | Mapping subject → UUID account, trạng thái domain; không lưu mật khẩu/token                                                                                            |
+| `merchant.shop`               | Shop và owner; unique owner là **giới hạn pilot một shop/account**, không phải luật marketplace vĩnh viễn                                                              |
+| `merchant.shop_member`        | Quan hệ account–shop và role; OWNER phải trùng owner của shop qua generated column + FK ghép; phân quyền staff chưa mở API                                             |
+| `merchant.shop_review`        | Quyết định admin, lý do, reviewer và thời điểm; audit cũ không được giả lập thành review mới                                                                           |
+| `catalog.category`            | Danh mục có parent; cấm tự làm parent; ngăn chu trình nhiều cấp là trách nhiệm service khi có editor                                                                   |
+| `catalog.product`             | Nội dung hàng hóa, shop, ngành, slug, trạng thái, version; không lưu giá/tồn                                                                                           |
+| `catalog.product_sku`         | Đơn vị bán được; SKU code unique/shop, variant signature unique/product, giá/currency riêng; FK bảo vệ SKU thuộc đúng shop của product                                 |
+| `catalog.product_option`      | Chiều phân loại của một sản phẩm, như màu/kích cỡ                                                                                                                      |
+| `catalog.option_value`        | Giá trị hợp lệ của từng chiều phân loại                                                                                                                                |
+| `catalog.sku_option_value`    | Một giá trị/chiều cho SKU; FK ghép không cho gắn option của sản phẩm khác; chữ ký biến thể phải được command service tạo nhất quán                                     |
+| `inventory.warehouse`         | Kho thuộc shop; dữ liệu chuyển đổi dùng kho DEFAULT, chưa đại diện địa chỉ xuất hàng đã xác minh                                                                       |
+| `inventory.stock_balance`     | PK `(sku_id, warehouse_id)`; cùng shop với SKU/kho; `available = on_hand - reserved - blocked >= 0`                                                                    |
+| `inventory.stock_reservation` | Quantity, TTL, state và idempotency key; `reference_id` chờ checkout module có FK; `ReservationService` đã có hold/commit/release/expire nhưng chưa có checkout gọi nó |
+| `inventory.stock_movement`    | Delta và reason theo nghiệp vụ; idempotency key unique; cần hạn chế UPDATE/DELETE của runtime role khi harden production                                               |
+| `platform.audit_event`        | Actor, action, resource, reason và thời điểm; index phục vụ truy vết actor/resource                                                                                    |
+| `platform.outbox_event`       | Domain event cùng commit với mutation; có schema version, aggregate và processing marker                                                                               |
+| `platform.event_receipt`      | Một receipt/event; worker replay không tạo receipt thứ hai                                                                                                             |
 
 Không có cột `available` lưu dư thừa; không cộng tồn bán ngay khi buyer gửi yêu cầu trả hàng. Trạng thái và tổng stock phải được command service cập nhật nguyên tử khi xây inventory write flow.
 
 ## 4. Mô hình commerce tham chiếu
 
-| Domain | Bảng | Vai trò |
-|---|---|---|
-| Policy | `platform.policy_version` | Điều kiện có version/ngày hiệu lực để snapshot/tra cứu |
-| Identity/merchant | `identity.address`, `merchant.bank_account` | Địa chỉ, beneficiary mã hóa, xác minh và hold |
-| Media | `media.asset`, `catalog.product_media` | File private/public, scan và liên kết sản phẩm |
-| Checkout | `cart`, `cart_line`, `quote` | Ý định mua không giữ tồn; quote có hạn và version |
-| Sales | `checkout_group`, `seller_order`, `order_line`, `order_adjustment` | Tách đơn theo shop; snapshot SKU/giá/ưu đãi/phí và người tài trợ |
-| Promotion | `voucher`, `redemption` | Scope, ngân sách, hold/consume/release; tổng budget phải khóa và tính nguyên tử |
-| Fulfillment | `shipment`, `shipment_line`, `shipment_event`, `cod_receivable` | Kiện, dòng hàng, tracking chống trùng; delivered không đồng nghĩa COD đã remitted |
-| Aftersales | `return_case`, `return_line`, `case_evidence` | Case theo dòng/quantity; policy, hạn và chứng cứ |
-| Payment | `intent`, `attempt`, `charge`, `allocation`, `refund`, `refund_allocation` | Phân biệt ý định, lần thử, tiền thu thật và phân bổ/hoàn; ghi cả charge trùng để tra soát |
-| Finance | `ledger_account`, `journal_entry`, `journal_line`, `settlement`, `settlement_line`, `payout`, `reconciliation_batch`, `reconciliation_item` | Sổ cái, phải trả seller, chi và đối soát tách nhau |
-| Engagement | `review`, `support_ticket`, `ticket_message` | Đánh giá gắn dòng mua, hỗ trợ có đối tượng/actor |
+| Domain            | Bảng                                                                                                                                        | Vai trò                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Policy            | `platform.policy_version`                                                                                                                   | Điều kiện có version/ngày hiệu lực để snapshot/tra cứu                                    |
+| Identity/merchant | `identity.address`, `merchant.bank_account`                                                                                                 | Địa chỉ, beneficiary mã hóa, xác minh và hold                                             |
+| Media             | `media.asset`, `catalog.product_media`                                                                                                      | File private/public, scan và liên kết sản phẩm                                            |
+| Checkout          | `cart`, `cart_line`, `quote`                                                                                                                | Ý định mua không giữ tồn; quote có hạn và version                                         |
+| Sales             | `checkout_group`, `seller_order`, `order_line`, `order_adjustment`                                                                          | Tách đơn theo shop; snapshot SKU/giá/ưu đãi/phí và người tài trợ                          |
+| Promotion         | `voucher`, `redemption`                                                                                                                     | Scope, ngân sách, hold/consume/release; tổng budget phải khóa và tính nguyên tử           |
+| Fulfillment       | `shipment`, `shipment_line`, `shipment_event`, `cod_receivable`                                                                             | Kiện, dòng hàng, tracking chống trùng; delivered không đồng nghĩa COD đã remitted         |
+| Aftersales        | `return_case`, `return_line`, `case_evidence`                                                                                               | Case theo dòng/quantity; policy, hạn và chứng cứ                                          |
+| Payment           | `intent`, `attempt`, `charge`, `allocation`, `refund`, `refund_allocation`                                                                  | Phân biệt ý định, lần thử, tiền thu thật và phân bổ/hoàn; ghi cả charge trùng để tra soát |
+| Finance           | `ledger_account`, `journal_entry`, `journal_line`, `settlement`, `settlement_line`, `payout`, `reconciliation_batch`, `reconciliation_item` | Sổ cái, phải trả seller, chi và đối soát tách nhau                                        |
+| Engagement        | `review`, `support_ticket`, `ticket_message`                                                                                                | Đánh giá gắn dòng mua, hỗ trợ có đối tượng/actor                                          |
 
 Trong bảng này tên không kèm schema được hiểu theo domain tương ứng. DDL đầy đủ có namespace và FK cụ thể.
 
@@ -115,17 +115,17 @@ Trong bảng này tên không kèm schema được hiểu theo domain tương �
 
 ## 6. Invariant phải thực hiện bằng transaction/service
 
-| Invariant | Cách thực hiện khi phát triển use case |
-|---|---|
-| Không oversell | Khóa balance hoặc conditional UPDATE; tạo reservation/movement/outbox cùng commit; khóa SKU theo thứ tự ổn định |
-| Không vượt budget voucher | Giữ quota/ngân sách nguyên tử; hết hạn/rollback nhả đúng một lần |
-| Line totals/group totals | Server calculator theo snapshot; kiểm tổng trước commit; không tin tổng từ client |
-| Refund không vượt tiền đã thu | Khóa charge/quota hoàn; cả refund pending và completed chiếm hạn mức; không chỉ SUM sau khi gửi PSP |
-| Quantity trả không vượt đã mua | Giữ quantity đang có case hoạt động và đã hoàn; không chỉ kiểm từng dòng riêng lẻ |
-| Buyer sở hữu order/case/review | Backend kiểm qua checkout buyer; FK account tồn tại không thay thế authorization |
-| Shipment quantity không vượt line | Serialize thao tác chia kiện, tổng forward allocations và return allocations theo direction |
-| Payout không vượt available | Số dư theo journal và hold/payout-in-flight, đối soát tiền về, reference ổn định khi UNKNOWN |
-| Multi-step external PSP/carrier | Intent/outbox, idempotency, query/reconcile và compensation; không coi ACID DB bao trùm HTTP ngoài |
+| Invariant                         | Cách thực hiện khi phát triển use case                                                                          |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Không oversell                    | Khóa balance hoặc conditional UPDATE; tạo reservation/movement/outbox cùng commit; khóa SKU theo thứ tự ổn định |
+| Không vượt budget voucher         | Giữ quota/ngân sách nguyên tử; hết hạn/rollback nhả đúng một lần                                                |
+| Line totals/group totals          | Server calculator theo snapshot; kiểm tổng trước commit; không tin tổng từ client                               |
+| Refund không vượt tiền đã thu     | Khóa charge/quota hoàn; cả refund pending và completed chiếm hạn mức; không chỉ SUM sau khi gửi PSP             |
+| Quantity trả không vượt đã mua    | Giữ quantity đang có case hoạt động và đã hoàn; không chỉ kiểm từng dòng riêng lẻ                               |
+| Buyer sở hữu order/case/review    | Backend kiểm qua checkout buyer; FK account tồn tại không thay thế authorization                                |
+| Shipment quantity không vượt line | Serialize thao tác chia kiện, tổng forward allocations và return allocations theo direction                     |
+| Payout không vượt available       | Số dư theo journal và hold/payout-in-flight, đối soát tiền về, reference ổn định khi UNKNOWN                    |
+| Multi-step external PSP/carrier   | Intent/outbox, idempotency, query/reconcile và compensation; không coi ACID DB bao trùm HTTP ngoài              |
 
 PostgreSQL row lock có hiệu lực trong transaction và deadlock cần retry có giới hạn; phải chốt chiến lược khóa trước khi viết các command này. [Explicit locking](https://www.postgresql.org/docs/18/explicit-locking.html)
 
