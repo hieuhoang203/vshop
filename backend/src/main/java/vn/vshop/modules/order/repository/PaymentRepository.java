@@ -22,6 +22,12 @@ public interface PaymentRepository {
 
     Optional<PaymentIntent> findIntentByGroup(UUID groupId);
 
+    /** Next unique integer reference for providers that need one (payOS order code). */
+    long nextOrderCode();
+
+    /** Stores the page URL once; false when another request already stored one. */
+    boolean setCheckout(UUID attemptId, String url, String providerReference);
+
     Optional<PaymentIntent> findIntentForUpdate(UUID intentId);
 
     Optional<PaymentAttempt> findLatestAttempt(UUID intentId);

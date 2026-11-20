@@ -4,10 +4,9 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 
 /**
- * What the order module needs from an online payment provider. Building the payment URL and
- * verifying a callback are pure computations (no network), so they are safe inside a database
- * transaction. Calling the provider over the network (status query, refund) is not part of this
- * port yet.
+ * What the order module needs from an online payment provider. {@link #createSession} and {@link
+ * #cancelSession} may call the provider over the network and must never run inside a database
+ * transaction; {@link #verify} is a pure check of a callback.
  */
 public interface PaymentGateway {
     String provider();
@@ -15,10 +14,14 @@ public interface PaymentGateway {
     /** False until the merchant credentials are configured; online payment is then refused. */
     boolean configured();
 
-    String paymentUrl(Session session);
+    /** Creates the hosted payment page for one attempt. */
+    SessionResult createSession(Session session);
 
-    /** Checks the signature of a callback and extracts the facts the order module needs. */
-    Callback verify(Map<String, String> parameters);
+    /** Best effort: closes a payment page we will not use. Never throws. */
+    default void cancelSession(String providerReference) {}
+
+    /** Checks the signature of a callback (query parameters or JSON body) and extracts facts. */
+    Callback verify(Map<String, ?> payload);
 
     record Session(
             String merchantReference,
@@ -28,6 +31,15 @@ public interface PaymentGateway {
             String clientIp,
             String orderInfo,
             String returnUrl) {}
+
+    enum Outcome {
+        CREATED,
+        /** The provider already has this reference but we have no page for it. */
+        DUPLICATE,
+        FAILED
+    }
+
+    record SessionResult(Outcome outcome, String url, String providerReference, String message) {}
 
     /**
      * {@code validSignature} false means nothing else may be trusted. {@code success} is true only

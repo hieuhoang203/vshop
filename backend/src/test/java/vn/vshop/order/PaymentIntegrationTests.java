@@ -44,6 +44,7 @@ import vn.vshop.modules.platform.service.PolicyService;
             "spring.datasource.url=${VSHOP_TEST_DATABASE_URL:jdbc:postgresql://localhost:15433/vshop_test}",
             "spring.flyway.locations=classpath:db/migration",
             "vshop.worker.enabled=false",
+            "vshop.payment.provider=vnpay",
             "vshop.payment.vnpay.tmn-code=TESTTMN1",
             "vshop.payment.vnpay.hash-secret=unit-test-secret-not-real",
             "vshop.payment.return-base-url=https://shop.example.test"

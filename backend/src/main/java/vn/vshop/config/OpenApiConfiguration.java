@@ -231,7 +231,9 @@ public class OpenApiConfiguration {
         Map<String, Object> access = new LinkedHashMap<>();
         if (((path.startsWith("/api/v1/catalog/") || path.equals("/api/v1/payments/vnpay/ipn"))
                         && "GET".equals(method))
-                || (path.equals("/api/v1/shipping/ghtk/webhook") && "POST".equals(method))) {
+                || ((path.equals("/api/v1/shipping/ghtk/webhook")
+                                || path.equals("/api/v1/payments/payos/webhook"))
+                        && "POST".equals(method))) {
             operation.setSecurity(List.of());
             access.put("public", true);
         } else {

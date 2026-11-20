@@ -134,6 +134,11 @@ public class SecurityConfiguration {
                                                 org.springframework.http.HttpMethod.GET,
                                                 "/api/v1/payments/vnpay/ipn")
                                         .permitAll()
+                                        // payOS payment webhook, authenticated by its signature.
+                                        .requestMatchers(
+                                                org.springframework.http.HttpMethod.POST,
+                                                "/api/v1/payments/payos/webhook")
+                                        .permitAll()
                                         // Carrier status reports, authenticated by the secret in
                                         // the callback URL.
                                         .requestMatchers(

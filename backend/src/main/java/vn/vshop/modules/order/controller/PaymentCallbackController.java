@@ -23,6 +23,6 @@ public class PaymentCallbackController {
 
     @GetMapping("/ipn")
     public Map<String, String> ipn(@RequestParam Map<String, String> parameters) {
-        return service.handleCallback(parameters);
+        return service.handleCallback("VNPAY", parameters);
     }
 }

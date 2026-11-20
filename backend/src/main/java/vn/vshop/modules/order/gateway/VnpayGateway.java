@@ -50,8 +50,13 @@ public class VnpayGateway implements PaymentGateway {
         return !tmnCode.isBlank() && !hashSecret.isBlank();
     }
 
+    /** The URL is computed locally, so no network call is needed. */
     @Override
-    public String paymentUrl(Session s) {
+    public SessionResult createSession(Session s) {
+        return new SessionResult(Outcome.CREATED, paymentUrl(s), null, "");
+    }
+
+    String paymentUrl(Session s) {
         TreeMap<String, String> p = new TreeMap<>();
         p.put("vnp_Version", "2.1.0");
         p.put("vnp_Command", "pay");
@@ -77,17 +82,17 @@ public class VnpayGateway implements PaymentGateway {
     }
 
     @Override
-    public Callback verify(Map<String, String> parameters) {
+    public Callback verify(Map<String, ?> parameters) {
         TreeMap<String, String> p = new TreeMap<>();
         parameters.forEach(
                 (k, v) -> {
                     if (k.startsWith("vnp_")
                             && !k.equals("vnp_SecureHash")
                             && !k.equals("vnp_SecureHashType")) {
-                        p.put(k, v);
+                        p.put(k, String.valueOf(v));
                     }
                 });
-        String given = parameters.getOrDefault("vnp_SecureHash", "");
+        String given = java.util.Objects.toString(parameters.get("vnp_SecureHash"), "");
         boolean valid =
                 configured()
                         && !given.isEmpty()

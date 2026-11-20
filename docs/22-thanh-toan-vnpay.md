@@ -47,3 +47,19 @@ Chưa cấu hình thì thanh toán trực tuyến bị từ chối (400, nêu r�
 5. **Mã khách (`vnp_IpAddr`)** lấy từ `X-Forwarded-For` hoặc địa chỉ kết nối; BFF hiện chưa chuyển tiếp IP khách nên sẽ là IP máy chủ web.
 6. Người mua chưa thể hủy đơn đang chờ thanh toán (chỉ hết hạn tự hủy).
 7. Thanh toán COD và trực tuyến cùng nhóm đơn: chưa hỗ trợ trộn.
+
+## 7. Cập nhật: dùng payOS làm nhà cung cấp mặc định
+
+Ngày: **20/11/2026**. Chủ sản phẩm cấp thông tin payOS (client id, API key, checksum key), nên payOS là nhà cung cấp mặc định (`PAYMENT_PROVIDER=payos`; đặt `vnpay` để quay lại VNPay). Cả hai cổng cùng nằm sau `PaymentGateway`; callback của cả hai luôn được nhận.
+
+**Khác VNPay, kéo theo thay đổi thiết kế:** trang thanh toán payOS phải tạo bằng một lời gọi mạng (`POST /v2/payment-requests`), không tự dựng URL được. Vì vậy:
+
+- Đặt đơn (giao dịch) chỉ ghi intent và attempt; **trang thanh toán được tạo sau khi giao dịch đã commit** bởi `PaymentService.ensureSession`, gọi ở tầng controller khi trả kết quả đặt đơn và mỗi lần đọc nhóm đơn. URL được lưu vào attempt (V1012) và lần sau trả lại đúng URL đó, không gọi payOS lại.
+- Nếu payOS không trả lời, đơn vẫn chờ thanh toán và lần đọc kế tiếp tạo trang cho cùng attempt. Nếu payOS báo mã đã tồn tại mà ta không có trang, attempt đó bị bỏ và tạo attempt mới với mã mới; thanh toán vào link cũ (nếu có) vẫn khớp attempt cũ nên không mất.
+- `orderCode` của payOS là số nguyên duy nhất lấy từ sequence `payment.order_code_seq` (bắt đầu 10.000.000).
+- Chữ ký tạo link: HMAC-SHA256 theo checksum key trên `amount, cancelUrl, description, orderCode, returnUrl` (đã sắp xếp). Chữ ký webhook: HMAC-SHA256 trên các trường của `data` (sắp xếp, `null` thành chuỗi rỗng).
+- Webhook `POST /api/v1/payments/payos/webhook` (công khai, xác thực bằng chữ ký, không qua BFF). payOS chỉ cần mã 2xx, kể cả với payload mẫu khi đăng ký webhook, nên luôn trả 200.
+
+**Kiểm chứng:** 5 test với payOS giả lập (trang tạo sau commit, lặp lại không gọi lại, mã nguyên duy nhất, webhook ký đúng xác nhận đúng một lần, chữ ký giả/bị sửa/sai số tiền/mã lạ/báo thất bại không đổi gì, payOS không trả lời rồi có lại, mã đã tồn tại thì tạo attempt mới, chữ ký tính độc lập có cả giá trị `null`). Ngoài ra đã **gọi thật payOS một lần**: tạo một link chưa thanh toán 2.000đ và hủy ngay, xác nhận thông tin xác thực và chữ ký tạo link được payOS chấp nhận. Chưa thử thanh toán thật và chưa thử webhook thật.
+
+**Việc còn lại cho chủ sản phẩm:** đăng ký webhook URL trong my.payos.vn (hoặc gọi `POST /confirm-webhook`) trỏ tới `https://<địa-chỉ-công-khai>/api/v1/payments/payos/webhook`. payOS không có sandbox nên mọi thử nghiệm thanh toán là tiền thật (nên dùng số tiền nhỏ). Chưa dùng `GET /v2/payment-requests/{id}` để đối soát khi mất webhook.

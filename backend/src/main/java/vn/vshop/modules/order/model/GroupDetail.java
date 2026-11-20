@@ -9,4 +9,8 @@ public record GroupDetail(
     public GroupDetail {
         orders = List.copyOf(orders);
     }
+
+    public GroupDetail withPaymentUrl(String url) {
+        return new GroupDetail(group, orders, replayed, url);
+    }
 }

@@ -318,6 +318,7 @@ ImplementedSchema,payment,attempt,7,status,character varying,varchar,NO,,20,,,NE
 ImplementedSchema,payment,attempt,8,client_ip,character varying,varchar,NO,,45,,,NEVER,
 ImplementedSchema,payment,attempt,9,created_at,timestamp with time zone,timestamptz,NO,now(),,,,NEVER,
 ImplementedSchema,payment,attempt,10,expires_at,timestamp with time zone,timestamptz,NO,,,,,NEVER,
+ImplementedSchema,payment,attempt,11,checkout_url,text,text,YES,,,,,NEVER,
 ImplementedSchema,payment,charge,1,id,uuid,uuid,NO,,,,,NEVER,
 ImplementedSchema,payment,charge,2,attempt_id,uuid,uuid,NO,,,,,NEVER,
 ImplementedSchema,payment,charge,3,checkout_group_id,uuid,uuid,NO,,,,,NEVER,

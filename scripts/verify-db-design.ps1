@@ -22,6 +22,7 @@ try {
         'backend/src/main/resources/db/migration/V1009__seller_confirmation_policy.sql',
         'backend/src/main/resources/db/migration/V1010__payments.sql',
         'backend/src/main/resources/db/migration/V1011__shipments.sql',
+        'backend/src/main/resources/db/migration/V1012__payment_sessions.sql',
         'docs/database/target-commerce.sql',
         'docs/database/target-design-checks.sql'
     )

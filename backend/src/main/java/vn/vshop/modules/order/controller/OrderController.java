@@ -24,9 +24,12 @@ import vn.vshop.modules.order.dto.request.ReasonRequest;
 import vn.vshop.modules.order.dto.response.CheckoutGroupResponse;
 import vn.vshop.modules.order.dto.response.OrderResponse;
 import vn.vshop.modules.order.dto.response.OrderSummaryResponse;
+import vn.vshop.modules.order.entity.PaymentMethod;
 import vn.vshop.modules.order.mapper.OrderMapper;
+import vn.vshop.modules.order.model.GroupDetail;
 import vn.vshop.modules.order.service.OrderFulfillmentService;
 import vn.vshop.modules.order.service.OrderService;
+import vn.vshop.modules.order.service.PaymentService;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -34,8 +37,11 @@ public class OrderController {
     private final OrderService service;
 
     private final OrderFulfillmentService fulfillment;
+    private final PaymentService payments;
 
-    public OrderController(OrderService service, OrderFulfillmentService fulfillment) {
+    public OrderController(
+            OrderService service, OrderFulfillmentService fulfillment, PaymentService payments) {
+        this.payments = payments;
         this.service = service;
         this.fulfillment = fulfillment;
     }
@@ -59,7 +65,18 @@ public class OrderController {
                         idempotencyKey,
                         clientIp(http));
         return ResponseEntity.status(result.replayed() ? HttpStatus.OK : HttpStatus.CREATED)
-                .body(OrderMapper.toResponse(result));
+                .body(OrderMapper.toResponse(withPage(result)));
+    }
+
+    /**
+     * Adds the payment page of an online group. Creating the page may call the provider, so it
+     * happens here, after the placing transaction has committed.
+     */
+    private GroupDetail withPage(GroupDetail detail) {
+        if (detail.group().paymentMethod() != PaymentMethod.PSP) {
+            return detail;
+        }
+        return detail.withPaymentUrl(payments.ensureSession(detail.group()).orElse(null));
     }
 
     /** First address of X-Forwarded-For when a proxy set it, else the socket peer. */
@@ -72,7 +89,7 @@ public class OrderController {
 
     @GetMapping("/checkout/groups/{id}")
     public CheckoutGroupResponse group(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
-        return OrderMapper.toResponse(service.group(jwt.getSubject(), id));
+        return OrderMapper.toResponse(withPage(service.group(jwt.getSubject(), id)));
     }
 
     @GetMapping("/orders")

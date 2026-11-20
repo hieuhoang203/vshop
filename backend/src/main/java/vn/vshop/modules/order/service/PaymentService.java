@@ -12,8 +12,10 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.ObjectMapper;
 import vn.vshop.modules.inventory.service.ReservationService;
 import vn.vshop.modules.order.entity.CheckoutGroup;
@@ -40,7 +42,9 @@ public class PaymentService {
     private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final SecureRandom RANDOM = new SecureRandom();
 
+    private final List<PaymentGateway> gateways;
     private final PaymentGateway gateway;
+    private final TransactionTemplate tx;
     private final PaymentRepository payments;
     private final OrderRepository orders;
     private final ReservationService reservations;
@@ -50,15 +54,26 @@ public class PaymentService {
     private final String returnBase;
 
     PaymentService(
-            PaymentGateway gateway,
+            List<PaymentGateway> gateways,
+            PlatformTransactionManager transactions,
             PaymentRepository payments,
             OrderRepository orders,
             ReservationService reservations,
             OutboxService outbox,
             ObjectMapper json,
             Clock clock,
-            @Value("${vshop.payment.return-base-url:http://localhost:3100}") String returnBase) {
-        this.gateway = gateway;
+            @Value("${vshop.payment.return-base-url:http://localhost:3100}") String returnBase,
+            @Value("${vshop.payment.provider:payos}") String provider) {
+        this.gateways = gateways;
+        this.gateway =
+                gateways.stream()
+                        .filter(g -> g.provider().equalsIgnoreCase(provider))
+                        .findFirst()
+                        .orElseThrow(
+                                () ->
+                                        new IllegalStateException(
+                                                "Unknown payment provider " + provider));
+        this.tx = new TransactionTemplate(transactions);
         this.payments = payments;
         this.orders = orders;
         this.reservations = reservations;
@@ -78,45 +93,102 @@ public class PaymentService {
     public void startIntent(UUID groupId, long amount, OffsetDateTime deadline, String clientIp) {
         UUID intentId = UUID.randomUUID();
         payments.insertIntent(intentId, groupId, reference("PI"), amount, deadline);
+        newAttempt(intentId, groupId, deadline, clientIp);
+    }
+
+    private void newAttempt(
+            UUID intentId, UUID groupId, OffsetDateTime expiresAt, String clientIp) {
+        String reference =
+                gateway.provider().equals("PAYOS")
+                        ? Long.toString(payments.nextOrderCode())
+                        : reference("PA");
         payments.insertAttempt(
                 UUID.randomUUID(),
                 intentId,
                 groupId,
                 gateway.provider(),
-                reference("PA"),
+                reference,
                 safeIp(clientIp),
-                deadline);
+                expiresAt);
     }
 
     /**
-     * The URL to pay at, rebuilt from stored data so a retried request gets the same one. Empty
-     * once the group is no longer waiting for payment.
+     * The page to pay at. Creating it may call the provider over the network, so this must be
+     * called outside any database transaction (it opens its own short ones). It is safe to call
+     * again and again: a stored page is returned as it is; a provider that already knows the
+     * reference but gave us no page gets a fresh attempt. Empty once the group is no longer waiting
+     * for payment.
      */
-    @Transactional
-    public Optional<String> paymentUrl(CheckoutGroup group) {
+    public Optional<String> ensureSession(CheckoutGroup group) {
         if (!gateway.configured()) {
             return Optional.empty();
         }
-        return payments.findIntentByGroup(group.id())
-                .filter(i -> i.status().equals("CREATED"))
-                .flatMap(i -> payments.findLatestAttempt(i.id()).map(a -> url(i, a)))
-                .flatMap(Optional::ofNullable);
-    }
-
-    private String url(PaymentIntent intent, PaymentAttempt attempt) {
-        OffsetDateTime now = OffsetDateTime.now(clock);
-        if (!attempt.status().equals("CREATED") || !attempt.expiresAt().isAfter(now)) {
-            return null;
+        for (int round = 0; round < 3; round++) {
+            PaymentIntent intent =
+                    tx.execute(x -> payments.findIntentByGroup(group.id()).orElse(null));
+            if (intent == null || !intent.status().equals("CREATED")) {
+                return Optional.empty();
+            }
+            PaymentAttempt attempt =
+                    tx.execute(x -> payments.findLatestAttempt(intent.id()).orElse(null));
+            OffsetDateTime now = OffsetDateTime.now(clock);
+            if (attempt == null
+                    || !attempt.status().equals("CREATED")
+                    || !attempt.expiresAt().isAfter(now)
+                    || !attempt.provider().equals(gateway.provider())) {
+                return Optional.empty();
+            }
+            if (attempt.checkoutUrl() != null) {
+                return Optional.of(attempt.checkoutUrl());
+            }
+            PaymentGateway.SessionResult result =
+                    gateway.createSession(
+                            new PaymentGateway.Session(
+                                    attempt.merchantAttemptReference(),
+                                    intent.requestedAmount(),
+                                    attempt.createdAt(),
+                                    attempt.expiresAt(),
+                                    attempt.clientIp(),
+                                    "Thanh toan don hang VShop",
+                                    returnBase + "/checkout/result/" + group.id()));
+            switch (result.outcome()) {
+                case CREATED -> {
+                    Boolean stored =
+                            tx.execute(
+                                    x ->
+                                            payments.setCheckout(
+                                                    attempt.id(),
+                                                    result.url(),
+                                                    result.providerReference()));
+                    if (Boolean.TRUE.equals(stored)) {
+                        return Optional.of(result.url());
+                    }
+                    // Another request stored its page first: loop and return that one.
+                }
+                case DUPLICATE ->
+                        tx.executeWithoutResult(
+                                x -> {
+                                    var current = payments.findLatestAttempt(intent.id());
+                                    if (current.isPresent()
+                                            && current.get().id().equals(attempt.id())
+                                            && current.get().checkoutUrl() == null) {
+                                        // The provider has this reference but we never got its
+                                        // page:
+                                        // abandon it and ask again with a new one.
+                                        payments.setAttemptStatus(attempt.id(), "EXPIRED", null);
+                                        newAttempt(
+                                                intent.id(),
+                                                group.id(),
+                                                intent.paymentDeadline(),
+                                                attempt.clientIp());
+                                    }
+                                });
+                case FAILED -> {
+                    return Optional.empty();
+                }
+            }
         }
-        return gateway.paymentUrl(
-                new PaymentGateway.Session(
-                        attempt.merchantAttemptReference(),
-                        intent.requestedAmount(),
-                        attempt.createdAt(),
-                        attempt.expiresAt(),
-                        attempt.clientIp(),
-                        "Thanh toan don hang VShop",
-                        returnBase + "/checkout/result/" + intent.checkoutGroupId()));
+        return Optional.empty();
     }
 
     /**
@@ -124,8 +196,13 @@ public class PaymentService {
      * Message). Repeated deliveries are harmless: a charge is recorded once per provider reference.
      */
     @Transactional
-    public Map<String, String> handleCallback(Map<String, String> parameters) {
-        PaymentGateway.Callback cb = gateway.verify(parameters);
+    public Map<String, String> handleCallback(String provider, Map<String, ?> parameters) {
+        PaymentGateway callbackGateway =
+                gateways.stream()
+                        .filter(g -> g.provider().equalsIgnoreCase(provider))
+                        .findFirst()
+                        .orElseThrow();
+        PaymentGateway.Callback cb = callbackGateway.verify(parameters);
         if (!cb.validSignature()) {
             return reply("97", "Invalid signature");
         }
@@ -135,9 +212,12 @@ public class PaymentService {
             return reply("01", "Order not found");
         }
         PaymentAttempt attempt = found.get();
+        if (!attempt.provider().equals(callbackGateway.provider())) {
+            return reply("01", "Order not found");
+        }
         PaymentIntent intent = payments.findIntentForUpdate(attempt.intentId()).orElseThrow();
         payments.insertEvent(
-                gateway.provider(),
+                callbackGateway.provider(),
                 cb.merchantReference() + ":" + cb.providerTransactionNo() + ":" + cb.responseCode(),
                 cb.merchantReference(),
                 cb.success() ? "PAID" : "NOT_PAID");
@@ -158,7 +238,7 @@ public class PaymentService {
                 chargeId,
                 attempt.id(),
                 attempt.checkoutGroupId(),
-                gateway.provider(),
+                callbackGateway.provider(),
                 cb.providerTransactionNo(),
                 cb.amountVnd())) {
             return reply("02", "Order already confirmed");

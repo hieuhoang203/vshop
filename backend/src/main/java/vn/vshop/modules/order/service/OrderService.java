@@ -344,7 +344,7 @@ public class OrderService {
                 group,
                 orders.findOrdersOfGroup(group.id()).stream().map(this::open).toList(),
                 replayed,
-                payments.paymentUrl(group).orElse(null));
+                null);
     }
 
     public OrderDetail open(SellerOrder order) {

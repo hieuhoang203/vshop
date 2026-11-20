@@ -33,6 +33,9 @@ import tools.jackson.databind.ObjectMapper;
             "spring.flyway.locations=classpath:db/migration",
             "vshop.worker.enabled=false",
             "vshop.payment.vnpay.tmn-code=",
+            "vshop.payment.payos.client-id=",
+            "vshop.payment.payos.api-key=",
+            "vshop.payment.payos.checksum-key=",
             "vshop.payment.vnpay.hash-secret="
         })
 @AutoConfigureMockMvc

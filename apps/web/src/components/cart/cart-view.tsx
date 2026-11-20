@@ -320,7 +320,7 @@ export function CartView({ initial, addresses }: { initial: CartContent; address
                       checked={method === "PSP"}
                       onChange={() => setMethod("PSP")}
                     />{" "}
-                    Thanh toán trực tuyến (VNPay)
+                    Thanh toán trực tuyến (payOS: chuyển khoản QR)
                   </label>
                 </fieldset>
                 <p className="form-note">

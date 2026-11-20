@@ -3079,6 +3079,50 @@
         }
       }
     },
+    "/api/v1/payments/payos/webhook" : {
+      "post" : {
+        "operationId" : "payosWebhookWebhook",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "additionalProperties" : { },
+                "type" : "object"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "additionalProperties" : { },
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "payos-webhook-controller" ],
+        "x-vshop-access" : {
+          "public" : true
+        }
+      }
+    },
     "/api/v1/payments/vnpay/ipn" : {
       "get" : {
         "operationId" : "paymentCallbackIpn",

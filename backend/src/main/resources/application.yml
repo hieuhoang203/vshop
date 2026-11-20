@@ -48,6 +48,14 @@ vshop:
   payment:
     # Public address of the web app: where VNPay sends the customer back after paying.
     return-base-url: ${WEB_BASE_URL:http://localhost:3100}
+    # Which provider new online payments use: payos or vnpay. Callbacks of both are always accepted.
+    provider: ${PAYMENT_PROVIDER:payos}
+    payos:
+      # payOS has no sandbox: credentials here are real. Never commit real values.
+      base-url: ${PAYOS_BASE_URL:https://api-merchant.payos.vn}
+      client-id: ${PAY_OS_CLIENT_ID:}
+      api-key: ${PAY_OS_API_KEY:}
+      checksum-key: ${PAY_OS_CHECKSUM_KEY:}
     vnpay:
       # Sandbox merchant credentials from VNPay. Empty means online payment is unavailable and
       # orders can only be placed as COD. Never commit real values.

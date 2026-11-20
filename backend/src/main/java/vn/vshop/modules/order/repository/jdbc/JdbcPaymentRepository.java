@@ -18,7 +18,7 @@ public class JdbcPaymentRepository implements PaymentRepository {
                     + " payment_deadline, created_at FROM payment.intent";
     private static final String ATTEMPT =
             "SELECT id, intent_id, checkout_group_id, provider, merchant_attempt_reference,"
-                    + " provider_reference, status, client_ip, created_at, expires_at"
+                    + " provider_reference, status, client_ip, checkout_url, created_at, expires_at"
                     + " FROM payment.attempt";
 
     private final JdbcClient jdbc;
@@ -53,8 +53,9 @@ public class JdbcPaymentRepository implements PaymentRepository {
             OffsetDateTime expiresAt) {
         jdbc.sql(
                         "INSERT INTO payment.attempt (id, intent_id, checkout_group_id, provider,"
-                                + " merchant_attempt_reference, status, client_ip, expires_at)"
-                                + " VALUES (:id, :intent, :group, :provider, :ref, 'CREATED', :ip, :expires)")
+                                + " merchant_attempt_reference, status, client_ip, expires_at, created_at)"
+                                + " VALUES (:id, :intent, :group, :provider, :ref, 'CREATED', :ip, :expires,"
+                                + " clock_timestamp())")
                 .param("id", id)
                 .param("intent", intentId)
                 .param("group", groupId)
@@ -71,6 +72,24 @@ public class JdbcPaymentRepository implements PaymentRepository {
                 .param("g", groupId)
                 .query(PaymentIntent.class)
                 .optional();
+    }
+
+    @Override
+    public long nextOrderCode() {
+        return jdbc.sql("SELECT nextval('payment.order_code_seq')").query(Long.class).single();
+    }
+
+    @Override
+    public boolean setCheckout(UUID attemptId, String url, String providerReference) {
+        return jdbc.sql(
+                                "UPDATE payment.attempt SET checkout_url = :url,"
+                                        + " provider_reference = COALESCE(:p, provider_reference)"
+                                        + " WHERE id = :id AND checkout_url IS NULL")
+                        .param("url", url)
+                        .param("p", providerReference, Types.VARCHAR)
+                        .param("id", attemptId)
+                        .update()
+                == 1;
     }
 
     @Override

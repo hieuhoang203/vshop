@@ -13,5 +13,6 @@ public record PaymentAttempt(
         String providerReference,
         String status,
         String clientIp,
+        String checkoutUrl,
         OffsetDateTime createdAt,
         OffsetDateTime expiresAt) {}
