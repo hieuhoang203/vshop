@@ -37,6 +37,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run format:check
+      - name: TypeScript contracts match the committed OpenAPI document
+        run: npm run contracts:check
       - run: npm run typecheck
       - run: npm run build
       - run: npm run mobile:typecheck
@@ -52,6 +54,9 @@ jobs:
             backend/src/main/resources/db/migration/V2__event_receipts.sql \
             backend/src/main/resources/db/migration/V1001__normalize_accounts_skus_and_inventory.sql \
             backend/src/main/resources/db/migration/V1002__enforce_owner_membership_and_event_naming.sql \
+            backend/src/main/resources/db/migration/V1003__product_moderation.sql \
+            backend/src/main/resources/db/migration/V1004__cart_and_quote.sql \
+            backend/src/main/resources/db/migration/V1005__buyer_addresses.sql \
             docs/database/target-commerce.sql \
             docs/database/target-design-checks.sql; do
             psql -v ON_ERROR_STOP=1 -h localhost -U vshop -d vshop_design_ci -f "$ddl"

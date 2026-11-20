@@ -1,4 +1,5 @@
 "use client";
+import type { ChangeProductStatusInput } from "@vshop/contracts";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ProductStatus, SellerProduct } from "@vshop/contracts";
@@ -47,7 +48,7 @@ export function ProductStatusActions({ product }: { product: SellerProduct }) {
       {
         status: action.target,
         expectedVersion: product.version,
-      },
+      } satisfies ChangeProductStatusInput,
     );
     setPending(false);
     if (!result.ok) return setError(result.message);

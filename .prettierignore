@@ -8,3 +8,4 @@ package-lock.json
 apps/web/next-env.d.ts
 docs/05-backlog.csv
 docs/06-uat.csv
+packages/contracts/src/generated

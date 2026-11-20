@@ -138,4 +138,4 @@ Chạy tại `backend/`:
 
 `apps/web/src/app` giữ route/page theo App Router; `components` giữ UI tái sử dụng; `lib/api.ts` gọi backend phía server, `lib/auth.ts` xử lý OIDC/session; `packages/contracts` giữ kiểu contract TypeScript. Route BFF chỉ làm session/Origin/allowlist/proxy, không tính giá, quyết định trạng thái shop hoặc truy cập PostgreSQL.
 
-Hiện `contracts` còn được khai báo thủ công; OpenAPI generation vẫn là backlog. Chưa tự chia frontend thành quá nhiều package khi chưa có domain interaction tương ứng.
+`contracts` được sinh từ OpenAPI (docs/19); không viết tay hình dạng API trong `packages/contracts`. Chưa tự chia frontend thành quá nhiều package khi chưa có domain interaction tương ứng.

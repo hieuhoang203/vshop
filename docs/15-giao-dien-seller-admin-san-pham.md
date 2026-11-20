@@ -30,7 +30,7 @@ Trang `/seller` và `/admin` có thanh điều hướng giữa hồ sơ gian hà
 - Chỉ header `Idempotency-Key` hợp lệ (8–100 ký tự an toàn) được chuyển tiếp; header khác của client không được.
 - Route không nằm trong danh sách trả 404 mà không chạm API. Java vẫn kiểm quyền ở mọi endpoint.
 
-Kiểu TypeScript cho các endpoint nằm trong `packages/contracts` (viết tay như phần còn lại; OpenAPI vẫn là backlog).
+Kiểu TypeScript cho các endpoint nằm trong `packages/contracts` (nay sinh từ OpenAPI, xem docs/19).
 
 ## 4. Backend bổ sung
 

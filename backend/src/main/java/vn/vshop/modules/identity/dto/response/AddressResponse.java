@@ -2,10 +2,11 @@ package vn.vshop.modules.identity.dto.response;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 public record AddressResponse(
         UUID id,
-        String label,
+        @Nullable String label,
         String recipientName,
         String phone,
         String street,

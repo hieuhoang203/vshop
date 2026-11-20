@@ -31,10 +31,13 @@ public class SecurityConfiguration {
     static final String MFA_MISSING = "vshop.mfa.missing";
 
     private final boolean adminMfaRequired;
+    private final boolean apiDocsEnabled;
 
     SecurityConfiguration(
-            @Value("${vshop.security.admin-mfa-required:true}") boolean adminMfaRequired) {
+            @Value("${vshop.security.admin-mfa-required:true}") boolean adminMfaRequired,
+            @Value("${springdoc.api-docs.enabled:false}") boolean apiDocsEnabled) {
         this.adminMfaRequired = adminMfaRequired;
+        this.apiDocsEnabled = apiDocsEnabled;
     }
 
     /**
@@ -111,6 +114,15 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(
                         auth ->
                                 auth.requestMatchers("/actuator/health", "/actuator/health/**")
+                                        .permitAll()
+                                        // The OpenAPI document is public only while springdoc is
+                                        // switched on (tests that generate it); otherwise it is
+                                        // denied like any unlisted path.
+                                        .requestMatchers(
+                                                org.springframework.http.HttpMethod.GET,
+                                                apiDocsEnabled
+                                                        ? "/v3/api-docs"
+                                                        : "/v3/api-docs-disabled")
                                         .permitAll()
                                         .requestMatchers(
                                                 org.springframework.http.HttpMethod.GET,

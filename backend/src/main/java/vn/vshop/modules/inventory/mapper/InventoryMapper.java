@@ -35,7 +35,7 @@ public final class InventoryMapper {
         return new StockMovementResponse(
                 movement.id(),
                 movement.warehouseId(),
-                movement.movementType().name(),
+                movement.movementType(),
                 movement.deltaOnHand(),
                 movement.deltaReserved(),
                 movement.deltaBlocked(),

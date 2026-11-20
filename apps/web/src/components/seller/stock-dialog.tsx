@@ -1,4 +1,5 @@
 "use client";
+import type { StockAdjustmentInput } from "@vshop/contracts";
 import { useCallback, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { StockBalance, StockMovement } from "@vshop/contracts";
@@ -80,7 +81,7 @@ export function StockDialog({
     const result = await bff<StockBalance>(
       "POST",
       `seller/shops/${shopId}/inventory/adjustments`,
-      { skuId, type: kind, delta, reason },
+      { skuId, type: kind, delta, reason } satisfies StockAdjustmentInput,
       { "Idempotency-Key": key.current },
     );
     setPending(false);

@@ -70,7 +70,7 @@ public final class SellerProductMapper {
                 product.name(),
                 product.description(),
                 product.imageKey(),
-                product.status().name(),
+                product.status(),
                 product.rejectionReason(),
                 product.version(),
                 product.createdAt(),
@@ -97,7 +97,7 @@ public final class SellerProductMapper {
                 entry.sku().sellerSku(),
                 entry.sku().price(),
                 entry.sku().currency(),
-                entry.sku().status().name(),
+                entry.sku().status(),
                 entry.sku().version(),
                 entry.optionValues(),
                 entry.available());

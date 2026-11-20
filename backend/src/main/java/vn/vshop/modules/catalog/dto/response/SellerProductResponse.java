@@ -4,6 +4,9 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
+import vn.vshop.modules.catalog.entity.ProductStatus;
+import vn.vshop.modules.catalog.entity.SkuStatus;
 
 public record SellerProductResponse(
         UUID id,
@@ -14,8 +17,8 @@ public record SellerProductResponse(
         String name,
         String description,
         String imageKey,
-        String status,
-        String rejectionReason,
+        ProductStatus status,
+        @Nullable String rejectionReason,
         long version,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
@@ -30,7 +33,7 @@ public record SellerProductResponse(
             String sellerSku,
             long price,
             String currency,
-            String status,
+            SkuStatus status,
             long version,
             Map<String, String> optionValues,
             long available) {}

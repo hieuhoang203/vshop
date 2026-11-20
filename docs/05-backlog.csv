@@ -18,7 +18,7 @@
 "B04","B","P0","DEV","Thiết lập Keycloak và OIDC","Realm clients roles MFA cấu hình","Web và API login logout refresh; kiểm issuer audience và key rotation","B02","BR27","2","InProgress"
 "B05","B","P0","DEV","Authorization theo shop và resource","Permission middleware và domain guards","Request đổi shopId hoặc userId bị từ chối ở backend","B03;B04","BR27","1.5","InProgress"
 "B06","B","P0","DEV","Session web và BFF","Next.js session integration","Cookie HttpOnly; CSRF; token không lộ ra browser storage","B04","BR27","1.5","InProgress"
-"B07","B","P0","DEV","API contract và error model","OpenAPI và client types","Pagination errors money time nhất quán; client generate build được","B01","BR02;BR11","1","InProgress"
+"B07","B","P0","DEV","API contract và error model","OpenAPI và client types","Pagination errors money time nhất quán; client generate build được","B01","BR02;BR11","1","Done"
 "B08","B","P0","DEV","Audit nền và trace ID","Audit append và structured logging","Có actor reason resource correlation; che token và dữ liệu nhạy cảm","B03;B05","BR29;BR31","1","InProgress"
 "B09","B","P0","DEV","Media private và public","Upload scan signed download","File chưa sạch không public; buyer khác không đọc evidence","B05","BR27;BR31","1.5","Planned"
 "B10","B","P0","DEV","Outbox worker và inbox dedupe","Durable event pipeline","Kill worker sau gửi không gây tác động nghiệp vụ trùng khi resume","B03","BR30","2","InProgress"

@@ -18,8 +18,15 @@
         <archunit.version>1.5.1</archunit.version>
         <spotless.version>3.11.0</spotless.version>
         <google-java-format.version>1.28.0</google-java-format.version>
+        <springdoc.version>3.2.0</springdoc.version>
     </properties>
     <dependencies>
+        <!-- OpenAPI generation only (no Swagger UI). Disabled at runtime unless springdoc.api-docs.enabled. -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>

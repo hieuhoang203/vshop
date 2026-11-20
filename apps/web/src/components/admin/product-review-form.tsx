@@ -1,4 +1,5 @@
 "use client";
+import type { ReviewProductInput } from "@vshop/contracts";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Select, TextField } from "@radix-ui/themes";
@@ -13,7 +14,7 @@ export function ProductReviewForm({
   version: number;
 }) {
   const router = useRouter();
-  const [decision, setDecision] = useState("APPROVED");
+  const [decision, setDecision] = useState<ReviewProductInput["decision"]>("APPROVED");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -28,7 +29,7 @@ export function ProductReviewForm({
       decision,
       reason,
       expectedVersion: version,
-    });
+    } satisfies ReviewProductInput);
     setPending(false);
     // On a version/state conflict the queue is stale, so reload it and show the message.
     if (!result.ok) {
@@ -44,7 +45,10 @@ export function ProductReviewForm({
       <div className="review-fields">
         <div>
           <label htmlFor={`product-decision-${productId}`}>Quyết định</label>
-          <Select.Root value={decision} onValueChange={setDecision}>
+          <Select.Root
+            value={decision}
+            onValueChange={(value) => setDecision(value as ReviewProductInput["decision"])}
+          >
             <Select.Trigger id={`product-decision-${productId}`} aria-label="Quyết định" />
             <Select.Content>
               <Select.Item value="APPROVED">Chấp thuận</Select.Item>

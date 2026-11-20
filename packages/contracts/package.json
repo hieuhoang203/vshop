@@ -4,5 +4,11 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0"
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../../docs/api/openapi.json -o src/generated/api.ts"
   }
 }

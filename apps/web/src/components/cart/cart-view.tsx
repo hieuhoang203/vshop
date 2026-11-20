@@ -1,4 +1,5 @@
 "use client";
+import type { CreateQuoteInput, SetQuantityInput } from "@vshop/contracts";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -45,7 +46,9 @@ export function CartView({ initial, addresses }: { initial: CartContent; address
   }
 
   const setQuantity = (line: CartLine, quantity: number) =>
-    run(line.skuId, () => bff<CartContent>("PUT", `cart/lines/${line.skuId}`, { quantity }));
+    run(line.skuId, () =>
+      bff<CartContent>("PUT", `cart/lines/${line.skuId}`, { quantity } satisfies SetQuantityInput),
+    );
   const remove = (line: CartLine) =>
     run(line.skuId, () => bff<CartContent>("DELETE", `cart/lines/${line.skuId}`));
   const clear = () => run("clear", () => bff<CartContent>("DELETE", "cart"));
@@ -54,7 +57,9 @@ export function CartView({ initial, addresses }: { initial: CartContent; address
     if (busy) return;
     setBusy("quote");
     setError("");
-    const result = await bff<Quote>("POST", "checkout/quotes", { addressId });
+    const result = await bff<Quote>("POST", "checkout/quotes", {
+      addressId,
+    } satisfies CreateQuoteInput);
     setBusy(null);
     if (!result.ok) return setError(result.message);
     setQuote(result.data);

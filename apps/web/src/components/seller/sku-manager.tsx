@@ -1,4 +1,5 @@
 "use client";
+import type { AddSkuInput, UpdateSkuInput } from "@vshop/contracts";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { SellerOption, SellerProduct, SellerSku } from "@vshop/contracts";
@@ -34,7 +35,11 @@ function SkuRow({ product, sku }: { product: SellerProduct; sku: SellerSku }) {
     const result = await bff(
       "PUT",
       `seller/shops/${product.shopId}/products/${product.id}/skus/${sku.id}`,
-      { price: value, status: active ? "ACTIVE" : "INACTIVE", expectedVersion: sku.version },
+      {
+        price: value,
+        status: active ? "ACTIVE" : "INACTIVE",
+        expectedVersion: sku.version,
+      } satisfies UpdateSkuInput,
     );
     setPending(false);
     if (!result.ok) return setMessage({ text: result.message, error: true });
@@ -118,7 +123,7 @@ function AddSkuForm({ product }: { product: SellerProduct }) {
       sellerSku,
       price,
       optionValues: selection,
-    });
+    } satisfies AddSkuInput);
     setPending(false);
     if (!result.ok) return setError(result.message);
     (event.target as HTMLFormElement).reset();

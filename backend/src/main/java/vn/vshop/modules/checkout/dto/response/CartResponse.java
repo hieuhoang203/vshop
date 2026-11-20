@@ -2,6 +2,8 @@ package vn.vshop.modules.checkout.dto.response;
 
 import java.util.List;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
+import vn.vshop.modules.checkout.model.CartLineIssue;
 
 /**
  * Cart or quote content. Amounts are integer VND. {@code notCalculated} lists price components that
@@ -25,11 +27,11 @@ public record CartResponse(
             String productSlug,
             String productName,
             String imageKey,
-            String variantLabel,
+            @Nullable String variantLabel,
             String sellerSku,
             long unitPrice,
             int quantity,
             long lineTotal,
-            String issue,
+            @Nullable CartLineIssue issue,
             long availableQuantity) {}
 }

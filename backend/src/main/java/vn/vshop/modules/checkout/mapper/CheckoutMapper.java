@@ -63,7 +63,7 @@ public final class CheckoutMapper {
                 line.unitPrice(),
                 line.quantity(),
                 line.lineTotal(),
-                line.issue() == null ? null : line.issue().name(),
+                line.issue(),
                 line.availableQuantity());
     }
 }

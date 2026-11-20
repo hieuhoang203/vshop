@@ -1,4 +1,5 @@
 "use client";
+import type { CartLineInput } from "@vshop/contracts";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -50,7 +51,10 @@ export function AddToCart({
     if (!Number.isInteger(count) || count < 1 || count > 99)
       return setError("Số lượng phải từ 1 đến 99.");
     setPending(true);
-    const result = await bff<CartContent>("POST", "cart/lines", { skuId, quantity: count });
+    const result = await bff<CartContent>("POST", "cart/lines", {
+      skuId,
+      quantity: count,
+    } satisfies CartLineInput);
     setPending(false);
     if (!result.ok) return setError(result.message);
     setAdded(`Đã thêm vào giỏ. Giỏ hiện có ${result.data.itemCount} sản phẩm.`);

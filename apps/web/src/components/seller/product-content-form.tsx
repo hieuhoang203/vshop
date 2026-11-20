@@ -1,4 +1,5 @@
 "use client";
+import type { UpdateProductInput } from "@vshop/contracts";
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import type { Category, SellerProduct } from "@vshop/contracts";
@@ -39,7 +40,7 @@ export function ProductContentForm({
       categoryId,
       imageKey,
       expectedVersion: product.version,
-    });
+    } satisfies UpdateProductInput);
     setPending(false);
     if (!result.ok) return setError(result.message);
     setSaved(true);

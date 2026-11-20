@@ -11,7 +11,7 @@ public final class ShopMapper {
                 shop.id(),
                 shop.name(),
                 shop.description(),
-                shop.status().name(),
+                shop.status(),
                 shop.rejectionReason(),
                 shop.createdAt());
     }
