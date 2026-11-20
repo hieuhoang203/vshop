@@ -22,13 +22,15 @@ public class GlobalExceptionHandler {
                     case SHOP_NOT_FOUND,
                             PRODUCT_NOT_FOUND,
                             RESERVATION_NOT_FOUND,
-                            QUOTE_NOT_FOUND ->
+                            QUOTE_NOT_FOUND,
+                            ADDRESS_NOT_FOUND ->
                             HttpStatus.NOT_FOUND;
                     case ACCOUNT_SUSPENDED -> HttpStatus.FORBIDDEN;
                     case INVALID_CATALOG_FILTER,
                             INVALID_PRODUCT_INPUT,
                             INVALID_STOCK_INPUT,
-                            INVALID_CART_INPUT ->
+                            INVALID_CART_INPUT,
+                            INVALID_ADDRESS_INPUT ->
                             HttpStatus.BAD_REQUEST;
                     case SHOP_ALREADY_EXISTS,
                             INVALID_SHOP_STATE,
@@ -39,7 +41,8 @@ public class GlobalExceptionHandler {
                             IDEMPOTENCY_CONFLICT,
                             INVALID_RESERVATION_STATE,
                             SKU_UNAVAILABLE,
-                            CART_EMPTY ->
+                            CART_EMPTY,
+                            ADDRESS_LIMIT_REACHED ->
                             HttpStatus.CONFLICT;
                 };
         return ResponseEntity.status(status)

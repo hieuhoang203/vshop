@@ -152,11 +152,13 @@ checkout,cart_line,cart_line_sku_id_fkey,f,FOREIGN KEY (sku_id) REFERENCES catal
 checkout,cart_line,cart_line_sku_id_not_null,n,NOT NULL sku_id
 checkout,cart_line,cart_line_updated_at_not_null,n,NOT NULL updated_at
 checkout,cart_line,ck_cart_line_quantity,c,CHECK (((quantity >= 1) AND (quantity <= 99)))
+checkout,quote,ck_quote_address_version,c,CHECK (((address_version IS NULL) OR (address_version >= 0)))
 checkout,quote,ck_quote_cart_version,c,CHECK ((cart_version >= 0))
 checkout,quote,ck_quote_currency,c,CHECK ((currency = 'VND'::bpchar))
 checkout,quote,ck_quote_expiry,c,CHECK ((expires_at > created_at))
 checkout,quote,ck_quote_snapshot,c,CHECK ((jsonb_typeof(snapshot) = 'object'::text))
 checkout,quote,ck_quote_total,c,CHECK ((total_amount >= 0))
+checkout,quote,quote_address_id_fkey,f,FOREIGN KEY (address_id) REFERENCES identity.address(id) ON DELETE SET NULL
 checkout,quote,quote_buyer_account_id_fkey,f,FOREIGN KEY (buyer_account_id) REFERENCES identity.account(id)
 checkout,quote,quote_buyer_account_id_not_null,n,NOT NULL buyer_account_id
 checkout,quote,quote_cart_id_fkey,f,FOREIGN KEY (cart_id) REFERENCES checkout.cart(id)
@@ -351,13 +353,22 @@ identity,account,ck_account_subject_nonblank,c,CHECK ((length(btrim((external_su
 identity,account,uq_account_external_subject,u,UNIQUE (external_subject)
 identity,address,address_account_id_fkey,f,FOREIGN KEY (account_id) REFERENCES identity.account(id)
 identity,address,address_account_id_not_null,n,NOT NULL account_id
-identity,address,address_address_ciphertext_not_null,n,NOT NULL address_ciphertext
-identity,address,address_administrative_code_not_null,n,NOT NULL administrative_code
 identity,address,address_created_at_not_null,n,NOT NULL created_at
 identity,address,address_id_not_null,n,NOT NULL id
+identity,address,address_is_default_not_null,n,NOT NULL is_default
 identity,address,address_phone_ciphertext_not_null,n,NOT NULL phone_ciphertext
 identity,address,address_pkey,p,PRIMARY KEY (id)
+identity,address,address_province_not_null,n,NOT NULL province
 identity,address,address_recipient_name_not_null,n,NOT NULL recipient_name
+identity,address,address_street_ciphertext_not_null,n,NOT NULL street_ciphertext
+identity,address,address_updated_at_not_null,n,NOT NULL updated_at
+identity,address,address_version_not_null,n,NOT NULL version
+identity,address,address_ward_not_null,n,NOT NULL ward
+identity,address,ck_address_ciphertext,c,CHECK (((length(phone_ciphertext) > 0) AND (length(street_ciphertext) > 0)))
+identity,address,ck_address_province,c,CHECK ((length(btrim((province)::text)) >= 1))
+identity,address,ck_address_recipient,c,CHECK ((length(btrim((recipient_name)::text)) >= 2))
+identity,address,ck_address_version,c,CHECK ((version >= 0))
+identity,address,ck_address_ward,c,CHECK ((length(btrim((ward)::text)) >= 1))
 inventory,stock_balance,ck_stock_available,c,CHECK (((reserved <= on_hand) AND (blocked <= (on_hand - reserved))))
 inventory,stock_balance,ck_stock_nonnegative,c,CHECK (((on_hand >= 0) AND (reserved >= 0) AND (blocked >= 0)))
 inventory,stock_balance,ck_stock_version,c,CHECK ((version >= 0))

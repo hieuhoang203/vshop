@@ -20,9 +20,11 @@ public class JdbcQuoteRepository implements QuoteRepository {
         jdbc.sql(
                         """
             INSERT INTO checkout.quote
-                (id, buyer_account_id, cart_id, cart_version, total_amount, currency, snapshot, expires_at)
+                (id, buyer_account_id, cart_id, cart_version, total_amount, currency, snapshot, expires_at,
+                 address_id, address_version, ship_province, ship_ward)
             VALUES (:id, :buyer, :cart, :version, :total, :currency, CAST(:snapshot AS jsonb),
-                    now() + make_interval(secs => :ttl))
+                    now() + make_interval(secs => :ttl),
+                    :addressId, :addressVersion, :shipProvince, :shipWard)
             """)
                 .param("id", quote.id())
                 .param("buyer", quote.buyerAccountId())
@@ -32,6 +34,10 @@ public class JdbcQuoteRepository implements QuoteRepository {
                 .param("currency", quote.currency())
                 .param("snapshot", quote.snapshot())
                 .param("ttl", (double) ttlSeconds)
+                .param("addressId", quote.addressId(), java.sql.Types.OTHER)
+                .param("addressVersion", quote.addressVersion(), java.sql.Types.BIGINT)
+                .param("shipProvince", quote.shipProvince(), java.sql.Types.VARCHAR)
+                .param("shipWard", quote.shipWard(), java.sql.Types.VARCHAR)
                 .update();
     }
 
@@ -40,7 +46,8 @@ public class JdbcQuoteRepository implements QuoteRepository {
         return jdbc.sql(
                         """
             SELECT id, buyer_account_id, cart_id, cart_version, total_amount, currency,
-                   snapshot::text AS snapshot, expires_at, created_at
+                   snapshot::text AS snapshot, expires_at, created_at,
+                   address_id, address_version, ship_province, ship_ward
             FROM checkout.quote WHERE id = :id AND buyer_account_id = :buyer
             """)
                 .param("id", quoteId)

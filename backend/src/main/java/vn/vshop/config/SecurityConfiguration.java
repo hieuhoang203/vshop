@@ -122,6 +122,9 @@ public class SecurityConfiguration {
                                         .hasAnyRole("SELLER", "BUYER")
                                         .requestMatchers("/api/v1/cart/**", "/api/v1/checkout/**")
                                         .hasAnyRole("BUYER", "SELLER")
+                                        .requestMatchers(
+                                                "/api/v1/me/addresses/**", "/api/v1/me/addresses")
+                                        .hasAnyRole("BUYER", "SELLER")
                                         .requestMatchers("/api/v1/me")
                                         .authenticated()
                                         .anyRequest()

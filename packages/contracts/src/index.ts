@@ -156,6 +156,29 @@ export type CartContent = {
   /** Price components that are not calculated yet: shipping, discounts, tax. */
   notCalculated: string[];
 };
+export type Address = {
+  id: string;
+  label: string | null;
+  recipientName: string;
+  /** Normalised 10-digit mobile number starting with 0. */
+  phone: string;
+  street: string;
+  ward: string;
+  province: string;
+  isDefault: boolean;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+};
+export type AddressInput = {
+  label?: string;
+  recipientName: string;
+  phone: string;
+  street: string;
+  ward: string;
+  province: string;
+  makeDefault?: boolean;
+};
 export type Quote = {
   id: string;
   createdAt: string;
@@ -164,4 +187,6 @@ export type Quote = {
   /** false once expired or once the cart changed after the quote was calculated */
   current: boolean;
   content: CartContent;
+  /** Delivery region the quote was calculated for; never phone or street. */
+  shipTo: { addressId: string | null; province: string; ward: string } | null;
 };

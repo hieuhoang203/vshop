@@ -7,9 +7,11 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import vn.vshop.modules.checkout.dto.request.CreateQuoteRequest;
 import vn.vshop.modules.checkout.dto.response.QuoteResponse;
 import vn.vshop.modules.checkout.mapper.CheckoutMapper;
 import vn.vshop.modules.checkout.service.QuoteService;
@@ -26,8 +28,11 @@ public class QuoteController {
     /** Calculates a quote from the caller's current cart. */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public QuoteResponse create(@AuthenticationPrincipal Jwt jwt) {
-        return CheckoutMapper.toResponse(service.create(jwt.getSubject()));
+    public QuoteResponse create(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody(required = false) CreateQuoteRequest request) {
+        return CheckoutMapper.toResponse(
+                service.create(jwt.getSubject(), request == null ? null : request.addressId()));
     }
 
     @GetMapping("/{id}")

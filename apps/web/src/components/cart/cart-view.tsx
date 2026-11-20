@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { CartContent, CartLine, Quote } from "@vshop/contracts";
-import { Button } from "@radix-ui/themes";
+import type { Address, CartContent, CartLine, Quote } from "@vshop/contracts";
+import { Button, Select } from "@radix-ui/themes";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { bff } from "@/lib/client-api";
 import { formatMoney } from "@/lib/format";
@@ -18,9 +18,12 @@ const timeOnly = new Intl.DateTimeFormat("vi-VN", {
   timeZone: "Asia/Ho_Chi_Minh",
 });
 
-export function CartView({ initial }: { initial: CartContent }) {
+export function CartView({ initial, addresses }: { initial: CartContent; addresses: Address[] }) {
   const router = useRouter();
   const [cart, setCart] = useState(initial);
+  const [addressId, setAddressId] = useState(
+    () => (addresses.find((a) => a.isDefault) ?? addresses[0])?.id ?? "",
+  );
   const [quote, setQuote] = useState<Quote | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -51,7 +54,7 @@ export function CartView({ initial }: { initial: CartContent }) {
     if (busy) return;
     setBusy("quote");
     setError("");
-    const result = await bff<Quote>("POST", "checkout/quotes");
+    const result = await bff<Quote>("POST", "checkout/quotes", { addressId });
     setBusy(null);
     if (!result.ok) return setError(result.message);
     setQuote(result.data);
@@ -72,7 +75,10 @@ export function CartView({ initial }: { initial: CartContent }) {
   // A quote is only trustworthy while it matches the cart and has not expired.
   const quoteStale =
     quote !== null &&
-    (quote.content.version !== cart.version || new Date(quote.expiresAt).getTime() <= now);
+    (quote.content.version !== cart.version ||
+      quote.shipTo?.addressId !== addressId ||
+      new Date(quote.expiresAt).getTime() <= now);
+  const selectedAddress = addresses.find((a) => a.id === addressId);
 
   return (
     <div className="cart-layout">
@@ -177,6 +183,32 @@ export function CartView({ initial }: { initial: CartContent }) {
           Chưa gồm phí vận chuyển, giảm giá và thuế. Các khoản này chưa được tính. Giá có thể thay
           đổi cho tới khi bạn chốt báo giá.
         </p>
+        <div className="cart-address">
+          <label htmlFor="cart-address">Giao đến</label>
+          {addresses.length ? (
+            <Select.Root value={addressId} onValueChange={setAddressId}>
+              <Select.Trigger id="cart-address" aria-label="Địa chỉ giao hàng" />
+              <Select.Content>
+                {addresses.map((a) => (
+                  <Select.Item key={a.id} value={a.id}>
+                    {a.recipientName} · {a.ward}, {a.province}
+                    {a.isDefault ? " (mặc định)" : ""}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select.Root>
+          ) : (
+            <p className="form-note">
+              Bạn chưa có địa chỉ. <Link href="/account/addresses">Thêm địa chỉ giao hàng</Link> để
+              chốt báo giá.
+            </p>
+          )}
+          {selectedAddress && (
+            <p className="form-note">
+              {selectedAddress.street}. <Link href="/account/addresses">Quản lý địa chỉ</Link>
+            </p>
+          )}
+        </div>
         {!cart.canCheckout && (
           <p className="form-note" role="status">
             Hãy xử lý các sản phẩm có cảnh báo trước khi chốt báo giá.
@@ -186,7 +218,7 @@ export function CartView({ initial }: { initial: CartContent }) {
           size="3"
           onClick={createQuote}
           loading={busy === "quote"}
-          disabled={busy !== null || !cart.canCheckout}
+          disabled={busy !== null || !cart.canCheckout || !addressId}
         >
           Chốt báo giá
         </Button>
@@ -205,10 +237,17 @@ export function CartView({ initial }: { initial: CartContent }) {
               {quoteStale
                 ? quote.content.version !== cart.version
                   ? "Giỏ hàng đã thay đổi — báo giá cũ không còn hiệu lực"
-                  : "Báo giá đã hết hạn"
+                  : quote.shipTo?.addressId !== addressId
+                    ? "Đã đổi địa chỉ — báo giá cũ không còn hiệu lực"
+                    : "Báo giá đã hết hạn"
                 : `Giá được giữ đến ${timeOnly.format(new Date(quote.expiresAt))}`}
             </strong>
             <span>Tổng sản phẩm trong báo giá: {formatMoney(quote.content.itemsTotal)}</span>
+            {quote.shipTo && (
+              <span>
+                Giao đến: {quote.shipTo.ward}, {quote.shipTo.province}
+              </span>
+            )}
             <p className="form-note">
               Thanh toán và đặt hàng chưa mở, nên báo giá này chưa tạo đơn và chưa giữ hàng.
             </p>

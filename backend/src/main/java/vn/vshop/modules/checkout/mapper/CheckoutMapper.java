@@ -23,7 +23,13 @@ public final class CheckoutMapper {
                 quote.expiresAt(),
                 quote.expired(),
                 quote.current(),
-                toResponse(quote.cartVersion(), quote.cart()));
+                toResponse(quote.cartVersion(), quote.cart()),
+                quote.shipTo() == null
+                        ? null
+                        : new QuoteResponse.ShipToResponse(
+                                quote.shipTo().addressId(),
+                                quote.shipTo().province(),
+                                quote.shipTo().ward()));
     }
 
     private static CartResponse toResponse(long version, PricedCart cart) {

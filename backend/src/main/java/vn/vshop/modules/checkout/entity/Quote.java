@@ -13,4 +13,8 @@ public record Quote(
         String currency,
         String snapshot,
         OffsetDateTime expiresAt,
-        OffsetDateTime createdAt) {}
+        OffsetDateTime createdAt,
+        UUID addressId,
+        Long addressVersion,
+        String shipProvince,
+        String shipWard) {}

@@ -222,7 +222,13 @@ export const getSession = cache(async (): Promise<Session | null> => {
 });
 
 export function safeReturnTo(value: string | null) {
-  if (value === "/seller" || value === "/admin" || value === "/cart") return value;
+  if (
+    value === "/seller" ||
+    value === "/admin" ||
+    value === "/cart" ||
+    value === "/account/addresses"
+  )
+    return value;
   // Product pages only, so the return path can never point off-site or at an API route.
   return value !== null && /^\/products\/[a-z0-9-]{1,160}$/.test(value) ? value : "/";
 }

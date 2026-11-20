@@ -45,3 +45,10 @@ vshop:
   security:
     # ADMIN tokens must carry amr=otp (Keycloak OTP form). Disable only in isolated tests.
     admin-mfa-required: true
+  pii:
+    # Application-level encryption of personal data (phone, street). One id per key; new values use
+    # active-key and old ids stay readable, so keys can be rotated. Provide the 32-byte base64 key
+    # through the environment (scripts/init-local.ps1 generates one locally).
+    active-key: local-1
+    keys:
+      local-1: ${PII_KEY_LOCAL_1:}

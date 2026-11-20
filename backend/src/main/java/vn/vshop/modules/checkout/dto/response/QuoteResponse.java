@@ -10,4 +10,8 @@ public record QuoteResponse(
         OffsetDateTime expiresAt,
         boolean expired,
         boolean current,
-        CartResponse content) {}
+        CartResponse content,
+        ShipToResponse shipTo) {
+    /** Region only; a quote never carries phone or street. */
+    public record ShipToResponse(UUID addressId, String province, String ward) {}
+}

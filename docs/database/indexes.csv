@@ -47,6 +47,7 @@ checkout,cart,cart_pkey,CREATE UNIQUE INDEX cart_pkey ON checkout.cart USING btr
 checkout,cart,uq_cart_buyer,CREATE UNIQUE INDEX uq_cart_buyer ON checkout.cart USING btree (buyer_account_id)
 checkout,cart_line,cart_line_pkey,"CREATE UNIQUE INDEX cart_line_pkey ON checkout.cart_line USING btree (cart_id, sku_id)"
 checkout,cart_line,ix_cart_line_sku,CREATE INDEX ix_cart_line_sku ON checkout.cart_line USING btree (sku_id)
+checkout,quote,ix_quote_address,CREATE INDEX ix_quote_address ON checkout.quote USING btree (address_id)
 checkout,quote,ix_quote_buyer,"CREATE INDEX ix_quote_buyer ON checkout.quote USING btree (buyer_account_id, created_at DESC)"
 checkout,quote,ix_quote_cart,CREATE INDEX ix_quote_cart ON checkout.quote USING btree (cart_id)
 checkout,quote,ix_quote_policy,CREATE INDEX ix_quote_policy ON checkout.quote USING btree (price_policy_id)
@@ -101,7 +102,8 @@ fulfillment,shipment_line,shipment_line_pkey,"CREATE UNIQUE INDEX shipment_line_
 identity,account,account_pkey,CREATE UNIQUE INDEX account_pkey ON identity.account USING btree (id)
 identity,account,uq_account_external_subject,CREATE UNIQUE INDEX uq_account_external_subject ON identity.account USING btree (external_subject)
 identity,address,address_pkey,CREATE UNIQUE INDEX address_pkey ON identity.address USING btree (id)
-identity,address,ix_address_account,CREATE INDEX ix_address_account ON identity.address USING btree (account_id)
+identity,address,ix_address_account,"CREATE INDEX ix_address_account ON identity.address USING btree (account_id, created_at, id)"
+identity,address,uq_address_default,CREATE UNIQUE INDEX uq_address_default ON identity.address USING btree (account_id) WHERE is_default
 inventory,stock_balance,ix_stock_shop,CREATE INDEX ix_stock_shop ON inventory.stock_balance USING btree (shop_id)
 inventory,stock_balance,ix_stock_sku_shop,"CREATE INDEX ix_stock_sku_shop ON inventory.stock_balance USING btree (sku_id, shop_id)"
 inventory,stock_balance,ix_stock_warehouse_shop,"CREATE INDEX ix_stock_warehouse_shop ON inventory.stock_balance USING btree (warehouse_id, shop_id)"

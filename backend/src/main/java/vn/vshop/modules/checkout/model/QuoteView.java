@@ -14,4 +14,12 @@ public record QuoteView(
         OffsetDateTime expiresAt,
         boolean expired,
         boolean current,
-        PricedCart cart) {}
+        PricedCart cart,
+        ShipTo shipTo) {
+
+    /**
+     * Delivery region the quote was calculated for. {@code addressId} is null if the address was
+     * since deleted.
+     */
+    public record ShipTo(UUID addressId, String province, String ward) {}
+}

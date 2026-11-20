@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { account, login } from "./support/auth";
+import { addAddress, clearAddresses } from "./support/addresses";
 
 async function emptyCart(page: Page) {
   await page.goto("/cart");
@@ -37,6 +38,17 @@ test("buyer fills the cart, sees exact totals and locks a quote that goes stale 
     const page = await context.newPage();
     await login(page, account("buyer.local"), "/cart");
     await emptyCart(page);
+    // A quote needs a delivery address.
+    await page.goto("/account/addresses");
+    await clearAddresses(page);
+    await addAddress(page, {
+      name: "Nguyễn Văn A",
+      phone: "0912345678",
+      street: "Số 12 ngõ 34 Nguyễn Trãi",
+      ward: "Phường Láng",
+      province: "Hà Nội",
+    });
+    await expect(page.getByText("Phường Láng")).toBeVisible();
 
     // Add two different fixture products from their detail pages.
     await page.goto("/products/den-ban-luma");
@@ -85,6 +97,8 @@ test("buyer fills the cart, sees exact totals and locks a quote that goes stale 
     await page.screenshot({ path: ".local/screenshots/cart-desktop.png", fullPage: true });
 
     await emptyCart(page);
+    await page.goto("/account/addresses");
+    await clearAddresses(page);
     await page.goto("/");
     await expect(page.getByRole("link", { name: "Giỏ hàng" })).toBeVisible();
   } finally {

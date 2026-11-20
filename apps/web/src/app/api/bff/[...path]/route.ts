@@ -21,7 +21,12 @@ const routes: { method: string; path: RegExp; maxBytes: number }[] = [
   { method: "PUT", path: new RegExp(`^cart/lines/${uuid}$`), maxBytes: 1_024 },
   { method: "DELETE", path: new RegExp(`^cart/lines/${uuid}$`), maxBytes: 64 },
   { method: "DELETE", path: /^cart$/, maxBytes: 64 },
-  { method: "POST", path: /^checkout\/quotes$/, maxBytes: 64 },
+  { method: "POST", path: /^checkout\/quotes$/, maxBytes: 256 },
+  // Address book (owner only; the API scopes every call to the token's account)
+  { method: "POST", path: /^me\/addresses$/, maxBytes: 2_048 },
+  { method: "PUT", path: new RegExp(`^me/addresses/${uuid}$`), maxBytes: 2_048 },
+  { method: "PUT", path: new RegExp(`^me/addresses/${uuid}/default$`), maxBytes: 64 },
+  { method: "DELETE", path: new RegExp(`^me/addresses/${uuid}$`), maxBytes: 64 },
   // Inventory
 
   { method: "POST", path: new RegExp(`^${shop}/inventory/adjustments$`), maxBytes: 2_048 },
@@ -72,6 +77,9 @@ async function forward(request: NextRequest, context: { params: Promise<{ path: 
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });
+    // A body is not allowed on 204 (for example a successful DELETE).
+    if (result.status === 204)
+      return new NextResponse(null, { status: 204, headers: { "Cache-Control": "no-store" } });
     const data = await result.json().catch(() => ({
       message:
         result.status === 403

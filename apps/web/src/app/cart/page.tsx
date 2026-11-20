@@ -1,6 +1,6 @@
 import { ShoppingCart } from "lucide-react";
 import { getSession } from "@/lib/auth";
-import { getCart } from "@/lib/api";
+import { getAddresses, getCart } from "@/lib/api";
 import { CartView } from "@/components/cart/cart-view";
 import Link from "next/link";
 
@@ -30,7 +30,7 @@ export default async function CartPage() {
         <p>Giỏ hàng dành cho tài khoản người mua hoặc người bán.</p>
       </div>
     );
-  const cart = await getCart();
+  const [cart, addresses] = await Promise.all([getCart(), getAddresses().catch(() => [])]);
   return (
     <div className="container page-space">
       <div className="portal-heading">
@@ -38,7 +38,7 @@ export default async function CartPage() {
         <h1>Giỏ hàng của bạn</h1>
         <p>Giá và tình trạng hàng luôn được tính lại từ dữ liệu hiện tại của gian hàng.</p>
       </div>
-      <CartView initial={cart} />
+      <CartView initial={cart} addresses={addresses} />
     </div>
   );
 }

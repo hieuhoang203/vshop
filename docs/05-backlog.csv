@@ -27,7 +27,7 @@
 "B13","B","P0","OPS","Backup và recovery nền","Backup jobs và restore smoke","DB và Keycloak config phục hồi được trong môi trường riêng","B03;B04","BR31","1","Planned"
 "B14","B","P0","DEV","UI shell và design tokens","Buyer seller admin layouts","Navigation theo quyền; 360px không mất nút quan trọng","B06;A11","BR27","1.5","InProgress"
 "B15","B","P0","QA","Bộ test DB và API nền","Testcontainers và fixtures","Test chạy CI trên PostgreSQL thật; có IDOR negative cases","B03;B05;B07","BR27","1","InProgress"
-"C01","C","P0","DEV","Buyer profile địa chỉ và consent","Profile APIs và UI","Chỉ owner sửa; địa chỉ được kiểm vùng và snapshot tại đặt","B05;B14","BR06;BR31","1","Planned"
+"C01","C","P0","DEV","Buyer profile địa chỉ và consent","Profile APIs và UI","Chỉ owner sửa; địa chỉ được kiểm vùng và snapshot tại đặt","B05;B14","BR06;BR31","1","InProgress"
 "C02","C","P0","DEV","Seller onboarding","Form hồ sơ shop","Lưu nháp gửi duyệt và bổ sung; file KYC private","B09;B14;C01","BR01;BR26","1.5","InProgress"
 "C03","C","P0","DEV","Admin duyệt shop","Review queue và decisions","Approve reject needs-changes có reason; chưa duyệt không bán","C02;B08","BR01;BR29","1","InProgress"
 "C04","C","P0","DEV","Bank beneficiary và xác minh","Beneficiary history và review","Đổi ngân hàng có re-auth hold và không đổi payout cũ","C02;B04","BR26","1","Planned"

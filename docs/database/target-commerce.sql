@@ -24,16 +24,7 @@ CREATE TABLE platform.policy_version (
     CHECK (effective_to IS NULL OR effective_to > effective_from)
 );
 
-CREATE TABLE identity.address (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    account_id UUID NOT NULL REFERENCES identity.account(id),
-    recipient_name VARCHAR(150) NOT NULL,
-    phone_ciphertext TEXT NOT NULL,
-    address_ciphertext TEXT NOT NULL,
-    administrative_code VARCHAR(30) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX ix_address_account ON identity.address(account_id);
+-- identity.address is implemented by Flyway V1005 (with encrypted phone and street).
 
 CREATE TABLE merchant.bank_account (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

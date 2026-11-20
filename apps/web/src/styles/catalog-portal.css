@@ -466,3 +466,80 @@
     justify-content: space-between;
   }
 }
+
+/* Address book */
+.address-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+.address-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.address-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.address-lines {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.address-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+.address-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.address-form label {
+  display: block;
+  margin: 6px 0 4px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.address-form .inline-check {
+  display: inline-flex;
+  margin: 8px 0;
+}
+.address-form .inline-check input {
+  width: auto;
+}
+.dialog-actions {
+  gap: 8px;
+}
+.cart-address {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cart-address label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.cart-address .rt-SelectTrigger {
+  width: 100%;
+}
+.cart-address a {
+  color: var(--purple-dark);
+  font-weight: 700;
+}
+.address-card.is-default {
+  border-color: var(--purple);
+}
+.address-list > .panel {
+  margin-top: 0;
+}

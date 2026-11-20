@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Sparkles,
   ShoppingCart,
+  MapPin,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -200,6 +201,13 @@ export function HeaderActions({
                 <Store size={16} /> Gian hàng của tôi
               </Link>
             </DropdownMenu.Item>
+            {roles.some((role) => role === "BUYER" || role === "SELLER") && (
+              <DropdownMenu.Item asChild>
+                <Link href="/account/addresses">
+                  <MapPin size={16} /> Sổ địa chỉ
+                </Link>
+              </DropdownMenu.Item>
+            )}
             {roles.includes("ADMIN") && (
               <DropdownMenu.Item asChild>
                 <Link href="/admin">

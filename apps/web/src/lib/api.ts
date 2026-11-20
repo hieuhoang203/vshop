@@ -1,5 +1,6 @@
 import "server-only";
 import type {
+  Address,
   CartContent,
   CatalogPage,
   PublicSku,
@@ -48,3 +49,5 @@ export const getReviewQueue = (page = 0, size = 20) =>
 export const getCart = () => api<CartContent>("/cart", true);
 export const getProductSkus = (slug: string) =>
   api<PublicSku[]>(`/catalog/products/${encodeURIComponent(slug)}/skus`);
+
+export const getAddresses = () => api<Address[]>("/me/addresses", true);
