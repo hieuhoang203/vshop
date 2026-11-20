@@ -90,13 +90,15 @@ finance,settlement,settlement_shop_id_period_start_period_end_key,"CREATE UNIQUE
 finance,settlement_line,ix_settlement_line_order,CREATE INDEX ix_settlement_line_order ON finance.settlement_line USING btree (seller_order_id)
 finance,settlement_line,settlement_line_pkey,"CREATE UNIQUE INDEX settlement_line_pkey ON finance.settlement_line USING btree (settlement_id, seller_order_id)"
 fulfillment,cod_receivable,cod_receivable_pkey,CREATE UNIQUE INDEX cod_receivable_pkey ON fulfillment.cod_receivable USING btree (shipment_id)
+fulfillment,pickup_address,pickup_address_pkey,CREATE UNIQUE INDEX pickup_address_pkey ON fulfillment.pickup_address USING btree (shop_id)
 fulfillment,shipment,ix_shipment_order_shop,"CREATE INDEX ix_shipment_order_shop ON fulfillment.shipment USING btree (seller_order_id, shop_id)"
-fulfillment,shipment,ix_shipment_warehouse_shop,"CREATE INDEX ix_shipment_warehouse_shop ON fulfillment.shipment USING btree (warehouse_id, shop_id)"
-fulfillment,shipment,shipment_carrier_code_tracking_number_key,"CREATE UNIQUE INDEX shipment_carrier_code_tracking_number_key ON fulfillment.shipment USING btree (carrier_code, tracking_number)"
-fulfillment,shipment,shipment_id_seller_order_id_key,"CREATE UNIQUE INDEX shipment_id_seller_order_id_key ON fulfillment.shipment USING btree (id, seller_order_id)"
 fulfillment,shipment,shipment_pkey,CREATE UNIQUE INDEX shipment_pkey ON fulfillment.shipment USING btree (id)
+fulfillment,shipment,uq_shipment_carrier_partner,"CREATE UNIQUE INDEX uq_shipment_carrier_partner ON fulfillment.shipment USING btree (carrier_code, partner_order_id)"
+fulfillment,shipment,uq_shipment_carrier_tracking,"CREATE UNIQUE INDEX uq_shipment_carrier_tracking ON fulfillment.shipment USING btree (carrier_code, tracking_number)"
+fulfillment,shipment,uq_shipment_id_order,"CREATE UNIQUE INDEX uq_shipment_id_order ON fulfillment.shipment USING btree (id, seller_order_id)"
+fulfillment,shipment,uq_shipment_live_forward,"CREATE UNIQUE INDEX uq_shipment_live_forward ON fulfillment.shipment USING btree (seller_order_id) WHERE (((direction)::text = 'FORWARD'::text) AND ((status)::text <> ALL ((ARRAY['FAILED'::character varying, 'CANCELED'::character varying])::text[])))"
 fulfillment,shipment_event,shipment_event_pkey,CREATE UNIQUE INDEX shipment_event_pkey ON fulfillment.shipment_event USING btree (id)
-fulfillment,shipment_event,shipment_event_shipment_id_provider_event_id_key,"CREATE UNIQUE INDEX shipment_event_shipment_id_provider_event_id_key ON fulfillment.shipment_event USING btree (shipment_id, provider_event_id)"
+fulfillment,shipment_event,uq_shipment_event,"CREATE UNIQUE INDEX uq_shipment_event ON fulfillment.shipment_event USING btree (shipment_id, provider_event_id)"
 fulfillment,shipment_line,ix_shipment_line_order,"CREATE INDEX ix_shipment_line_order ON fulfillment.shipment_line USING btree (order_line_id, seller_order_id)"
 fulfillment,shipment_line,shipment_line_pkey,"CREATE UNIQUE INDEX shipment_line_pkey ON fulfillment.shipment_line USING btree (shipment_id, order_line_id)"
 identity,account,account_pkey,CREATE UNIQUE INDEX account_pkey ON identity.account USING btree (id)

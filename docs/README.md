@@ -38,6 +38,7 @@ Web người mua, cổng người bán, cổng admin dùng Next.js/TypeScript. A
 | [20-thiet-ke-checkout.md](20-thiet-ke-checkout.md)                             | Thiết kế checkout, đơn hàng, thanh toán: quyết định cần chốt, luồng, máy trạng thái, kế hoạch (chưa có code) |
 | [21-checkout-cod.md](21-checkout-cod.md)                                       | Đã triển khai S0 + S1: cổng chính sách đã duyệt, phí ship, đặt đơn COD nguyên tử, khác biệt so với thiết kế  |
 | [22-thanh-toan-vnpay.md](22-thanh-toan-vnpay.md)                               | Thanh toán trực tuyến VNPay (S3): vì sao chọn, callback có chữ ký, hết hạn, thanh toán muộn, giới hạn        |
+| [23-van-chuyen-ghtk.md](23-van-chuyen-ghtk.md)                                 | Vận chuyển GHTK (S4): tạo vận đơn không giữ khóa, webhook, hủy, giới hạn                                     |
 | [architecture/README.md](architecture/README.md)                               | Quy ước từng tầng, entity/DTO/repository, format và ArchUnit                                                 |
 | [database/README.md](database/README.md)                                       | ERD, bảng/quan hệ, từ điển cột, DDL và invariant giao dịch                                                   |
 

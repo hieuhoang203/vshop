@@ -1,4 +1,5 @@
-import { getSellerOrders } from "@/lib/api";
+import { getPickupAddress, getSellerOrders } from "@/lib/api";
+import { PickupForm } from "@/components/seller/pickup-form";
 import { loadSellerContext } from "@/lib/seller-context";
 import { formatMoney } from "@/lib/format";
 import { PortalNav } from "@/components/portal-nav";
@@ -16,6 +17,7 @@ export default async function SellerOrders({
   const context = await loadSellerContext();
   if (context.kind !== "ok") return <SellerBlocked context={context} />;
   const { status = "" } = await searchParams;
+  const pickup = await getPickupAddress(context.shop.id);
   const page = await getSellerOrders(context.shop.id, /^[A-Z_]+$/.test(status) ? status : "");
   return (
     <div className="container page-space">
@@ -28,6 +30,7 @@ export default async function SellerOrders({
         </p>
       </div>
       <PortalNav portal="seller" current="/seller/orders" />
+      <PickupForm shopId={context.shop.id} current={pickup} />
       <p>{page.total} đơn</p>
       {page.items.map((order) => (
         <section

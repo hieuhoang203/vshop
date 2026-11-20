@@ -294,6 +294,17 @@
         },
         "type" : "object"
       },
+      "CreateShipmentRequest" : {
+        "properties" : {
+          "weightGrams" : {
+            "format" : "int32",
+            "maximum" : 50000,
+            "minimum" : 50,
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
       "LineResponse" : {
         "properties" : {
           "availableQuantity" : {
@@ -737,6 +748,66 @@
           }
         },
         "required" : [ "items", "page", "size", "total" ],
+        "type" : "object"
+      },
+      "PickupAddressRequest" : {
+        "properties" : {
+          "contactName" : {
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "district" : {
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "phone" : {
+            "maxLength" : 30,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "province" : {
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "street" : {
+            "maxLength" : 300,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "ward" : {
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "contactName", "district", "phone", "province", "street", "ward" ],
+        "type" : "object"
+      },
+      "PickupAddressResponse" : {
+        "properties" : {
+          "contactName" : {
+            "type" : "string"
+          },
+          "district" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "province" : {
+            "type" : "string"
+          },
+          "street" : {
+            "type" : "string"
+          },
+          "ward" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "contactName", "district", "phone", "province", "street", "ward" ],
         "type" : "object"
       },
       "PlaceOrderRequest" : {
@@ -3872,6 +3943,216 @@
         }
       }
     },
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/shipment" : {
+      "post" : {
+        "operationId" : "sellerShipmentCreate",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "shopId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateShipmentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SellerOrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "seller-shipment-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/shipment/cancel" : {
+      "post" : {
+        "operationId" : "sellerShipmentCancel",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "shopId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SellerOrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "seller-shipment-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/seller/shops/{shopId}/pickup-address" : {
+      "get" : {
+        "operationId" : "sellerShipmentPickup",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "shopId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PickupAddressResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "seller-shipment-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      },
+      "put" : {
+        "operationId" : "sellerShipmentSavePickup",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "shopId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PickupAddressRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PickupAddressResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "seller-shipment-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
     "/api/v1/seller/shops/{shopId}/products" : {
       "get" : {
         "operationId" : "sellerProductList",
@@ -4293,6 +4574,72 @@
         "x-vshop-access" : {
           "anyOfRoles" : [ "BUYER", "SELLER" ],
           "public" : false
+        }
+      }
+    },
+    "/api/v1/shipping/ghtk/webhook" : {
+      "post" : {
+        "operationId" : "shippingWebhookJson",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "hash",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "additionalProperties" : { },
+                "type" : "object"
+              }
+            },
+            "application/x-www-form-urlencoded" : {
+              "schema" : {
+                "properties" : {
+                  "parameters" : {
+                    "additionalProperties" : {
+                      "type" : "string"
+                    },
+                    "type" : "object"
+                  }
+                },
+                "required" : [ "parameters" ],
+                "type" : "object"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "additionalProperties" : { },
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "shipping-webhook-controller" ],
+        "x-vshop-access" : {
+          "public" : true
         }
       }
     }

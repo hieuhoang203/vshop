@@ -134,6 +134,12 @@ public class SecurityConfiguration {
                                                 org.springframework.http.HttpMethod.GET,
                                                 "/api/v1/payments/vnpay/ipn")
                                         .permitAll()
+                                        // Carrier status reports, authenticated by the secret in
+                                        // the callback URL.
+                                        .requestMatchers(
+                                                org.springframework.http.HttpMethod.POST,
+                                                "/api/v1/shipping/ghtk/webhook")
+                                        .permitAll()
                                         .requestMatchers("/api/v1/admin/**")
                                         .access(this::adminWithSecondFactor)
                                         .requestMatchers("/api/v1/seller/**")

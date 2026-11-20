@@ -7,6 +7,7 @@ import type {
   Order,
   OrderPage,
   OverdueOrders,
+  PickupAddress,
   SellerOrder,
   SellerOrderPage,
   Policy,
@@ -74,3 +75,7 @@ export const getSellerOrder = (shopId: string, orderId: string) =>
   api<SellerOrder>(`/seller/shops/${shopId}/orders/${encodeURIComponent(orderId)}`, true);
 
 export const getOverdueOrders = () => api<OverdueOrders>("/admin/orders/overdue", true);
+
+/** Null while the shop has not set a pickup address (the API answers with an empty body). */
+export const getPickupAddress = (shopId: string) =>
+  api<PickupAddress>(`/seller/shops/${shopId}/pickup-address`, true).catch(() => null);

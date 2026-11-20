@@ -28,13 +28,15 @@ public class GlobalExceptionHandler {
                             ORDER_NOT_FOUND ->
                             HttpStatus.NOT_FOUND;
                     case ACCOUNT_SUSPENDED -> HttpStatus.FORBIDDEN;
+                    case CARRIER_UNAVAILABLE -> HttpStatus.BAD_GATEWAY;
                     case INVALID_CATALOG_FILTER,
                             INVALID_PRODUCT_INPUT,
                             INVALID_STOCK_INPUT,
                             INVALID_CART_INPUT,
                             INVALID_ADDRESS_INPUT,
                             INVALID_POLICY_INPUT,
-                            INVALID_ORDER_INPUT ->
+                            INVALID_ORDER_INPUT,
+                            INVALID_PICKUP_INPUT ->
                             HttpStatus.BAD_REQUEST;
                     case SHOP_ALREADY_EXISTS,
                             INVALID_SHOP_STATE,
@@ -49,6 +51,9 @@ public class GlobalExceptionHandler {
                             ADDRESS_LIMIT_REACHED,
                             INVALID_POLICY_STATE,
                             INVALID_ORDER_STATE,
+                            CARRIER_NOT_CONFIGURED,
+                            CARRIER_REJECTED,
+                            PICKUP_ADDRESS_REQUIRED,
                             CHECKOUT_POLICY_MISSING,
                             QUOTE_STALE,
                             QUOTE_ADDRESS_REQUIRED,

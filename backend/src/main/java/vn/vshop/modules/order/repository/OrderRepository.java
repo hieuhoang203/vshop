@@ -65,6 +65,14 @@ public interface OrderRepository {
 
     List<UUID> findReservationIds(UUID orderId);
 
+    String paymentMethodOfGroup(UUID groupId);
+
+    /** Unscoped lookup for system actions (webhooks); callers must already be authorised. */
+    SellerOrder findById(UUID orderId);
+
+    /** IN_FULFILLMENT back to READY_TO_SHIP (shipment canceled), clearing the tracking code. */
+    boolean reopenForShipping(UUID orderId);
+
     /** AWAITING_SELLER orders placed at or before {@code cutoff}, oldest first. */
     List<vn.vshop.modules.order.model.OverdueOrders.Overdue> findOverdue(
             java.time.OffsetDateTime cutoff, int limit);

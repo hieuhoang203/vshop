@@ -399,6 +399,36 @@ public class JdbcOrderRepository implements OrderRepository {
     }
 
     @Override
+    public SellerOrder findById(UUID orderId) {
+        return jdbc.sql("SELECT " + ORDER_COLUMNS + " FROM sales.seller_order o WHERE o.id = :id")
+                .param("id", orderId)
+                .query(SellerOrder.class)
+                .single();
+    }
+
+    @Override
+    public String paymentMethodOfGroup(UUID groupId) {
+        return jdbc.sql("SELECT payment_method FROM sales.checkout_group WHERE id = :id")
+                .param("id", groupId)
+                .query(String.class)
+                .single();
+    }
+
+    @Override
+    public boolean reopenForShipping(UUID orderId) {
+        return jdbc.sql(
+                                """
+            UPDATE sales.seller_order
+            SET status = 'READY_TO_SHIP', manual_tracking_code = NULL, shipped_at = NULL,
+                version = version + 1, updated_at = now()
+            WHERE id = :id AND status = 'IN_FULFILLMENT'
+            """)
+                        .param("id", orderId)
+                        .update()
+                == 1;
+    }
+
+    @Override
     public List<UUID> findReservationIds(UUID orderId) {
         return jdbc.sql(
                         """

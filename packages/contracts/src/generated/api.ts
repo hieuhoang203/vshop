@@ -644,6 +644,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/shipment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sellerShipmentCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/shipment/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sellerShipmentCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/shops/{shopId}/pickup-address": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sellerShipmentPickup"];
+        put: operations["sellerShipmentSavePickup"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/seller/shops/{shopId}/products": {
         parameters: {
             query?: never;
@@ -718,6 +766,22 @@ export interface paths {
         get?: never;
         put: operations["sellerProductChangeStatus"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/shipping/ghtk/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["shippingWebhookJson"];
         delete?: never;
         options?: never;
         head?: never;
@@ -827,6 +891,10 @@ export interface components {
         CreateQuoteRequest: {
             /** Format: uuid */
             addressId?: string;
+        };
+        CreateShipmentRequest: {
+            /** Format: int32 */
+            weightGrams?: number;
         };
         LineResponse: {
             /** Format: int64 */
@@ -999,6 +1067,22 @@ export interface components {
             size: number;
             /** Format: int64 */
             total: number;
+        };
+        PickupAddressRequest: {
+            contactName: string;
+            district: string;
+            phone: string;
+            province: string;
+            street: string;
+            ward: string;
+        };
+        PickupAddressResponse: {
+            contactName: string;
+            district: string;
+            phone: string;
+            province: string;
+            street: string;
+            ward: string;
         };
         PlaceOrderRequest: {
             /** @enum {string} */
@@ -2828,6 +2912,140 @@ export interface operations {
             };
         };
     };
+    sellerShipmentCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shopId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateShipmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerOrderResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    sellerShipmentCancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shopId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerOrderResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    sellerShipmentPickup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shopId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickupAddressResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    sellerShipmentSavePickup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shopId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PickupAddressRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PickupAddressResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     sellerProductList: {
         parameters: {
             query?: {
@@ -3061,6 +3279,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SellerProductResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    shippingWebhookJson: {
+        parameters: {
+            query?: {
+                hash?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+                "application/x-www-form-urlencoded": {
+                    parameters: {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */

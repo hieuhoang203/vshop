@@ -1,7 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { ReasonInput, SellerOrder, ShipOrderInput } from "@vshop/contracts";
+import type {
+  CreateShipmentInput,
+  ReasonInput,
+  SellerOrder,
+  ShipOrderInput,
+} from "@vshop/contracts";
 import { Button, TextField } from "@radix-ui/themes";
 import { bff } from "@/lib/client-api";
 
@@ -9,6 +14,7 @@ import { bff } from "@/lib/client-api";
 export function OrderActions({ shopId, order }: { shopId: string; order: SellerOrder }) {
   const router = useRouter();
   const [text, setText] = useState("");
+  const [weight, setWeight] = useState("500");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const base = `seller/shops/${shopId}/orders/${order.id}`;
@@ -60,6 +66,22 @@ export function OrderActions({ shopId, order }: { shopId: string; order: SellerO
       )}
       {status === "READY_TO_SHIP" && (
         <>
+          <label htmlFor={`weight-${order.id}`}>Khối lượng kiện hàng (gram)</label>
+          <TextField.Root
+            id={`weight-${order.id}`}
+            type="number"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+          />
+          <Button
+            disabled={busy}
+            onClick={() =>
+              act("shipment", { weightGrams: Number(weight) } satisfies CreateShipmentInput)
+            }
+          >
+            Tạo vận đơn GHTK
+          </Button>
+          <p className="form-note">Hoặc giao thủ công bằng mã vận đơn tự nhập:</p>
           <label htmlFor={`track-${order.id}`}>Mã vận đơn (nhập tay)</label>
           <TextField.Root
             id={`track-${order.id}`}
@@ -82,6 +104,9 @@ export function OrderActions({ shopId, order }: { shopId: string; order: SellerO
           </p>
           <Button disabled={busy} onClick={() => act("delivered")}>
             Xác nhận đã giao
+          </Button>
+          <Button color="red" variant="soft" disabled={busy} onClick={() => act("shipment/cancel")}>
+            Hủy vận đơn GHTK
           </Button>
         </>
       )}

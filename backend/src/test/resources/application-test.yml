@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    hikari:
+      # Many cached Spring contexts share one PostgreSQL in the test run; keep each pool small.
+      maximum-pool-size: 4
+      minimum-idle: 0

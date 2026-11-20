@@ -31,7 +31,9 @@ import tools.jackson.databind.ObjectMapper;
         properties = {
             "spring.datasource.url=${VSHOP_TEST_DATABASE_URL:jdbc:postgresql://localhost:15433/vshop_test}",
             "spring.flyway.locations=classpath:db/migration",
-            "vshop.worker.enabled=false"
+            "vshop.worker.enabled=false",
+            "vshop.payment.vnpay.tmn-code=",
+            "vshop.payment.vnpay.hash-secret="
         })
 @AutoConfigureMockMvc
 @Transactional

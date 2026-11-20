@@ -82,5 +82,10 @@ export type SellerOrderPage = Schemas["PageResponseSellerOrderResponse"];
 export type ReasonInput = Schemas["ReasonRequest"];
 export type ShipOrderInput = Schemas["ShipOrderRequest"];
 
+// Carrier shipping
+export type PickupAddress = Schemas["PickupAddressResponse"];
+export type PickupAddressInput = Schemas["PickupAddressRequest"];
+export type CreateShipmentInput = Schemas["CreateShipmentRequest"];
+
 // Support queue
 export type OverdueOrders = Schemas["OverdueOrdersResponse"];

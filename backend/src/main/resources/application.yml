@@ -54,6 +54,15 @@ vshop:
       tmn-code: ${VNPAY_TMN_CODE:}
       hash-secret: ${VNPAY_HASH_SECRET:}
       pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+  shipping:
+    ghtk:
+      # GHTK staging until production access is granted. An empty token or partner code means the
+      # carrier is not configured and shops use manual shipping. Never commit real values.
+      base-url: ${GHTK_BASE_URL:https://services-staging.ghtklab.com}
+      token: ${GHTK_TOKEN:}
+      partner-code: ${GHTK_PARTNER_CODE:}
+      # The secret GHTK puts in the webhook URL (?hash=...). Choose a long random value.
+      webhook-token: ${GHTK_WEBHOOK_TOKEN:}
   pii:
     # Application-level encryption of personal data (phone, street). One id per key; new values use
     # active-key and old ids stay readable, so keys can be rotated. Provide the 32-byte base64 key

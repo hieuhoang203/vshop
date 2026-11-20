@@ -9,7 +9,7 @@ BEGIN;
 ALTER TABLE sales.order_line ADD CONSTRAINT uq_order_line_id_order UNIQUE (id, seller_order_id);
 CREATE SCHEMA promotion;
 -- payment.intent, attempt, charge, allocation, provider_event and review_case: Flyway V1010.
-CREATE SCHEMA fulfillment;
+-- fulfillment.shipment, shipment_event and pickup_address: Flyway V1011.
 CREATE SCHEMA aftersales;
 CREATE SCHEMA finance;
 CREATE SCHEMA engagement;
@@ -110,25 +110,6 @@ CREATE TABLE promotion.redemption (
 );
 CREATE INDEX ix_redemption_checkout ON promotion.redemption(checkout_group_id);
 
-CREATE TABLE fulfillment.shipment (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    seller_order_id UUID NOT NULL,
-    shop_id UUID NOT NULL,
-    warehouse_id UUID NOT NULL,
-    direction VARCHAR(10) NOT NULL CHECK (direction IN ('FORWARD', 'RETURN')),
-    carrier_code VARCHAR(30) NOT NULL,
-    tracking_number VARCHAR(100),
-    status VARCHAR(30) NOT NULL CHECK (status IN ('CREATED', 'READY', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED', 'DELIVERY_FAILED', 'RETURNING', 'RETURNED', 'LOST', 'CANCELED')),
-    cod_amount BIGINT NOT NULL DEFAULT 0 CHECK (cod_amount >= 0),
-    recipient_snapshot_ciphertext TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (carrier_code, tracking_number),
-    UNIQUE (id, seller_order_id),
-    FOREIGN KEY (seller_order_id, shop_id) REFERENCES sales.seller_order(id, shop_id),
-    FOREIGN KEY (warehouse_id, shop_id) REFERENCES inventory.warehouse(id, shop_id)
-);
-CREATE INDEX ix_shipment_order_shop ON fulfillment.shipment(seller_order_id, shop_id);
-CREATE INDEX ix_shipment_warehouse_shop ON fulfillment.shipment(warehouse_id, shop_id);
 CREATE TABLE fulfillment.shipment_line (
     shipment_id UUID NOT NULL,
     seller_order_id UUID NOT NULL,
@@ -139,17 +120,6 @@ CREATE TABLE fulfillment.shipment_line (
     FOREIGN KEY (order_line_id, seller_order_id) REFERENCES sales.order_line(id, seller_order_id)
 );
 CREATE INDEX ix_shipment_line_order ON fulfillment.shipment_line(order_line_id, seller_order_id);
-CREATE TABLE fulfillment.shipment_event (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    shipment_id UUID NOT NULL REFERENCES fulfillment.shipment(id),
-    provider_event_id VARCHAR(150) NOT NULL,
-    raw_status VARCHAR(80) NOT NULL,
-    normalized_status VARCHAR(30) NOT NULL,
-    occurred_at TIMESTAMPTZ NOT NULL,
-    received_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    redacted_payload JSONB NOT NULL,
-    UNIQUE (shipment_id, provider_event_id)
-);
 CREATE TABLE fulfillment.cod_receivable (
     shipment_id UUID PRIMARY KEY REFERENCES fulfillment.shipment(id),
     expected_amount BIGINT NOT NULL CHECK (expected_amount >= 0),

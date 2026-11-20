@@ -305,24 +305,41 @@ fulfillment,cod_receivable,cod_receivable_remitted_amount_check,c,CHECK ((remitt
 fulfillment,cod_receivable,cod_receivable_remitted_amount_not_null,n,NOT NULL remitted_amount
 fulfillment,cod_receivable,cod_receivable_shipment_id_fkey,f,FOREIGN KEY (shipment_id) REFERENCES fulfillment.shipment(id)
 fulfillment,cod_receivable,cod_receivable_shipment_id_not_null,n,NOT NULL shipment_id
+fulfillment,pickup_address,pickup_address_contact_name_not_null,n,NOT NULL contact_name
+fulfillment,pickup_address,pickup_address_district_not_null,n,NOT NULL district
+fulfillment,pickup_address,pickup_address_phone_ciphertext_not_null,n,NOT NULL phone_ciphertext
+fulfillment,pickup_address,pickup_address_pkey,p,PRIMARY KEY (shop_id)
+fulfillment,pickup_address,pickup_address_province_not_null,n,NOT NULL province
+fulfillment,pickup_address,pickup_address_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
+fulfillment,pickup_address,pickup_address_shop_id_not_null,n,NOT NULL shop_id
+fulfillment,pickup_address,pickup_address_street_ciphertext_not_null,n,NOT NULL street_ciphertext
+fulfillment,pickup_address,pickup_address_updated_at_not_null,n,NOT NULL updated_at
+fulfillment,pickup_address,pickup_address_ward_not_null,n,NOT NULL ward
+fulfillment,shipment,ck_shipment_tracking,c,"CHECK ((((status)::text = ANY ((ARRAY['CREATING'::character varying, 'FAILED'::character varying])::text[])) OR (tracking_number IS NOT NULL)))"
+fulfillment,shipment,fk_shipment_order_shop,f,"FOREIGN KEY (seller_order_id, shop_id) REFERENCES sales.seller_order(id, shop_id)"
 fulfillment,shipment,shipment_carrier_code_not_null,n,NOT NULL carrier_code
-fulfillment,shipment,shipment_carrier_code_tracking_number_key,u,"UNIQUE (carrier_code, tracking_number)"
+fulfillment,shipment,shipment_carrier_fee_check,c,CHECK ((carrier_fee >= 0))
 fulfillment,shipment,shipment_cod_amount_check,c,CHECK ((cod_amount >= 0))
 fulfillment,shipment,shipment_cod_amount_not_null,n,NOT NULL cod_amount
 fulfillment,shipment,shipment_created_at_not_null,n,NOT NULL created_at
+fulfillment,shipment,shipment_declared_value_check,c,CHECK ((declared_value > 0))
+fulfillment,shipment,shipment_declared_value_not_null,n,NOT NULL declared_value
 fulfillment,shipment,shipment_direction_check,c,"CHECK (((direction)::text = ANY ((ARRAY['FORWARD'::character varying, 'RETURN'::character varying])::text[])))"
 fulfillment,shipment,shipment_direction_not_null,n,NOT NULL direction
 fulfillment,shipment,shipment_id_not_null,n,NOT NULL id
-fulfillment,shipment,shipment_id_seller_order_id_key,u,"UNIQUE (id, seller_order_id)"
+fulfillment,shipment,shipment_insurance_fee_check,c,CHECK ((insurance_fee >= 0))
+fulfillment,shipment,shipment_partner_order_id_not_null,n,NOT NULL partner_order_id
 fulfillment,shipment,shipment_pkey,p,PRIMARY KEY (id)
-fulfillment,shipment,shipment_recipient_snapshot_ciphertext_not_null,n,NOT NULL recipient_snapshot_ciphertext
 fulfillment,shipment,shipment_seller_order_id_not_null,n,NOT NULL seller_order_id
-fulfillment,shipment,shipment_seller_order_id_shop_id_fkey,f,"FOREIGN KEY (seller_order_id, shop_id) REFERENCES sales.seller_order(id, shop_id)"
 fulfillment,shipment,shipment_shop_id_not_null,n,NOT NULL shop_id
-fulfillment,shipment,shipment_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['CREATED'::character varying, 'READY'::character varying, 'PICKED_UP'::character varying, 'IN_TRANSIT'::character varying, 'OUT_FOR_DELIVERY'::character varying, 'DELIVERED'::character varying, 'DELIVERY_FAILED'::character varying, 'RETURNING'::character varying, 'RETURNED'::character varying, 'LOST'::character varying, 'CANCELED'::character varying])::text[])))"
+fulfillment,shipment,shipment_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['CREATING'::character varying, 'CREATED'::character varying, 'FAILED'::character varying, 'PICKED_UP'::character varying, 'IN_TRANSIT'::character varying, 'DELIVERED'::character varying, 'DELIVERY_FAILED'::character varying, 'RETURNING'::character varying, 'RETURNED'::character varying, 'CANCELED'::character varying])::text[])))"
 fulfillment,shipment,shipment_status_not_null,n,NOT NULL status
-fulfillment,shipment,shipment_warehouse_id_not_null,n,NOT NULL warehouse_id
-fulfillment,shipment,shipment_warehouse_id_shop_id_fkey,f,"FOREIGN KEY (warehouse_id, shop_id) REFERENCES inventory.warehouse(id, shop_id)"
+fulfillment,shipment,shipment_updated_at_not_null,n,NOT NULL updated_at
+fulfillment,shipment,shipment_weight_grams_check,c,CHECK ((weight_grams > 0))
+fulfillment,shipment,shipment_weight_grams_not_null,n,NOT NULL weight_grams
+fulfillment,shipment,uq_shipment_carrier_partner,u,"UNIQUE (carrier_code, partner_order_id)"
+fulfillment,shipment,uq_shipment_carrier_tracking,u,"UNIQUE (carrier_code, tracking_number)"
+fulfillment,shipment,uq_shipment_id_order,u,"UNIQUE (id, seller_order_id)"
 fulfillment,shipment_event,shipment_event_id_not_null,n,NOT NULL id
 fulfillment,shipment_event,shipment_event_normalized_status_not_null,n,NOT NULL normalized_status
 fulfillment,shipment_event,shipment_event_occurred_at_not_null,n,NOT NULL occurred_at
@@ -330,10 +347,9 @@ fulfillment,shipment_event,shipment_event_pkey,p,PRIMARY KEY (id)
 fulfillment,shipment_event,shipment_event_provider_event_id_not_null,n,NOT NULL provider_event_id
 fulfillment,shipment_event,shipment_event_raw_status_not_null,n,NOT NULL raw_status
 fulfillment,shipment_event,shipment_event_received_at_not_null,n,NOT NULL received_at
-fulfillment,shipment_event,shipment_event_redacted_payload_not_null,n,NOT NULL redacted_payload
 fulfillment,shipment_event,shipment_event_shipment_id_fkey,f,FOREIGN KEY (shipment_id) REFERENCES fulfillment.shipment(id)
 fulfillment,shipment_event,shipment_event_shipment_id_not_null,n,NOT NULL shipment_id
-fulfillment,shipment_event,shipment_event_shipment_id_provider_event_id_key,u,"UNIQUE (shipment_id, provider_event_id)"
+fulfillment,shipment_event,uq_shipment_event,u,"UNIQUE (shipment_id, provider_event_id)"
 fulfillment,shipment_line,shipment_line_order_line_id_not_null,n,NOT NULL order_line_id
 fulfillment,shipment_line,shipment_line_order_line_id_seller_order_id_fkey,f,"FOREIGN KEY (order_line_id, seller_order_id) REFERENCES sales.order_line(id, seller_order_id)"
 fulfillment,shipment_line,shipment_line_pkey,p,"PRIMARY KEY (shipment_id, order_line_id)"
