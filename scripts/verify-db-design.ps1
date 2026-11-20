@@ -19,6 +19,7 @@ try {
         'backend/src/main/resources/db/migration/V1006__policy_versions_and_generic_outbox.sql',
         'backend/src/main/resources/db/migration/V1007__orders.sql',
         'backend/src/main/resources/db/migration/V1008__manual_fulfillment.sql',
+        'backend/src/main/resources/db/migration/V1009__seller_confirmation_policy.sql',
         'docs/database/target-commerce.sql',
         'docs/database/target-design-checks.sql'
     )

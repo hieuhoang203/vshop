@@ -19,6 +19,7 @@ import vn.vshop.modules.order.entity.OrderStatus;
 import vn.vshop.modules.order.entity.OrderStatusEvent;
 import vn.vshop.modules.order.entity.SellerOrder;
 import vn.vshop.modules.order.model.OrderDetail;
+import vn.vshop.modules.order.model.OverdueOrders;
 import vn.vshop.modules.order.model.SellerOrderDetail;
 import vn.vshop.modules.order.repository.OrderRepository;
 import vn.vshop.modules.platform.service.OutboxService;
@@ -51,6 +52,7 @@ public class OrderFulfillmentService {
     private final PolicyService policies;
     private final OutboxService outbox;
     private final ObjectMapper json;
+    private final java.time.Clock clock;
 
     OrderFulfillmentService(
             OrderRepository orders,
@@ -60,7 +62,8 @@ public class OrderFulfillmentService {
             ReservationService reservations,
             PolicyService policies,
             OutboxService outbox,
-            ObjectMapper json) {
+            ObjectMapper json,
+            java.time.Clock clock) {
         this.orders = orders;
         this.orderService = orderService;
         this.shops = shops;
@@ -69,6 +72,23 @@ public class OrderFulfillmentService {
         this.policies = policies;
         this.outbox = outbox;
         this.json = json;
+        this.clock = clock;
+    }
+
+    // ------------------------------------------------------------------ support queue
+
+    /**
+     * Orders still waiting for the shop after the approved deadline. Nothing is changed: no
+     * automatic cancel, support decides (docs/20 D8).
+     */
+    @Transactional(readOnly = true)
+    public OverdueOrders overdue() {
+        var minutes = policies.sellerConfirmationMinutes();
+        if (minutes.isEmpty()) {
+            return new OverdueOrders(null, List.of());
+        }
+        var cutoff = java.time.OffsetDateTime.now(clock).minusMinutes(minutes.get());
+        return new OverdueOrders(minutes.get(), orders.findOverdue(cutoff, 200));
     }
 
     // ------------------------------------------------------------------ seller reads

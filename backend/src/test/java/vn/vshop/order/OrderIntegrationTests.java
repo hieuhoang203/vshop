@@ -602,6 +602,67 @@ class OrderIntegrationTests {
                 .isEqualTo("AWAITING_SELLER");
     }
 
+    @Test
+    void ordersNotConfirmedWithinTheApproved24HoursLandInTheSupportQueueAndAreNotCanceled()
+            throws Exception {
+        JsonNode order = placedOrderOfShopA(1);
+        UUID id = UUID.fromString(order.get("id").asText());
+        // No deadline policy yet: nothing is overdue, whatever the age.
+        jdbc.sql(
+                        "UPDATE sales.seller_order SET created_at = now() - interval '30 hours' WHERE id = :id")
+                .param("id", id)
+                .update();
+        mvc.perform(get("/api/v1/admin/orders/overdue").with(admin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.confirmMinutes").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.items.length()").value(0));
+        mvc.perform(get("/api/v1/admin/orders/overdue").with(buyer("buyer-1")))
+                .andExpect(status().isForbidden());
+
+        // A too-short deadline is refused; 24h (1440 minutes) is approved like any policy.
+        mvc.perform(
+                        post("/api/v1/admin/policies")
+                                .with(admin())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"policyType\":\"SELLER_CONFIRMATION\",\"content\":{\"confirmMinutes\":10}}"))
+                .andExpect(status().isBadRequest());
+        approve(draft("SELLER_CONFIRMATION", Map.of("confirmMinutes", 1440)));
+        mvc.perform(get("/api/v1/admin/orders/overdue").with(admin()))
+                .andExpect(jsonPath("$.confirmMinutes").value(1440))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(id.toString()))
+                .andExpect(jsonPath("$.items[0].minutesOverdue").value(360));
+        // Nothing was canceled and the stock is untouched.
+        assertThat(
+                        jdbc.sql("SELECT status FROM sales.seller_order WHERE id = :id")
+                                .param("id", id)
+                                .query(String.class)
+                                .single())
+                .isEqualTo("AWAITING_SELLER");
+        assertThat(onHand(skuA1)).isEqualTo(9);
+
+        // Younger than 24h is not overdue; confirming removes it from the queue.
+        jdbc.sql(
+                        "UPDATE sales.seller_order SET created_at = now() - interval '23 hours' WHERE id = :id")
+                .param("id", id)
+                .update();
+        mvc.perform(get("/api/v1/admin/orders/overdue").with(admin()))
+                .andExpect(jsonPath("$.items.length()").value(0));
+        jdbc.sql(
+                        "UPDATE sales.seller_order SET created_at = now() - interval '25 hours' WHERE id = :id")
+                .param("id", id)
+                .update();
+        mvc.perform(get("/api/v1/admin/orders/overdue").with(admin()))
+                .andExpect(jsonPath("$.items.length()").value(1));
+        mvc.perform(
+                        post("/api/v1/seller/shops/" + shopA + "/orders/" + id + "/confirm")
+                                .with(seller("order-seller-a")))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/v1/admin/orders/overdue").with(admin()))
+                .andExpect(jsonPath("$.items.length()").value(0));
+    }
+
     private JsonNode placedOrderOfShopA(int quantity) throws Exception {
         if (jdbc.sql("SELECT count(*) FROM platform.policy_version WHERE status = 'APPROVED'")
                         .query(Long.class)

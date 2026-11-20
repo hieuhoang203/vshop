@@ -234,7 +234,7 @@
             "type" : "object"
           },
           "policyType" : {
-            "enum" : [ "SHIPPING_FLAT", "RETURN", "COD_LIMITS", "PAYMENT_WINDOW" ],
+            "enum" : [ "SHIPPING_FLAT", "RETURN", "COD_LIMITS", "PAYMENT_WINDOW", "SELLER_CONFIRMATION" ],
             "type" : "string"
           }
         },
@@ -592,6 +592,54 @@
         "required" : [ "checkoutGroupId", "createdAt", "firstImageKey", "firstProductName", "id", "itemCount", "orderNumber", "payableAmount", "shopName", "status" ],
         "type" : "object"
       },
+      "OverdueOrderResponse" : {
+        "properties" : {
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "minutesOverdue" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "payableAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "shopId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "shopName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "createdAt", "id", "minutesOverdue", "orderNumber", "payableAmount", "shopId", "shopName" ],
+        "type" : "object"
+      },
+      "OverdueOrdersResponse" : {
+        "properties" : {
+          "confirmMinutes" : {
+            "format" : "int32",
+            "type" : [ "integer", "null" ]
+          },
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/OverdueOrderResponse"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "confirmMinutes", "items" ],
+        "type" : "object"
+      },
       "PageResponseOrderSummaryResponse" : {
         "properties" : {
           "items" : {
@@ -754,7 +802,7 @@
             "type" : "string"
           },
           "policyType" : {
-            "enum" : [ "SHIPPING_FLAT", "RETURN", "COD_LIMITS", "PAYMENT_WINDOW" ],
+            "enum" : [ "SHIPPING_FLAT", "RETURN", "COD_LIMITS", "PAYMENT_WINDOW", "SELLER_CONFIRMATION" ],
             "type" : "string"
           },
           "status" : {
@@ -1559,6 +1607,42 @@
           "bearerAuth" : [ ]
         } ],
         "tags" : [ "admin-merchant-analytics-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "ADMIN" ],
+          "public" : false,
+          "requiresSecondFactor" : true
+        }
+      }
+    },
+    "/api/v1/admin/orders/overdue" : {
+      "get" : {
+        "operationId" : "adminOrderOverdue",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OverdueOrdersResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "admin-order-controller" ],
         "x-vshop-access" : {
           "anyOfRoles" : [ "ADMIN" ],
           "public" : false,

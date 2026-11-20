@@ -64,4 +64,8 @@ public interface OrderRepository {
     boolean markDelivered(UUID orderId, int returnWindowDays);
 
     List<UUID> findReservationIds(UUID orderId);
+
+    /** AWAITING_SELLER orders placed at or before {@code cutoff}, oldest first. */
+    List<vn.vshop.modules.order.model.OverdueOrders.Overdue> findOverdue(
+            java.time.OffsetDateTime cutoff, int limit);
 }

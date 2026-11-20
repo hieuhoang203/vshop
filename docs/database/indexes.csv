@@ -197,6 +197,7 @@ sales,order_line_reservation,order_line_reservation_pkey,CREATE UNIQUE INDEX ord
 sales,order_line_reservation,order_line_reservation_reservation_id_key,CREATE UNIQUE INDEX order_line_reservation_reservation_id_key ON sales.order_line_reservation USING btree (reservation_id)
 sales,order_status_history,ix_history_order,"CREATE INDEX ix_history_order ON sales.order_status_history USING btree (seller_order_id, created_at, id)"
 sales,order_status_history,order_status_history_pkey,CREATE UNIQUE INDEX order_status_history_pkey ON sales.order_status_history USING btree (id)
+sales,seller_order,ix_order_awaiting,CREATE INDEX ix_order_awaiting ON sales.seller_order USING btree (created_at) WHERE ((status)::text = 'AWAITING_SELLER'::text)
 sales,seller_order,ix_order_deadline,CREATE INDEX ix_order_deadline ON sales.seller_order USING btree (payment_deadline) WHERE ((status)::text = 'PENDING_PAYMENT'::text)
 sales,seller_order,ix_order_policy,CREATE INDEX ix_order_policy ON sales.seller_order USING btree (return_policy_id)
 sales,seller_order,ix_order_shop_created,"CREATE INDEX ix_order_shop_created ON sales.seller_order USING btree (shop_id, created_at DESC)"

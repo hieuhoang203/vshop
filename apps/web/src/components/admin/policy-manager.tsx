@@ -13,6 +13,7 @@ const FIELDS: Record<PolicyType, { key: string; label: string }[]> = {
     { key: "maxOrderAmount", label: "Tối đa mỗi đơn COD (VND)" },
     { key: "maxOpenOrders", label: "Số đơn COD đang mở tối đa" },
   ],
+  SELLER_CONFIRMATION: [{ key: "confirmMinutes", label: "Hạn người bán xác nhận đơn (phút)" }],
   PAYMENT_WINDOW: [
     { key: "paymentMinutes", label: "Thời gian thanh toán (phút)" },
     { key: "reservationBufferMinutes", label: "Đệm giữ hàng (phút)" },

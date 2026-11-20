@@ -39,7 +39,9 @@ public class PolicyService {
                     PolicyType.PAYMENT_WINDOW,
                             Map.of(
                                     "paymentMinutes", new long[] {5, 1440},
-                                    "reservationBufferMinutes", new long[] {0, 60}));
+                                    "reservationBufferMinutes", new long[] {0, 60}),
+                    PolicyType.SELLER_CONFIRMATION,
+                            Map.of("confirmMinutes", new long[] {60, 10_080}));
 
     private final PolicyRepository policies;
     private final AccountService accounts;
@@ -99,6 +101,17 @@ public class PolicyService {
     @Transactional(readOnly = true)
     public List<PolicyVersion> list() {
         return policies.list();
+    }
+
+    /**
+     * How long a shop has to confirm or reject an order, from the approved policy. Empty while none
+     * is approved (then no order counts as overdue). It is deliberately not part of the checkout
+     * gate: it does not change what a buyer pays.
+     */
+    @Transactional(readOnly = true)
+    public java.util.Optional<Integer> sellerConfirmationMinutes() {
+        return policies.findCurrent(PolicyType.SELLER_CONFIRMATION)
+                .map(p -> (int) value(p, "confirmMinutes"));
     }
 
     /** Return window of the (possibly retired) policy version an order was placed under. */

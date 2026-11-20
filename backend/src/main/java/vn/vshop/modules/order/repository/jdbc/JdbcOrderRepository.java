@@ -380,6 +380,25 @@ public class JdbcOrderRepository implements OrderRepository {
     }
 
     @Override
+    public List<vn.vshop.modules.order.model.OverdueOrders.Overdue> findOverdue(
+            java.time.OffsetDateTime cutoff, int limit) {
+        return jdbc.sql(
+                        """
+            SELECT o.id, o.order_number, o.shop_id, o.shop_name_snapshot AS shop_name,
+                   o.payable_amount, o.created_at,
+                   (EXTRACT(EPOCH FROM (CAST(:cutoff AS timestamptz) - o.created_at)) / 60)::bigint
+                       AS minutes_overdue
+            FROM sales.seller_order o
+            WHERE o.status = 'AWAITING_SELLER' AND o.created_at <= :cutoff
+            ORDER BY o.created_at, o.id LIMIT :limit
+            """)
+                .param("cutoff", cutoff)
+                .param("limit", limit)
+                .query(vn.vshop.modules.order.model.OverdueOrders.Overdue.class)
+                .list();
+    }
+
+    @Override
     public List<UUID> findReservationIds(UUID orderId) {
         return jdbc.sql(
                         """

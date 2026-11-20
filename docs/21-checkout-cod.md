@@ -75,3 +75,13 @@ Ngày: **20/11/2026**. Phạm vi: docs/20 mục S2 với D11 (giao thủ công).
 3. Chỉ chủ gian hàng xử lý đơn; vai trò FULFILLMENT/SUPPORT của `shop_member` chưa được dùng ở đâu cả.
 4. Chưa có `CANCEL_REQUESTED` (người mua hủy sau khi shop xác nhận), trả hàng, hoàn tiền; cần S3/E.
 5. Bản ghi phải thu COD (`fulfillment.cod_receivable`) chưa tạo; thuộc S4.
+
+## 7. D8: hạn xác nhận 24 giờ và hàng đợi hỗ trợ
+
+Chủ sản phẩm chốt hạn xác nhận của người bán là **24 giờ** (1.440 phút). Quá hạn **không tự hủy**: đơn vào hàng đợi cho quản trị viên (theo thiết kế docs/20 D8).
+
+- Chính sách mới `SELLER_CONFIRMATION {confirmMinutes}` (60–10.080 phút), qua cùng cổng duyệt như các chính sách khác (V1009 mở rộng CHECK). **Không** thuộc cổng checkout vì không đổi số tiền người mua trả.
+- `GET /api/v1/admin/orders/overdue` (ADMIN + OTP): đơn `AWAITING_SELLER` có tuổi lớn hơn hạn đã duyệt, cũ nhất trước (tối đa 200), kèm số phút quá hạn. Chưa có chính sách đã duyệt thì `confirmMinutes` là `null` và danh sách rỗng. Trang web `/admin/orders`.
+- **Việc còn lại cho chủ sản phẩm:** vào `/admin/policies`, tạo bản nháp `SELLER_CONFIRMATION` với 1440 và duyệt (bằng tài khoản ADMIN có OTP). Mã không tự duyệt thay bạn.
+- Chưa có hành động trong hàng đợi (nhắc người bán, hủy thay, chuyển shop); hiện chỉ xem. Chưa có thông báo cho người bán (chưa có kênh thông báo).
+- Kiểm chứng: 1 test tích hợp mới (không chính sách thì rỗng, 10 phút bị từ chối, 23 giờ chưa quá hạn, 25 giờ quá hạn, xác nhận thì rời hàng đợi, không đơn nào bị hủy).

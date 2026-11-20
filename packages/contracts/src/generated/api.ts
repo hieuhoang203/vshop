@@ -20,6 +20,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/orders/overdue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["adminOrderOverdue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/policies": {
         parameters: {
             query?: never;
@@ -780,7 +796,7 @@ export interface components {
                 [key: string]: number;
             };
             /** @enum {string} */
-            policyType: "SHIPPING_FLAT" | "RETURN" | "COD_LIMITS" | "PAYMENT_WINDOW";
+            policyType: "SHIPPING_FLAT" | "RETURN" | "COD_LIMITS" | "PAYMENT_WINDOW" | "SELLER_CONFIRMATION";
         };
         CreateProductRequest: {
             /** Format: uuid */
@@ -912,6 +928,25 @@ export interface components {
             /** @enum {string} */
             status: "PENDING_PAYMENT" | "AWAITING_SELLER" | "CONFIRMED" | "PACKING" | "READY_TO_SHIP" | "IN_FULFILLMENT" | "DELIVERED" | "COMPLETED" | "CANCEL_REQUESTED" | "CANCELED" | "REJECTED";
         };
+        OverdueOrderResponse: {
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            minutesOverdue: number;
+            orderNumber: string;
+            /** Format: int64 */
+            payableAmount: number;
+            /** Format: uuid */
+            shopId: string;
+            shopName: string;
+        };
+        OverdueOrdersResponse: {
+            /** Format: int32 */
+            confirmMinutes: number | null;
+            items: components["schemas"]["OverdueOrderResponse"][];
+        };
         PageResponseOrderSummaryResponse: {
             items: components["schemas"]["OrderSummaryResponse"][];
             /** Format: int32 */
@@ -979,7 +1014,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            policyType: "SHIPPING_FLAT" | "RETURN" | "COD_LIMITS" | "PAYMENT_WINDOW";
+            policyType: "SHIPPING_FLAT" | "RETURN" | "COD_LIMITS" | "PAYMENT_WINDOW" | "SELLER_CONFIRMATION";
             /** @enum {string} */
             status: "DRAFT" | "APPROVED" | "RETIRED";
             /** Format: int32 */
@@ -1278,6 +1313,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ShopActivityResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    adminOrderOverdue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverdueOrdersResponse"];
                 };
             };
             /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */

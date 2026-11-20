@@ -81,3 +81,6 @@ export type SellerOrder = Schemas["SellerOrderResponse"];
 export type SellerOrderPage = Schemas["PageResponseSellerOrderResponse"];
 export type ReasonInput = Schemas["ReasonRequest"];
 export type ShipOrderInput = Schemas["ShipOrderRequest"];
+
+// Support queue
+export type OverdueOrders = Schemas["OverdueOrdersResponse"];

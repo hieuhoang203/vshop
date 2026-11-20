@@ -5,5 +5,6 @@ public enum PolicyType {
     SHIPPING_FLAT,
     RETURN,
     COD_LIMITS,
-    PAYMENT_WINDOW
+    PAYMENT_WINDOW,
+    SELLER_CONFIRMATION
 }

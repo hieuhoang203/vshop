@@ -6,12 +6,14 @@ import tools.jackson.databind.ObjectMapper;
 import vn.vshop.modules.order.dto.response.CheckoutGroupResponse;
 import vn.vshop.modules.order.dto.response.OrderResponse;
 import vn.vshop.modules.order.dto.response.OrderSummaryResponse;
+import vn.vshop.modules.order.dto.response.OverdueOrdersResponse;
 import vn.vshop.modules.order.dto.response.SellerOrderResponse;
 import vn.vshop.modules.order.entity.OrderLine;
 import vn.vshop.modules.order.entity.OrderStatusEvent;
 import vn.vshop.modules.order.model.GroupDetail;
 import vn.vshop.modules.order.model.OrderDetail;
 import vn.vshop.modules.order.model.OrderSummary;
+import vn.vshop.modules.order.model.OverdueOrders;
 import vn.vshop.modules.order.model.SellerOrderDetail;
 
 public final class OrderMapper {
@@ -73,6 +75,23 @@ public final class OrderMapper {
                 o.createdAt(),
                 d.lines().stream().map(OrderMapper::toResponse).toList(),
                 d.history().stream().map(OrderMapper::toResponse).toList());
+    }
+
+    public static OverdueOrdersResponse toResponse(OverdueOrders o) {
+        return new OverdueOrdersResponse(
+                o.confirmMinutes(),
+                o.items().stream()
+                        .map(
+                                i ->
+                                        new OverdueOrdersResponse.OverdueOrderResponse(
+                                                i.id(),
+                                                i.orderNumber(),
+                                                i.shopId(),
+                                                i.shopName(),
+                                                i.payableAmount(),
+                                                i.createdAt(),
+                                                i.minutesOverdue()))
+                        .toList());
     }
 
     public static OrderSummaryResponse toResponse(OrderSummary s) {

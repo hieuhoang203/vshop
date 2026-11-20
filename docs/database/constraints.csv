@@ -600,7 +600,7 @@ platform,policy_version,ck_policy_approved,c,CHECK (((((status)::text = 'DRAFT':
 platform,policy_version,ck_policy_content,c,CHECK ((jsonb_typeof(content) = 'object'::text))
 platform,policy_version,ck_policy_effective,c,CHECK (((effective_to IS NULL) OR ((effective_from IS NOT NULL) AND (effective_to > effective_from))))
 platform,policy_version,ck_policy_status,c,"CHECK (((status)::text = ANY ((ARRAY['DRAFT'::character varying, 'APPROVED'::character varying, 'RETIRED'::character varying])::text[])))"
-platform,policy_version,ck_policy_type,c,"CHECK (((policy_type)::text = ANY ((ARRAY['SHIPPING_FLAT'::character varying, 'RETURN'::character varying, 'COD_LIMITS'::character varying, 'PAYMENT_WINDOW'::character varying])::text[])))"
+platform,policy_version,ck_policy_type,c,"CHECK (((policy_type)::text = ANY ((ARRAY['SHIPPING_FLAT'::character varying, 'RETURN'::character varying, 'COD_LIMITS'::character varying, 'PAYMENT_WINDOW'::character varying, 'SELLER_CONFIRMATION'::character varying])::text[])))"
 platform,policy_version,ck_policy_version,c,CHECK ((version > 0))
 platform,policy_version,policy_version_approved_by_account_id_fkey,f,FOREIGN KEY (approved_by_account_id) REFERENCES identity.account(id)
 platform,policy_version,policy_version_content_not_null,n,NOT NULL content

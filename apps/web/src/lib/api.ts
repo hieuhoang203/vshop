@@ -6,6 +6,7 @@ import type {
   CheckoutGroup,
   Order,
   OrderPage,
+  OverdueOrders,
   SellerOrder,
   SellerOrderPage,
   Policy,
@@ -71,3 +72,5 @@ export const getSellerOrders = (shopId: string, status = "", page = 0) =>
   );
 export const getSellerOrder = (shopId: string, orderId: string) =>
   api<SellerOrder>(`/seller/shops/${shopId}/orders/${encodeURIComponent(orderId)}`, true);
+
+export const getOverdueOrders = () => api<OverdueOrders>("/admin/orders/overdue", true);
