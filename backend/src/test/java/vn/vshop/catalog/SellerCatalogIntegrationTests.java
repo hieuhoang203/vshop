@@ -67,7 +67,10 @@ class SellerCatalogIntegrationTests {
 
         mvc.perform(get("/api/v1/catalog/products/" + slug)).andExpect(status().isNotFound());
 
-        JsonNode published = changeStatus(OWNER, product, "ACTIVE", 0, 200);
+        changeStatus(OWNER, product, "ACTIVE", 0, 409); // sellers cannot self-publish
+        changeStatus(OWNER, product, "PENDING_REVIEW", 0, 200);
+        mvc.perform(get("/api/v1/catalog/products/" + slug)).andExpect(status().isNotFound());
+        JsonNode published = review(product, "APPROVED", "Nội dung phù hợp", 1, 200);
         assertThat(published.get("status").asText()).isEqualTo("ACTIVE");
         mvc.perform(get("/api/v1/catalog/products/" + slug))
                 .andExpect(status().isOk())
@@ -84,7 +87,7 @@ class SellerCatalogIntegrationTests {
         mvc.perform(get("/api/v1/catalog/products/" + slug))
                 .andExpect(jsonPath("$.price").value(160000));
 
-        changeStatus(OWNER, product, "HIDDEN", 1, 200);
+        changeStatus(OWNER, product, "HIDDEN", 2, 200);
         mvc.perform(get("/api/v1/catalog/products/" + slug)).andExpect(status().isNotFound());
         assertThat(
                         jdbc.sql(
@@ -277,9 +280,10 @@ class SellerCatalogIntegrationTests {
         String sku = created.get("skus").get(0).get("id").asText();
         // Deactivate while DRAFT is allowed; then publishing must fail.
         updateSku(OWNER, product, sku, 50000, "INACTIVE", 0, 200);
-        changeStatus(OWNER, product, "ACTIVE", 0, 409);
+        changeStatus(OWNER, product, "PENDING_REVIEW", 0, 409);
         updateSku(OWNER, product, sku, 50000, "ACTIVE", 1, 200);
-        changeStatus(OWNER, product, "ACTIVE", 0, 200);
+        changeStatus(OWNER, product, "PENDING_REVIEW", 0, 200);
+        review(product, "APPROVED", "Nội dung phù hợp", 1, 200);
         updateSku(OWNER, product, sku, 50000, "INACTIVE", 2, 409);
         assertThat(
                         jdbc.sql("SELECT status FROM catalog.product_sku WHERE id=:id")
@@ -315,9 +319,9 @@ class SellerCatalogIntegrationTests {
                 .andExpect(jsonPath("$.code").value("VERSION_CONFLICT"));
         changeStatus(OWNER, product, "HIDDEN", 1, 409);
         changeStatus(OWNER, product, "DRAFT", 1, 409);
-        changeStatus(OWNER, product, "ACTIVE", 0, 409);
-        changeStatus(OWNER, product, "ACTIVE", 1, 200);
-        changeStatus(OWNER, product, "ACTIVE", 2, 409);
+        changeStatus(OWNER, product, "PENDING_REVIEW", 0, 409);
+        changeStatus(OWNER, product, "PENDING_REVIEW", 1, 200);
+        changeStatus(OWNER, product, "PENDING_REVIEW", 2, 409);
     }
 
     @Test
@@ -357,6 +361,29 @@ class SellerCatalogIntegrationTests {
                                 .with(actor(subject))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(body));
+        result.andExpect(status().is(expectedStatus));
+        return JSON.readTree(result.andReturn().getResponse().getContentAsString());
+    }
+
+    private JsonNode review(
+            UUID product, String decision, String reason, long version, int expectedStatus)
+            throws Exception {
+        ResultActions result =
+                mvc.perform(
+                        post("/api/v1/admin/products/" + product + "/review")
+                                .with(
+                                        jwt().jwt(j -> j.subject("catalog-admin"))
+                                                .authorities(
+                                                        new SimpleGrantedAuthority("ROLE_ADMIN")))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"decision\":\""
+                                                + decision
+                                                + "\",\"reason\":\""
+                                                + reason
+                                                + "\",\"expectedVersion\":"
+                                                + version
+                                                + "}"));
         result.andExpect(status().is(expectedStatus));
         return JSON.readTree(result.andReturn().getResponse().getContentAsString());
     }

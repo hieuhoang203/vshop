@@ -6,6 +6,7 @@ import vn.vshop.common.model.SearchResult;
 import vn.vshop.modules.catalog.entity.OptionValue;
 import vn.vshop.modules.catalog.entity.Product;
 import vn.vshop.modules.catalog.entity.ProductOption;
+import vn.vshop.modules.catalog.entity.ProductReview;
 import vn.vshop.modules.catalog.entity.ProductSku;
 import vn.vshop.modules.catalog.entity.ProductStatus;
 import vn.vshop.modules.catalog.entity.SkuOptionValue;
@@ -30,6 +31,9 @@ public interface SellerCatalogRepository {
 
     Optional<Product> findProductForUpdate(UUID productId, UUID shopId);
 
+    /** Admin moderation only: locks by product id without a shop scope. */
+    Optional<Product> lockProduct(UUID productId);
+
     Optional<SellerProduct> findProduct(UUID productId, UUID shopId);
 
     SearchResult<SellerProduct> listProducts(UUID shopId, int page, int size);
@@ -37,7 +41,17 @@ public interface SellerCatalogRepository {
     /** Returns false when the expected version no longer matches. */
     boolean updateContent(UUID productId, UUID shopId, ProductContentChange change);
 
-    boolean updateStatus(UUID productId, UUID shopId, long expectedVersion, ProductStatus status);
+    boolean updateStatus(
+            UUID productId,
+            UUID shopId,
+            long expectedVersion,
+            ProductStatus status,
+            String rejectionReason);
+
+    /** Products in the given status across all shops, oldest first (admin moderation queue). */
+    SearchResult<SellerProduct> listProductsByStatus(ProductStatus status, int page, int size);
+
+    void insertReview(ProductReview review);
 
     Optional<ProductSku> findShopSku(UUID skuId, UUID shopId);
 

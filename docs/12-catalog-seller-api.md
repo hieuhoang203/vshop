@@ -1,6 +1,6 @@
 # Catalog seller API — sản phẩm, biến thể và SKU
 
-Ngày: **20/11/2026**. Phạm vi: backend API ghi catalog cho seller (backlog C06, **InProgress**). Chưa có UI editor, chưa upload ảnh, chưa kiểm duyệt hàng hóa, chưa ghi tồn kho.
+Ngày: **20/11/2026**. Phạm vi: backend API ghi catalog cho seller (backlog C06, **InProgress**). Chưa có UI editor, chưa upload ảnh, kiểm duyệt xem [docs/14](14-kiem-duyet-san-pham.md), tồn kho xem [docs/13](13-ton-kho-va-giu-hang.md).
 
 ## 1. Endpoint
 

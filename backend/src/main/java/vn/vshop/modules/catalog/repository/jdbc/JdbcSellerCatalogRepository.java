@@ -14,6 +14,7 @@ import vn.vshop.common.model.SearchResult;
 import vn.vshop.modules.catalog.entity.OptionValue;
 import vn.vshop.modules.catalog.entity.Product;
 import vn.vshop.modules.catalog.entity.ProductOption;
+import vn.vshop.modules.catalog.entity.ProductReview;
 import vn.vshop.modules.catalog.entity.ProductSku;
 import vn.vshop.modules.catalog.entity.ProductStatus;
 import vn.vshop.modules.catalog.entity.SkuOptionValue;
@@ -25,7 +26,7 @@ import vn.vshop.modules.catalog.repository.SellerCatalogRepository;
 @Repository
 public class JdbcSellerCatalogRepository implements SellerCatalogRepository {
     private static final String PRODUCT_COLUMNS =
-            "id, shop_id, category_id, slug, name, description, image_key, status, version, created_at, updated_at";
+            "id, shop_id, category_id, slug, name, description, image_key, status, rejection_reason, version, created_at, updated_at";
     private static final String SKU_COLUMNS =
             "id, product_id, shop_id, seller_sku, variant_signature, price, currency, status, version, created_at, updated_at";
     private final JdbcClient jdbc;
@@ -138,6 +139,17 @@ public class JdbcSellerCatalogRepository implements SellerCatalogRepository {
     }
 
     @Override
+    public Optional<Product> lockProduct(UUID productId) {
+        return jdbc.sql(
+                        "SELECT "
+                                + PRODUCT_COLUMNS
+                                + " FROM catalog.product WHERE id = :id FOR UPDATE")
+                .param("id", productId)
+                .query(Product.class)
+                .optional();
+    }
+
+    @Override
     public Optional<SellerProduct> findProduct(UUID productId, UUID shopId) {
         List<Product> products =
                 jdbc.sql(
@@ -179,7 +191,9 @@ public class JdbcSellerCatalogRepository implements SellerCatalogRepository {
         return jdbc.sql(
                                 """
             UPDATE catalog.product SET name = :name, description = :description,
-                category_id = :category, image_key = :image, updated_at = now(), version = version + 1
+                category_id = :category, image_key = :image,
+                status = CASE WHEN status IN ('ACTIVE', 'HIDDEN') THEN 'PENDING_REVIEW' ELSE status END,
+                updated_at = now(), version = version + 1
             WHERE id = :id AND shop_id = :shop AND version = :version
             """)
                         .param("id", productId)
@@ -195,18 +209,66 @@ public class JdbcSellerCatalogRepository implements SellerCatalogRepository {
 
     @Override
     public boolean updateStatus(
-            UUID productId, UUID shopId, long expectedVersion, ProductStatus status) {
+            UUID productId,
+            UUID shopId,
+            long expectedVersion,
+            ProductStatus status,
+            String rejectionReason) {
         return jdbc.sql(
                                 """
-            UPDATE catalog.product SET status = :status, updated_at = now(), version = version + 1
+            UPDATE catalog.product SET status = :status, rejection_reason = :reason,
+                updated_at = now(), version = version + 1
             WHERE id = :id AND shop_id = :shop AND version = :version
             """)
                         .param("id", productId)
                         .param("shop", shopId)
                         .param("status", status.name())
+                        .param("reason", rejectionReason, java.sql.Types.VARCHAR)
                         .param("version", expectedVersion)
                         .update()
                 == 1;
+    }
+
+    @Override
+    public SearchResult<SellerProduct> listProductsByStatus(
+            ProductStatus status, int page, int size) {
+        long total =
+                jdbc.sql("SELECT count(*) FROM catalog.product WHERE status = :status")
+                        .param("status", status.name())
+                        .query(Long.class)
+                        .single();
+        List<Product> products =
+                jdbc.sql(
+                                "SELECT "
+                                        + PRODUCT_COLUMNS
+                                        + """
+             FROM catalog.product WHERE status = :status
+             ORDER BY created_at, id LIMIT :size OFFSET :offset
+            """)
+                        .param("status", status.name())
+                        .param("size", size)
+                        .param("offset", (long) page * size)
+                        .query(Product.class)
+                        .list();
+        return new SearchResult<>(assemble(products), total, page, size);
+    }
+
+    @Override
+    public void insertReview(ProductReview review) {
+        jdbc.sql(
+                        """
+            INSERT INTO catalog.product_review
+                (id, product_id, shop_id, reviewer_account_id, decision, reason, product_version)
+            VALUES (:id, :product, :shop, :reviewer, :decision, :reason, :version)
+            """)
+                .param("id", review.id())
+                .param("product", review.productId())
+                .param("shop", review.shopId())
+                .param("reviewer", review.reviewerAccountId())
+                .param("decision", review.decision().name())
+                .param("reason", review.reason())
+                .param("version", review.productVersion())
+                .update();
     }
 
     @Override

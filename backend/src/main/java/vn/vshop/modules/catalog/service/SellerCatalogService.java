@@ -107,6 +107,7 @@ public class SellerCatalogService {
                         command.description().strip(),
                         command.imageKey(),
                         ProductStatus.DRAFT,
+                        null,
                         0,
                         null,
                         null));
@@ -168,23 +169,26 @@ public class SellerCatalogService {
         requireWritableShop(subject, shopId);
         Product current =
                 catalog.findProductForUpdate(productId, shopId).orElseThrow(this::productNotFound);
+        // Sellers never approve their own content: ACTIVE is reachable only via admin review,
+        // or by un-hiding a product whose current content was already approved.
         boolean allowed =
                 switch (current.status()) {
-                    case DRAFT -> target == ProductStatus.ACTIVE;
+                    case DRAFT, REJECTED -> target == ProductStatus.PENDING_REVIEW;
                     case ACTIVE -> target == ProductStatus.HIDDEN;
                     case HIDDEN -> target == ProductStatus.ACTIVE;
+                    case PENDING_REVIEW -> false;
                 };
         if (!allowed) {
             throw new BusinessException(
                     ErrorCode.INVALID_PRODUCT_STATE,
                     "Không thể chuyển sản phẩm từ " + current.status() + " sang " + target + ".");
         }
-        if (target == ProductStatus.ACTIVE && catalog.countActiveSkus(productId) == 0) {
+        if (target != ProductStatus.HIDDEN && catalog.countActiveSkus(productId) == 0) {
             throw new BusinessException(
                     ErrorCode.INVALID_PRODUCT_STATE,
-                    "Cần ít nhất một SKU đang bán trước khi hiển thị sản phẩm.");
+                    "Cần ít nhất một SKU đang bán trước khi gửi duyệt hoặc hiển thị sản phẩm.");
         }
-        if (!catalog.updateStatus(productId, shopId, expectedVersion, target)) {
+        if (!catalog.updateStatus(productId, shopId, expectedVersion, target, null)) {
             throw versionConflict();
         }
         events.record(

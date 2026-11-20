@@ -70,6 +70,7 @@ public final class SellerProductMapper {
                 product.description(),
                 product.imageKey(),
                 product.status().name(),
+                product.rejectionReason(),
                 product.version(),
                 product.createdAt(),
                 product.updatedAt(),

@@ -12,6 +12,7 @@ public record Product(
         String description,
         String imageKey,
         ProductStatus status,
+        String rejectionReason,
         long version,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt) {}

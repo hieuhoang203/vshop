@@ -88,7 +88,7 @@ E2E cần API/Keycloak đang chạy và `.local/accounts.json`. Playwright dùng
 
 `application-local.yml` nạp 1 shop mẫu, 3 danh mục, 6 sản phẩm mẫu. Các fixture nằm ngoài migration production và không được nạp nếu không bật profile `local`. Không chạy production bằng profile local. V1000 được giữ nguyên lịch sử; migration lõi tiếp tục V1001/V1002 để tách account/SKU/inventory và không còn cần out-of-order.
 
-DB ứng dụng có 17 bảng nền tảng trên 5 schema. DDL tham chiếu mở rộng lên 55 bảng/14 schema đã được kiểm trong DB riêng; không được hiểu rằng các chức năng checkout/payment/finance đã có code hoạt động.
+DB ứng dụng có 18 bảng nền tảng trên 5 schema. DDL tham chiếu mở rộng lên 56 bảng/14 schema đã được kiểm trong DB riêng; không được hiểu rằng các chức năng checkout/payment/finance đã có code hoạt động.
 
 Format Java tại `backend/`: `./mvnw.cmd spotless:apply`; kiểm bằng `./mvnw.cmd verify`. Format web/config: `npm run format`. ArchUnit ngăn phụ thuộc sai tầng và Spotless chặn Java sai format trong Maven lifecycle.
 
@@ -111,4 +111,4 @@ Nhấn `Ctrl+C` ở terminal web/backend/worker. Nếu Windows còn giữ child 
 
 ## Phạm vi tiếp theo
 
-Hoàn thiện nền tảng: refresh session, MFA admin và OpenAPI; tiếp đó hồ sơ seller/thuế/ngân hàng, kiểm duyệt hàng hóa, UI editor sản phẩm/tồn kho và checkout giữ tồn. Backend đã có API ghi sản phẩm/biến thể/SKU/giá ([docs/12](docs/12-catalog-seller-api.md)) và tồn kho/reservation ([docs/13](docs/13-ton-kho-va-giu-hang.md)); kiểm duyệt, UI và checkout chưa được triển khai. Tích hợp PSP/carrier chỉ khi có tài liệu sandbox và mô hình tiền được xác nhận. Chưa triển khai checkout, payment, shipping, refund, settlement hoặc production deployment. App native mới có phạm vi ghi trong báo cáo mobile.
+Hoàn thiện nền tảng: refresh session, MFA admin và OpenAPI; tiếp đó hồ sơ seller/thuế/ngân hàng, UI duyệt/editor sản phẩm/tồn kho và checkout giữ tồn. Backend đã có API ghi sản phẩm/biến thể/SKU/giá ([docs/12](docs/12-catalog-seller-api.md)) và tồn kho/reservation ([docs/13](docs/13-ton-kho-va-giu-hang.md)); kiểm duyệt sản phẩm đã có ở backend ([docs/14](docs/14-kiem-duyet-san-pham.md)); UI và checkout chưa được triển khai. Tích hợp PSP/carrier chỉ khi có tài liệu sandbox và mô hình tiền được xác nhận. Chưa triển khai checkout, payment, shipping, refund, settlement hoặc production deployment. App native mới có phạm vi ghi trong báo cáo mobile.

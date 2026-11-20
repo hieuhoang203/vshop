@@ -4,11 +4,11 @@ Ngày cập nhật: **19/11/2026**. PostgreSQL **18**, modular monolith, marketp
 
 ## 1. Phạm vi và trạng thái
 
-| Phạm vi                                                             | Trạng thái                       | Nguồn kiểm chứng                                         |
-| ------------------------------------------------------------------- | -------------------------------- | -------------------------------------------------------- |
-| Identity, merchant, catalog/SKU, inventory, platform                | **17 bảng đã có migration thực** | Flyway V1, V2, V1001, V1002; local có thêm fixture V1000 |
-| Checkout, đơn, khuyến mãi, giao nhận, hậu mãi, tiền, hỗ trợ và file | **38 bảng thiết kế tham chiếu**  | `target-commerce.sql`, chạy kiểm cấu trúc ở DB riêng     |
-| Toàn mô hình tham chiếu                                             | **55 bảng, 14 schema, 389 cột**  | Dictionary được xuất từ PostgreSQL sau khi thực thi DDL  |
+| Phạm vi                                                             | Trạng thái                       | Nguồn kiểm chứng                                                |
+| ------------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------------- |
+| Identity, merchant, catalog/SKU, inventory, platform                | **18 bảng đã có migration thực** | Flyway V1, V2, V1001, V1002, V1003; local có thêm fixture V1000 |
+| Checkout, đơn, khuyến mãi, giao nhận, hậu mãi, tiền, hỗ trợ và file | **38 bảng thiết kế tham chiếu**  | `target-commerce.sql`, chạy kiểm cấu trúc ở DB riêng            |
+| Toàn mô hình tham chiếu                                             | **56 bảng, 14 schema, 402 cột**  | Dictionary được xuất từ PostgreSQL sau khi thực thi DDL         |
 
 `ImplementedSchema` nghĩa là bảng đã được tạo bằng migration, **không đồng nghĩa mọi API/use case của bảng đã được triển khai**. Inventory có seller API nhập/điều chỉnh tồn và `ReservationService` (hold/commit/release/expire); chưa có checkout gọi giữ tồn. `ReferenceDesign` chưa được đưa vào DB ứng dụng hoặc dùng để giao dịch tiền thật.
 
@@ -69,7 +69,8 @@ Shop phải có owner account ở DB; service tạo owner membership cùng trans
 | `merchant.shop_member`        | Quan hệ account–shop và role; OWNER phải trùng owner của shop qua generated column + FK ghép; phân quyền staff chưa mở API                                             |
 | `merchant.shop_review`        | Quyết định admin, lý do, reviewer và thời điểm; audit cũ không được giả lập thành review mới                                                                           |
 | `catalog.category`            | Danh mục có parent; cấm tự làm parent; ngăn chu trình nhiều cấp là trách nhiệm service khi có editor                                                                   |
-| `catalog.product`             | Nội dung hàng hóa, shop, ngành, slug, trạng thái, version; không lưu giá/tồn                                                                                           |
+| `catalog.product`             | Nội dung hàng hóa, shop, ngành, slug, trạng thái (DRAFT, PENDING_REVIEW, REJECTED, ACTIVE, HIDDEN), lý do từ chối, version; không lưu giá/tồn                          |
+| `catalog.product_review`      | Quyết định duyệt hàng (APPROVED/REJECTED) kèm lý do và đúng version nội dung đã duyệt; bất biến, FK ghép theo shop                                                     |
 | `catalog.product_sku`         | Đơn vị bán được; SKU code unique/shop, variant signature unique/product, giá/currency riêng; FK bảo vệ SKU thuộc đúng shop của product                                 |
 | `catalog.product_option`      | Chiều phân loại của một sản phẩm, như màu/kích cỡ                                                                                                                      |
 | `catalog.option_value`        | Giá trị hợp lệ của từng chiều phân loại                                                                                                                                |
@@ -139,7 +140,7 @@ COD refunds cần rail hoàn phù hợp và nguồn vốn; `payment.refund` tron
 
 ## 8. Migration, dữ liệu cũ và rollback
 
-- Không sửa V1/V2/V1000 đã áp dụng. V1001 chuyển dữ liệu, V1002 tăng ràng buộc và chuẩn hóa tên receipt. Các migration tiếp theo dùng số lớn hơn 1002.
+- Không sửa V1/V2/V1000 đã áp dụng. V1001 chuyển dữ liệu, V1002 tăng ràng buộc và chuẩn hóa tên receipt. Các migration tiếp theo dùng số lớn hơn 1003 (V1003 thêm kiểm duyệt sản phẩm, không di chuyển hay xóa cột nên không cần backup dữ liệu).
 - Vì fixture cũ ở V1000, migration lõi mới tiếp tục V1001; bỏ `out-of-order` local sau khi chuyển đổi. Database trống production bỏ qua fixture local và vẫn áp dụng V1 → V2 → V1001 → V1002.
 - V1001 tạo account từ owner subject, tạo SKU từ product, kho mặc định và opening balance/movement; giữ ID sản phẩm, giá, tồn và lịch sử audit/outbox.
 - Backup trước thay đổi: `.local/backups/vshop-before-schema-refactor.sql`. Snapshot kiểm tra trước/sau: `.local/backups/before-refactor.json`, `after-refactor.json`.

@@ -14,6 +14,7 @@ public record SellerProductResponse(
         String description,
         String imageKey,
         String status,
+        String rejectionReason,
         long version,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,

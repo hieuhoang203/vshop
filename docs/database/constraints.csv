@@ -53,6 +53,8 @@ catalog,option_value,option_value_sort_order_not_null,n,NOT NULL sort_order
 catalog,option_value,uq_option_value_code,u,"UNIQUE (option_id, code)"
 catalog,option_value,uq_option_value_id_option,u,"UNIQUE (id, option_id)"
 catalog,product,ck_product_name,c,CHECK ((length(btrim((name)::text)) > 0))
+catalog,product,ck_product_rejection_reason,c,CHECK (((((status)::text = 'REJECTED'::text) AND (length(btrim((rejection_reason)::text)) >= 5)) OR (((status)::text <> 'REJECTED'::text) AND (rejection_reason IS NULL))))
+catalog,product,ck_product_status,c,"CHECK (((status)::text = ANY ((ARRAY['DRAFT'::character varying, 'PENDING_REVIEW'::character varying, 'REJECTED'::character varying, 'ACTIVE'::character varying, 'HIDDEN'::character varying])::text[])))"
 catalog,product,ck_product_version,c,CHECK ((version >= 0))
 catalog,product,product_category_id_fkey,f,FOREIGN KEY (category_id) REFERENCES catalog.category(id)
 catalog,product,product_category_id_not_null,n,NOT NULL category_id
@@ -66,7 +68,6 @@ catalog,product,product_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant
 catalog,product,product_shop_id_not_null,n,NOT NULL shop_id
 catalog,product,product_slug_key,u,UNIQUE (slug)
 catalog,product,product_slug_not_null,n,NOT NULL slug
-catalog,product,product_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['DRAFT'::character varying, 'ACTIVE'::character varying, 'HIDDEN'::character varying])::text[])))"
 catalog,product,product_status_not_null,n,NOT NULL status
 catalog,product,product_updated_at_not_null,n,NOT NULL updated_at
 catalog,product,product_version_not_null,n,NOT NULL version
@@ -88,6 +89,20 @@ catalog,product_option,product_option_product_id_not_null,n,NOT NULL product_id
 catalog,product_option,product_option_sort_order_not_null,n,NOT NULL sort_order
 catalog,product_option,uq_product_option_code,u,"UNIQUE (product_id, code)"
 catalog,product_option,uq_product_option_id_product,u,"UNIQUE (id, product_id)"
+catalog,product_review,ck_product_review_decision,c,"CHECK (((decision)::text = ANY ((ARRAY['APPROVED'::character varying, 'REJECTED'::character varying])::text[])))"
+catalog,product_review,ck_product_review_reason,c,CHECK ((length(btrim((reason)::text)) >= 5))
+catalog,product_review,ck_product_review_version,c,CHECK ((product_version >= 0))
+catalog,product_review,fk_product_review_product_shop,f,"FOREIGN KEY (product_id, shop_id) REFERENCES catalog.product(id, shop_id)"
+catalog,product_review,product_review_created_at_not_null,n,NOT NULL created_at
+catalog,product_review,product_review_decision_not_null,n,NOT NULL decision
+catalog,product_review,product_review_id_not_null,n,NOT NULL id
+catalog,product_review,product_review_pkey,p,PRIMARY KEY (id)
+catalog,product_review,product_review_product_id_not_null,n,NOT NULL product_id
+catalog,product_review,product_review_product_version_not_null,n,NOT NULL product_version
+catalog,product_review,product_review_reason_not_null,n,NOT NULL reason
+catalog,product_review,product_review_reviewer_account_id_fkey,f,FOREIGN KEY (reviewer_account_id) REFERENCES identity.account(id)
+catalog,product_review,product_review_reviewer_account_id_not_null,n,NOT NULL reviewer_account_id
+catalog,product_review,product_review_shop_id_not_null,n,NOT NULL shop_id
 catalog,product_sku,ck_sku_code,c,CHECK ((length(btrim((seller_sku)::text)) > 0))
 catalog,product_sku,ck_sku_currency,c,CHECK ((currency = 'VND'::bpchar))
 catalog,product_sku,ck_sku_price,c,CHECK ((price > 0))

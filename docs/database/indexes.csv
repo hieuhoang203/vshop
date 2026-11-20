@@ -17,6 +17,7 @@ catalog,option_value,option_value_pkey,CREATE UNIQUE INDEX option_value_pkey ON 
 catalog,option_value,uq_option_value_code,"CREATE UNIQUE INDEX uq_option_value_code ON catalog.option_value USING btree (option_id, code)"
 catalog,option_value,uq_option_value_id_option,"CREATE UNIQUE INDEX uq_option_value_id_option ON catalog.option_value USING btree (id, option_id)"
 catalog,product,ix_product_category,CREATE INDEX ix_product_category ON catalog.product USING btree (category_id)
+catalog,product,ix_product_review_queue,"CREATE INDEX ix_product_review_queue ON catalog.product USING btree (created_at, id) WHERE ((status)::text = 'PENDING_REVIEW'::text)"
 catalog,product,ix_product_shop,"CREATE INDEX ix_product_shop ON catalog.product USING btree (shop_id, created_at DESC, id)"
 catalog,product,product_active_category,"CREATE INDEX product_active_category ON catalog.product USING btree (category_id, created_at DESC, id) WHERE ((status)::text = 'ACTIVE'::text)"
 catalog,product,product_pkey,CREATE UNIQUE INDEX product_pkey ON catalog.product USING btree (id)
@@ -27,6 +28,10 @@ catalog,product_media,product_media_pkey,"CREATE UNIQUE INDEX product_media_pkey
 catalog,product_option,product_option_pkey,CREATE UNIQUE INDEX product_option_pkey ON catalog.product_option USING btree (id)
 catalog,product_option,uq_product_option_code,"CREATE UNIQUE INDEX uq_product_option_code ON catalog.product_option USING btree (product_id, code)"
 catalog,product_option,uq_product_option_id_product,"CREATE UNIQUE INDEX uq_product_option_id_product ON catalog.product_option USING btree (id, product_id)"
+catalog,product_review,ix_product_review_product,"CREATE INDEX ix_product_review_product ON catalog.product_review USING btree (product_id, created_at DESC)"
+catalog,product_review,ix_product_review_reviewer,CREATE INDEX ix_product_review_reviewer ON catalog.product_review USING btree (reviewer_account_id)
+catalog,product_review,ix_product_review_shop,"CREATE INDEX ix_product_review_shop ON catalog.product_review USING btree (shop_id, product_id)"
+catalog,product_review,product_review_pkey,CREATE UNIQUE INDEX product_review_pkey ON catalog.product_review USING btree (id)
 catalog,product_sku,ix_sku_product_active,"CREATE INDEX ix_sku_product_active ON catalog.product_sku USING btree (product_id, price, id) WHERE ((status)::text = 'ACTIVE'::text)"
 catalog,product_sku,ix_sku_product_shop,"CREATE INDEX ix_sku_product_shop ON catalog.product_sku USING btree (product_id, shop_id)"
 catalog,product_sku,product_sku_pkey,CREATE UNIQUE INDEX product_sku_pkey ON catalog.product_sku USING btree (id)

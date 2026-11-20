@@ -29,10 +29,11 @@ Web người mua, cổng người bán, cổng admin dùng Next.js/TypeScript. A
 | [11-san-pham-la-trung-tam.md](11-san-pham-la-trung-tam.md)           | Bố cục hiện hành: sản phẩm trước banner, kiểm viewport web/native và APK cập nhật |
 | [12-catalog-seller-api.md](12-catalog-seller-api.md)                 | API seller ghi sản phẩm, biến thể, SKU, giá; quy tắc, giới hạn và kiểm chứng      |
 | [13-ton-kho-va-giu-hang.md](13-ton-kho-va-giu-hang.md)               | API nhập/điều chỉnh tồn, vòng đời reservation, bất biến, kiểm thử cạnh tranh      |
+| [14-kiem-duyet-san-pham.md](14-kiem-duyet-san-pham.md)               | Kiểm duyệt sản phẩm: máy trạng thái, API admin, ràng buộc phiên bản, giới hạn     |
 | [architecture/README.md](architecture/README.md)                     | Quy ước từng tầng, entity/DTO/repository, format và ArchUnit                      |
 | [database/README.md](database/README.md)                             | ERD, bảng/quan hệ, từ điển cột, DDL và invariant giao dịch                        |
 
-CSV dùng UTF-8 có BOM để mở tiếng Việt trong Excel. Import theo cột `ID`, `DependsOn`, `BusinessRules`, `Acceptance`; trạng thái được cập nhật theo increment. Hiện tại: 1 Done, 22 InProgress, 107 Planned (C06, C09, C10 InProgress). Các ước lượng vẫn là kế hoạch ban đầu, không phải timesheet thực tế.
+CSV dùng UTF-8 có BOM để mở tiếng Việt trong Excel. Import theo cột `ID`, `DependsOn`, `BusinessRules`, `Acceptance`; trạng thái được cập nhật theo increment. Hiện tại: 1 Done, 23 InProgress, 106 Planned (C06, C08, C09, C10 InProgress). Các ước lượng vẫn là kế hoạch ban đầu, không phải timesheet thực tế.
 
 ## Ranh giới bằng chứng
 
