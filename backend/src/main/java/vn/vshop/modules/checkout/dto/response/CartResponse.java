@@ -16,10 +16,17 @@ public record CartResponse(
         String currency,
         List<ShopGroupResponse> groups,
         long itemsTotal,
+        long shippingTotal,
+        long payableTotal,
         boolean canCheckout,
         List<String> notCalculated) {
     public record ShopGroupResponse(
-            UUID shopId, String shopName, long subtotal, List<LineResponse> lines) {}
+            UUID shopId,
+            String shopName,
+            long subtotal,
+            long shippingFee,
+            long payable,
+            List<LineResponse> lines) {}
 
     public record LineResponse(
             UUID skuId,

@@ -47,6 +47,22 @@ public class JdbcEventRepository implements EventRepository {
     }
 
     @Override
+    public void appendOutbox(
+            UUID id, String aggregateType, String eventType, UUID aggregateId, String payloadJson) {
+        jdbc.sql(
+                        """
+            INSERT INTO platform.outbox_event (id, event_type, aggregate_type, aggregate_id, payload)
+            VALUES (:id, :type, :aggType, :aggregate, CAST(:payload AS jsonb))
+            """)
+                .param("id", id)
+                .param("type", eventType)
+                .param("aggType", aggregateType)
+                .param("aggregate", aggregateId)
+                .param("payload", payloadJson)
+                .update();
+    }
+
+    @Override
     public List<OutboxEvent> lockPending(int limit) {
         return jdbc.sql(
                         """

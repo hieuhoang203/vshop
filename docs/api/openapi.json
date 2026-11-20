@@ -142,12 +142,20 @@
             },
             "type" : "array"
           },
+          "payableTotal" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "shippingTotal" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
           "version" : {
             "format" : "int64",
             "type" : "integer"
           }
         },
-        "required" : [ "canCheckout", "currency", "groups", "itemCount", "itemsTotal", "notCalculated", "version" ],
+        "required" : [ "canCheckout", "currency", "groups", "itemCount", "itemsTotal", "notCalculated", "payableTotal", "shippingTotal", "version" ],
         "type" : "object"
       },
       "CategoryResponse" : {
@@ -183,6 +191,54 @@
           }
         },
         "required" : [ "expectedVersion", "status" ],
+        "type" : "object"
+      },
+      "CheckoutGroupResponse" : {
+        "properties" : {
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "currency" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "orders" : {
+            "items" : {
+              "$ref" : "#/components/schemas/OrderResponse"
+            },
+            "type" : "array"
+          },
+          "paymentMethod" : {
+            "enum" : [ "COD", "PSP" ],
+            "type" : "string"
+          },
+          "totalAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "createdAt", "currency", "id", "orders", "paymentMethod", "totalAmount" ],
+        "type" : "object"
+      },
+      "CreatePolicyRequest" : {
+        "properties" : {
+          "content" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "integer"
+            },
+            "type" : "object"
+          },
+          "policyType" : {
+            "enum" : [ "SHIPPING_FLAT", "RETURN", "COD_LIMITS", "PAYMENT_WINDOW" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "content", "policyType" ],
         "type" : "object"
       },
       "CreateProductRequest" : {
@@ -326,6 +382,240 @@
         "required" : [ "code", "name", "values" ],
         "type" : "object"
       },
+      "OrderLineResponse" : {
+        "properties" : {
+          "discountAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "grossAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "imageKey" : {
+            "type" : [ "string", "null" ]
+          },
+          "netAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "productId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "productSlug" : {
+            "type" : "string"
+          },
+          "quantity" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "sellerSku" : {
+            "type" : "string"
+          },
+          "skuId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "unitPrice" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "variantLabel" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "discountAmount", "grossAmount", "imageKey", "netAmount", "productId", "productName", "productSlug", "quantity", "sellerSku", "skuId", "unitPrice", "variantLabel" ],
+        "type" : "object"
+      },
+      "OrderRecipientResponse" : {
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "phone" : {
+            "type" : "string"
+          },
+          "province" : {
+            "type" : "string"
+          },
+          "street" : {
+            "type" : "string"
+          },
+          "ward" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "name", "phone", "province", "street", "ward" ],
+        "type" : "object"
+      },
+      "OrderResponse" : {
+        "properties" : {
+          "cancelReason" : {
+            "type" : [ "string", "null" ]
+          },
+          "canceledAt" : {
+            "format" : "date-time",
+            "type" : [ "string", "null" ]
+          },
+          "checkoutGroupId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "discountAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "history" : {
+            "items" : {
+              "$ref" : "#/components/schemas/OrderStatusEventResponse"
+            },
+            "type" : "array"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "itemAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "lines" : {
+            "items" : {
+              "$ref" : "#/components/schemas/OrderLineResponse"
+            },
+            "type" : "array"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "payableAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "paymentDeadline" : {
+            "format" : "date-time",
+            "type" : [ "string", "null" ]
+          },
+          "recipient" : {
+            "$ref" : "#/components/schemas/OrderRecipientResponse"
+          },
+          "shippingAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "shopId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "shopName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "PENDING_PAYMENT", "AWAITING_SELLER", "CONFIRMED", "PACKING", "READY_TO_SHIP", "IN_FULFILLMENT", "DELIVERED", "COMPLETED", "CANCEL_REQUESTED", "CANCELED", "REJECTED" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "cancelReason", "canceledAt", "checkoutGroupId", "createdAt", "discountAmount", "history", "id", "itemAmount", "lines", "orderNumber", "payableAmount", "paymentDeadline", "recipient", "shippingAmount", "shopId", "shopName", "status" ],
+        "type" : "object"
+      },
+      "OrderStatusEventResponse" : {
+        "properties" : {
+          "actorType" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "fromStatus" : {
+            "enum" : [ "PENDING_PAYMENT", "AWAITING_SELLER", "CONFIRMED", "PACKING", "READY_TO_SHIP", "IN_FULFILLMENT", "DELIVERED", "COMPLETED", "CANCEL_REQUESTED", "CANCELED", "REJECTED", null ],
+            "type" : [ "string", "null" ]
+          },
+          "reason" : {
+            "type" : [ "string", "null" ]
+          },
+          "toStatus" : {
+            "enum" : [ "PENDING_PAYMENT", "AWAITING_SELLER", "CONFIRMED", "PACKING", "READY_TO_SHIP", "IN_FULFILLMENT", "DELIVERED", "COMPLETED", "CANCEL_REQUESTED", "CANCELED", "REJECTED" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "actorType", "createdAt", "fromStatus", "reason", "toStatus" ],
+        "type" : "object"
+      },
+      "OrderSummaryResponse" : {
+        "properties" : {
+          "checkoutGroupId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "firstImageKey" : {
+            "type" : [ "string", "null" ]
+          },
+          "firstProductName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "itemCount" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "payableAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "shopName" : {
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "PENDING_PAYMENT", "AWAITING_SELLER", "CONFIRMED", "PACKING", "READY_TO_SHIP", "IN_FULFILLMENT", "DELIVERED", "COMPLETED", "CANCEL_REQUESTED", "CANCELED", "REJECTED" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "checkoutGroupId", "createdAt", "firstImageKey", "firstProductName", "id", "itemCount", "orderNumber", "payableAmount", "shopName", "status" ],
+        "type" : "object"
+      },
+      "PageResponseOrderSummaryResponse" : {
+        "properties" : {
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/OrderSummaryResponse"
+            },
+            "type" : "array"
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "total" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ],
+        "type" : "object"
+      },
       "PageResponseProductResponse" : {
         "properties" : {
           "items" : {
@@ -374,6 +664,20 @@
         "required" : [ "items", "page", "size", "total" ],
         "type" : "object"
       },
+      "PlaceOrderRequest" : {
+        "properties" : {
+          "paymentMethod" : {
+            "enum" : [ "COD", "PSP" ],
+            "type" : "string"
+          },
+          "quoteId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "required" : [ "paymentMethod", "quoteId" ],
+        "type" : "object"
+      },
       "Point" : {
         "properties" : {
           "approved" : {
@@ -394,6 +698,51 @@
           }
         },
         "required" : [ "approved", "date", "rejected", "submitted" ],
+        "type" : "object"
+      },
+      "PolicyResponse" : {
+        "properties" : {
+          "approvedAt" : {
+            "format" : "date-time",
+            "type" : [ "string", "null" ]
+          },
+          "content" : {
+            "additionalProperties" : {
+              "format" : "int64",
+              "type" : "integer"
+            },
+            "type" : "object"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "effectiveFrom" : {
+            "format" : "date-time",
+            "type" : [ "string", "null" ]
+          },
+          "effectiveTo" : {
+            "format" : "date-time",
+            "type" : [ "string", "null" ]
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "policyType" : {
+            "enum" : [ "SHIPPING_FLAT", "RETURN", "COD_LIMITS", "PAYMENT_WINDOW" ],
+            "type" : "string"
+          },
+          "status" : {
+            "enum" : [ "DRAFT", "APPROVED", "RETIRED" ],
+            "type" : "string"
+          },
+          "version" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "approvedAt", "content", "createdAt", "effectiveFrom", "effectiveTo", "id", "policyType", "status", "version" ],
         "type" : "object"
       },
       "ProductResponse" : {
@@ -682,6 +1031,14 @@
             },
             "type" : "array"
           },
+          "payable" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "shippingFee" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
           "shopId" : {
             "format" : "uuid",
             "type" : "string"
@@ -694,7 +1051,7 @@
             "type" : "integer"
           }
         },
-        "required" : [ "lines", "shopId", "shopName", "subtotal" ],
+        "required" : [ "lines", "payable", "shippingFee", "shopId", "shopName", "subtotal" ],
         "type" : "object"
       },
       "ShopResponse" : {
@@ -1077,6 +1434,134 @@
           "bearerAuth" : [ ]
         } ],
         "tags" : [ "admin-merchant-analytics-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "ADMIN" ],
+          "public" : false,
+          "requiresSecondFactor" : true
+        }
+      }
+    },
+    "/api/v1/admin/policies" : {
+      "get" : {
+        "operationId" : "adminPolicyList",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/PolicyResponse"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "admin-policy-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "ADMIN" ],
+          "public" : false,
+          "requiresSecondFactor" : true
+        }
+      },
+      "post" : {
+        "operationId" : "adminPolicyDraft",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreatePolicyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PolicyResponse"
+                }
+              }
+            },
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "admin-policy-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "ADMIN" ],
+          "public" : false,
+          "requiresSecondFactor" : true
+        }
+      }
+    },
+    "/api/v1/admin/policies/{id}/approve" : {
+      "post" : {
+        "operationId" : "adminPolicyApprove",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PolicyResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "admin-policy-controller" ],
         "x-vshop-access" : {
           "anyOfRoles" : [ "ADMIN" ],
           "public" : false,
@@ -1720,6 +2205,104 @@
         }
       }
     },
+    "/api/v1/checkout/groups/{id}" : {
+      "get" : {
+        "operationId" : "orderGroup",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CheckoutGroupResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/checkout/orders" : {
+      "post" : {
+        "operationId" : "orderPlace",
+        "parameters" : [ {
+          "in" : "header",
+          "name" : "Idempotency-Key",
+          "required" : true,
+          "schema" : {
+            "pattern" : "[A-Za-z0-9._:-]{8,100}",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PlaceOrderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CheckoutGroupResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
     "/api/v1/checkout/quotes" : {
       "post" : {
         "operationId" : "quoteCreate",
@@ -2051,6 +2634,108 @@
           "bearerAuth" : [ ]
         } ],
         "tags" : [ "address-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/orders" : {
+      "get" : {
+        "operationId" : "orderList",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "default" : 0,
+            "format" : "int32",
+            "maximum" : 10000,
+            "minimum" : 0,
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "default" : 20,
+            "format" : "int32",
+            "maximum" : 50,
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseOrderSummaryResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/orders/{id}" : {
+      "get" : {
+        "operationId" : "orderOrder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "order-controller" ],
         "x-vshop-access" : {
           "anyOfRoles" : [ "BUYER", "SELLER" ],
           "public" : false

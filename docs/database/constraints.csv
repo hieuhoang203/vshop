@@ -589,23 +589,30 @@ platform,event_receipt,platform_event_receipt_event_type_not_null,n,NOT NULL eve
 platform,event_receipt,platform_event_receipt_pkey,p,PRIMARY KEY (event_id)
 platform,event_receipt,platform_event_receipt_received_at_not_null,n,NOT NULL received_at
 platform,outbox_event,outbox_event_aggregate_id_not_null,n,NOT NULL aggregate_id
+platform,outbox_event,outbox_event_aggregate_type_not_null,n,NOT NULL aggregate_type
 platform,outbox_event,outbox_event_created_at_not_null,n,NOT NULL created_at
 platform,outbox_event,outbox_event_event_type_not_null,n,NOT NULL event_type
 platform,outbox_event,outbox_event_id_not_null,n,NOT NULL id
 platform,outbox_event,outbox_event_payload_not_null,n,NOT NULL payload
 platform,outbox_event,outbox_event_pkey,p,PRIMARY KEY (id)
 platform,outbox_event,outbox_event_schema_version_not_null,n,NOT NULL schema_version
-platform,policy_version,policy_version_check,c,CHECK (((effective_to IS NULL) OR (effective_to > effective_from)))
-platform,policy_version,policy_version_content_check,c,CHECK ((jsonb_typeof(content) = 'object'::text))
+platform,policy_version,ck_policy_approved,c,CHECK (((((status)::text = 'DRAFT'::text) AND (effective_from IS NULL) AND (approved_by_account_id IS NULL) AND (approved_at IS NULL)) OR (((status)::text <> 'DRAFT'::text) AND (effective_from IS NOT NULL) AND (approved_by_account_id IS NOT NULL) AND (approved_at IS NOT NULL))))
+platform,policy_version,ck_policy_content,c,CHECK ((jsonb_typeof(content) = 'object'::text))
+platform,policy_version,ck_policy_effective,c,CHECK (((effective_to IS NULL) OR ((effective_from IS NOT NULL) AND (effective_to > effective_from))))
+platform,policy_version,ck_policy_status,c,"CHECK (((status)::text = ANY ((ARRAY['DRAFT'::character varying, 'APPROVED'::character varying, 'RETIRED'::character varying])::text[])))"
+platform,policy_version,ck_policy_type,c,"CHECK (((policy_type)::text = ANY ((ARRAY['SHIPPING_FLAT'::character varying, 'RETURN'::character varying, 'COD_LIMITS'::character varying, 'PAYMENT_WINDOW'::character varying])::text[])))"
+platform,policy_version,ck_policy_version,c,CHECK ((version > 0))
+platform,policy_version,policy_version_approved_by_account_id_fkey,f,FOREIGN KEY (approved_by_account_id) REFERENCES identity.account(id)
 platform,policy_version,policy_version_content_not_null,n,NOT NULL content
 platform,policy_version,policy_version_created_at_not_null,n,NOT NULL created_at
-platform,policy_version,policy_version_effective_from_not_null,n,NOT NULL effective_from
+platform,policy_version,policy_version_created_by_account_id_fkey,f,FOREIGN KEY (created_by_account_id) REFERENCES identity.account(id)
+platform,policy_version,policy_version_created_by_account_id_not_null,n,NOT NULL created_by_account_id
 platform,policy_version,policy_version_id_not_null,n,NOT NULL id
 platform,policy_version,policy_version_pkey,p,PRIMARY KEY (id)
 platform,policy_version,policy_version_policy_type_not_null,n,NOT NULL policy_type
-platform,policy_version,policy_version_policy_type_version_key,u,"UNIQUE (policy_type, version)"
-platform,policy_version,policy_version_version_check,c,CHECK ((version > 0))
+platform,policy_version,policy_version_status_not_null,n,NOT NULL status
 platform,policy_version,policy_version_version_not_null,n,NOT NULL version
+platform,policy_version,uq_policy_type_version,u,"UNIQUE (policy_type, version)"
 promotion,redemption,redemption_allocated_amount_check,c,CHECK ((allocated_amount >= 0))
 promotion,redemption,redemption_allocated_amount_not_null,n,NOT NULL allocated_amount
 promotion,redemption,redemption_checkout_group_id_fkey,f,FOREIGN KEY (checkout_group_id) REFERENCES sales.checkout_group(id)
@@ -644,22 +651,24 @@ promotion,voucher,voucher_scope_not_null,n,NOT NULL scope
 promotion,voucher,voucher_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
 promotion,voucher,voucher_starts_at_not_null,n,NOT NULL starts_at
 sales,checkout_group,checkout_group_buyer_account_id_fkey,f,FOREIGN KEY (buyer_account_id) REFERENCES identity.account(id)
-sales,checkout_group,checkout_group_buyer_account_id_idempotency_key_key,u,"UNIQUE (buyer_account_id, idempotency_key)"
 sales,checkout_group,checkout_group_buyer_account_id_not_null,n,NOT NULL buyer_account_id
 sales,checkout_group,checkout_group_created_at_not_null,n,NOT NULL created_at
-sales,checkout_group,checkout_group_currency_check,c,CHECK ((currency = 'VND'::bpchar))
 sales,checkout_group,checkout_group_currency_not_null,n,NOT NULL currency
 sales,checkout_group,checkout_group_id_not_null,n,NOT NULL id
 sales,checkout_group,checkout_group_idempotency_key_not_null,n,NOT NULL idempotency_key
-sales,checkout_group,checkout_group_payment_method_check,c,"CHECK (((payment_method)::text = ANY ((ARRAY['COD'::character varying, 'PSP'::character varying])::text[])))"
 sales,checkout_group,checkout_group_payment_method_not_null,n,NOT NULL payment_method
 sales,checkout_group,checkout_group_pkey,p,PRIMARY KEY (id)
+sales,checkout_group,checkout_group_policy_snapshot_not_null,n,NOT NULL policy_snapshot
 sales,checkout_group,checkout_group_quote_id_fkey,f,FOREIGN KEY (quote_id) REFERENCES checkout.quote(id)
-sales,checkout_group,checkout_group_quote_id_key,u,UNIQUE (quote_id)
 sales,checkout_group,checkout_group_quote_id_not_null,n,NOT NULL quote_id
 sales,checkout_group,checkout_group_request_hash_not_null,n,NOT NULL request_hash
-sales,checkout_group,checkout_group_total_amount_check,c,CHECK ((total_amount >= 0))
 sales,checkout_group,checkout_group_total_amount_not_null,n,NOT NULL total_amount
+sales,checkout_group,ck_group_currency,c,CHECK ((currency = 'VND'::bpchar))
+sales,checkout_group,ck_group_method,c,"CHECK (((payment_method)::text = ANY ((ARRAY['COD'::character varying, 'PSP'::character varying])::text[])))"
+sales,checkout_group,ck_group_policy,c,CHECK ((jsonb_typeof(policy_snapshot) = 'object'::text))
+sales,checkout_group,ck_group_total,c,CHECK ((total_amount >= 0))
+sales,checkout_group,uq_group_buyer_key,u,"UNIQUE (buyer_account_id, idempotency_key)"
+sales,checkout_group,uq_group_quote,u,UNIQUE (quote_id)
 sales,order_adjustment,order_adjustment_adjustment_type_check,c,"CHECK (((adjustment_type)::text = ANY ((ARRAY['SELLER_DISCOUNT'::character varying, 'PLATFORM_DISCOUNT'::character varying, 'SHIP_SUBSIDY'::character varying, 'FEE'::character varying, 'TAX'::character varying])::text[])))"
 sales,order_adjustment,order_adjustment_adjustment_type_not_null,n,NOT NULL adjustment_type
 sales,order_adjustment,order_adjustment_amount_check,c,CHECK ((amount >= 0))
@@ -674,55 +683,73 @@ sales,order_adjustment,order_adjustment_policy_id_fkey,f,FOREIGN KEY (policy_id)
 sales,order_adjustment,order_adjustment_policy_id_not_null,n,NOT NULL policy_id
 sales,order_adjustment,order_adjustment_seller_order_id_fkey,f,FOREIGN KEY (seller_order_id) REFERENCES sales.seller_order(id)
 sales,order_adjustment,order_adjustment_seller_order_id_not_null,n,NOT NULL seller_order_id
-sales,order_line,order_line_check,c,CHECK ((gross_amount = (unit_price * quantity)))
-sales,order_line,order_line_check1,c,CHECK ((net_amount = (gross_amount - discount_amount)))
-sales,order_line,order_line_discount_amount_check,c,CHECK ((discount_amount >= 0))
+sales,order_line,ck_order_line_discount,c,CHECK ((discount_amount >= 0))
+sales,order_line,ck_order_line_gross,c,CHECK ((gross_amount = (unit_price * quantity)))
+sales,order_line,ck_order_line_net,c,CHECK ((net_amount = (gross_amount - discount_amount)))
+sales,order_line,ck_order_line_price,c,CHECK ((unit_price > 0))
+sales,order_line,ck_order_line_quantity,c,CHECK ((quantity > 0))
+sales,order_line,ck_order_line_variant,c,CHECK ((jsonb_typeof(variant_snapshot) = 'object'::text))
+sales,order_line,fk_order_line_order_shop,f,"FOREIGN KEY (seller_order_id, shop_id) REFERENCES sales.seller_order(id, shop_id)"
+sales,order_line,fk_order_line_sku_shop,f,"FOREIGN KEY (sku_id, shop_id) REFERENCES catalog.product_sku(id, shop_id)"
 sales,order_line,order_line_discount_amount_not_null,n,NOT NULL discount_amount
-sales,order_line,order_line_gross_amount_check,c,CHECK ((gross_amount > 0))
 sales,order_line,order_line_gross_amount_not_null,n,NOT NULL gross_amount
 sales,order_line,order_line_id_not_null,n,NOT NULL id
-sales,order_line,order_line_id_seller_order_id_key,u,"UNIQUE (id, seller_order_id)"
-sales,order_line,order_line_net_amount_check,c,CHECK ((net_amount >= 0))
 sales,order_line,order_line_net_amount_not_null,n,NOT NULL net_amount
 sales,order_line,order_line_pkey,p,PRIMARY KEY (id)
+sales,order_line,order_line_product_id_fkey,f,FOREIGN KEY (product_id) REFERENCES catalog.product(id)
+sales,order_line,order_line_product_id_not_null,n,NOT NULL product_id
 sales,order_line,order_line_product_name_snapshot_not_null,n,NOT NULL product_name_snapshot
-sales,order_line,order_line_quantity_check,c,CHECK ((quantity > 0))
+sales,order_line,order_line_product_slug_not_null,n,NOT NULL product_slug
 sales,order_line,order_line_quantity_not_null,n,NOT NULL quantity
 sales,order_line,order_line_seller_order_id_not_null,n,NOT NULL seller_order_id
-sales,order_line,order_line_seller_order_id_shop_id_fkey,f,"FOREIGN KEY (seller_order_id, shop_id) REFERENCES sales.seller_order(id, shop_id)"
+sales,order_line,order_line_seller_sku_not_null,n,NOT NULL seller_sku
 sales,order_line,order_line_shop_id_not_null,n,NOT NULL shop_id
 sales,order_line,order_line_sku_id_not_null,n,NOT NULL sku_id
-sales,order_line,order_line_sku_id_shop_id_fkey,f,"FOREIGN KEY (sku_id, shop_id) REFERENCES catalog.product_sku(id, shop_id)"
-sales,order_line,order_line_unit_price_check,c,CHECK ((unit_price > 0))
 sales,order_line,order_line_unit_price_not_null,n,NOT NULL unit_price
 sales,order_line,order_line_variant_snapshot_not_null,n,NOT NULL variant_snapshot
-sales,seller_order,seller_order_check,c,CHECK ((discount_amount <= item_amount))
-sales,seller_order,seller_order_check1,c,CHECK ((payable_amount = ((item_amount - discount_amount) + shipping_amount)))
+sales,order_line,uq_order_line_id_order,u,"UNIQUE (id, seller_order_id)"
+sales,order_line_reservation,order_line_reservation_order_line_id_fkey,f,FOREIGN KEY (order_line_id) REFERENCES sales.order_line(id)
+sales,order_line_reservation,order_line_reservation_order_line_id_not_null,n,NOT NULL order_line_id
+sales,order_line_reservation,order_line_reservation_pkey,p,PRIMARY KEY (order_line_id)
+sales,order_line_reservation,order_line_reservation_reservation_id_fkey,f,FOREIGN KEY (reservation_id) REFERENCES inventory.stock_reservation(id)
+sales,order_line_reservation,order_line_reservation_reservation_id_key,u,UNIQUE (reservation_id)
+sales,order_line_reservation,order_line_reservation_reservation_id_not_null,n,NOT NULL reservation_id
+sales,order_status_history,ck_history_actor,c,"CHECK (((actor_type)::text = ANY ((ARRAY['BUYER'::character varying, 'SELLER'::character varying, 'ADMIN'::character varying, 'SYSTEM'::character varying])::text[])))"
+sales,order_status_history,order_status_history_actor_type_not_null,n,NOT NULL actor_type
+sales,order_status_history,order_status_history_created_at_not_null,n,NOT NULL created_at
+sales,order_status_history,order_status_history_id_not_null,n,NOT NULL id
+sales,order_status_history,order_status_history_pkey,p,PRIMARY KEY (id)
+sales,order_status_history,order_status_history_seller_order_id_fkey,f,FOREIGN KEY (seller_order_id) REFERENCES sales.seller_order(id)
+sales,order_status_history,order_status_history_seller_order_id_not_null,n,NOT NULL seller_order_id
+sales,order_status_history,order_status_history_to_status_not_null,n,NOT NULL to_status
+sales,seller_order,ck_order_amounts,c,CHECK (((item_amount >= 0) AND (discount_amount >= 0) AND (shipping_amount >= 0) AND (payable_amount >= 0)))
+sales,seller_order,ck_order_cancel,c,CHECK ((((status)::text = 'CANCELED'::text) = (canceled_at IS NOT NULL)))
+sales,seller_order,ck_order_discount,c,CHECK ((discount_amount <= item_amount))
+sales,seller_order,ck_order_payable,c,CHECK ((payable_amount = ((item_amount - discount_amount) + shipping_amount)))
+sales,seller_order,ck_order_status,c,"CHECK (((status)::text = ANY ((ARRAY['PENDING_PAYMENT'::character varying, 'AWAITING_SELLER'::character varying, 'CONFIRMED'::character varying, 'PACKING'::character varying, 'READY_TO_SHIP'::character varying, 'IN_FULFILLMENT'::character varying, 'DELIVERED'::character varying, 'COMPLETED'::character varying, 'CANCEL_REQUESTED'::character varying, 'CANCELED'::character varying, 'REJECTED'::character varying])::text[])))"
+sales,seller_order,ck_order_version,c,CHECK ((version >= 0))
 sales,seller_order,seller_order_checkout_group_id_fkey,f,FOREIGN KEY (checkout_group_id) REFERENCES sales.checkout_group(id)
 sales,seller_order,seller_order_checkout_group_id_not_null,n,NOT NULL checkout_group_id
-sales,seller_order,seller_order_checkout_group_id_shop_id_key,u,"UNIQUE (checkout_group_id, shop_id)"
 sales,seller_order,seller_order_created_at_not_null,n,NOT NULL created_at
-sales,seller_order,seller_order_discount_amount_check,c,CHECK ((discount_amount >= 0))
 sales,seller_order,seller_order_discount_amount_not_null,n,NOT NULL discount_amount
-sales,seller_order,seller_order_id_checkout_group_id_key,u,"UNIQUE (id, checkout_group_id)"
 sales,seller_order,seller_order_id_not_null,n,NOT NULL id
-sales,seller_order,seller_order_id_shop_id_key,u,"UNIQUE (id, shop_id)"
-sales,seller_order,seller_order_item_amount_check,c,CHECK ((item_amount >= 0))
 sales,seller_order,seller_order_item_amount_not_null,n,NOT NULL item_amount
-sales,seller_order,seller_order_order_number_key,u,UNIQUE (order_number)
 sales,seller_order,seller_order_order_number_not_null,n,NOT NULL order_number
-sales,seller_order,seller_order_payable_amount_check,c,CHECK ((payable_amount >= 0))
 sales,seller_order,seller_order_payable_amount_not_null,n,NOT NULL payable_amount
 sales,seller_order,seller_order_pkey,p,PRIMARY KEY (id)
 sales,seller_order,seller_order_recipient_snapshot_ciphertext_not_null,n,NOT NULL recipient_snapshot_ciphertext
 sales,seller_order,seller_order_return_policy_id_fkey,f,FOREIGN KEY (return_policy_id) REFERENCES platform.policy_version(id)
 sales,seller_order,seller_order_return_policy_id_not_null,n,NOT NULL return_policy_id
-sales,seller_order,seller_order_shipping_amount_check,c,CHECK ((shipping_amount >= 0))
+sales,seller_order,seller_order_ship_province_not_null,n,NOT NULL ship_province
+sales,seller_order,seller_order_ship_ward_not_null,n,NOT NULL ship_ward
 sales,seller_order,seller_order_shipping_amount_not_null,n,NOT NULL shipping_amount
 sales,seller_order,seller_order_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES merchant.shop(id)
 sales,seller_order,seller_order_shop_id_not_null,n,NOT NULL shop_id
-sales,seller_order,seller_order_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['PENDING_PAYMENT'::character varying, 'AWAITING_SELLER'::character varying, 'CONFIRMED'::character varying, 'PACKING'::character varying, 'READY_TO_SHIP'::character varying, 'IN_FULFILLMENT'::character varying, 'DELIVERED'::character varying, 'COMPLETED'::character varying, 'CANCEL_REQUESTED'::character varying, 'CANCELED'::character varying, 'REJECTED'::character varying])::text[])))"
+sales,seller_order,seller_order_shop_name_snapshot_not_null,n,NOT NULL shop_name_snapshot
 sales,seller_order,seller_order_status_not_null,n,NOT NULL status
 sales,seller_order,seller_order_updated_at_not_null,n,NOT NULL updated_at
-sales,seller_order,seller_order_version_check,c,CHECK ((version >= 0))
 sales,seller_order,seller_order_version_not_null,n,NOT NULL version
+sales,seller_order,uq_order_group_shop,u,"UNIQUE (checkout_group_id, shop_id)"
+sales,seller_order,uq_order_id_group,u,"UNIQUE (id, checkout_group_id)"
+sales,seller_order,uq_order_id_shop,u,"UNIQUE (id, shop_id)"
+sales,seller_order,uq_order_number,u,UNIQUE (order_number)

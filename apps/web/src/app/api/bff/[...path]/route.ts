@@ -22,6 +22,11 @@ const routes: { method: string; path: RegExp; maxBytes: number }[] = [
   { method: "DELETE", path: new RegExp(`^cart/lines/${uuid}$`), maxBytes: 64 },
   { method: "DELETE", path: /^cart$/, maxBytes: 64 },
   { method: "POST", path: /^checkout\/quotes$/, maxBytes: 256 },
+  // Orders: the idempotency key is forwarded by the generic header handling below
+  { method: "POST", path: /^checkout\/orders$/, maxBytes: 512 },
+  // Policies (admin, second factor enforced by the API)
+  { method: "POST", path: /^admin\/policies$/, maxBytes: 1_024 },
+  { method: "POST", path: new RegExp(`^admin/policies/${uuid}/approve$`), maxBytes: 64 },
   // Address book (owner only; the API scopes every call to the token's account)
   { method: "POST", path: /^me\/addresses$/, maxBytes: 2_048 },
   { method: "PUT", path: new RegExp(`^me/addresses/${uuid}$`), maxBytes: 2_048 },

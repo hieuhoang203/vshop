@@ -3,10 +3,17 @@ import type { CreateQuoteInput, SetQuantityInput } from "@vshop/contracts";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { Address, CartContent, CartLine, Quote } from "@vshop/contracts";
+import type {
+  Address,
+  CartContent,
+  CartLine,
+  CheckoutGroup,
+  PlaceOrderInput,
+  Quote,
+} from "@vshop/contracts";
 import { Button, Select } from "@radix-ui/themes";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
-import { bff } from "@/lib/client-api";
+import { bff, newIdempotencyKey } from "@/lib/client-api";
 import { formatMoney } from "@/lib/format";
 
 const ISSUE_TEXT: Record<string, (line: CartLine) => string> = {
@@ -26,6 +33,7 @@ export function CartView({ initial, addresses }: { initial: CartContent; address
     () => (addresses.find((a) => a.isDefault) ?? addresses[0])?.id ?? "",
   );
   const [quote, setQuote] = useState<Quote | null>(null);
+  const [orderKey, setOrderKey] = useState<{ quoteId: string; key: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [now, setNow] = useState(() => Date.now());
@@ -63,6 +71,30 @@ export function CartView({ initial, addresses }: { initial: CartContent; address
     setBusy(null);
     if (!result.ok) return setError(result.message);
     setQuote(result.data);
+  }
+
+  async function placeOrder() {
+    if (busy || !quote) return;
+    // One key per quote: a retry after a network error cannot create a second order.
+    let key = orderKey?.quoteId === quote.id ? orderKey.key : null;
+    if (!key) {
+      key = newIdempotencyKey();
+      setOrderKey({ quoteId: quote.id, key });
+    }
+    setBusy("order");
+    setError("");
+    const result = await bff<CheckoutGroup>(
+      "POST",
+      "checkout/orders",
+      { quoteId: quote.id, paymentMethod: "COD" } satisfies PlaceOrderInput,
+      { "Idempotency-Key": key },
+    );
+    setBusy(null);
+    if (!result.ok) {
+      if (result.status !== 0) setOrderKey(null); // a definite answer: next try is a new attempt
+      return setError(result.message);
+    }
+    router.push(`/checkout/result/${result.data.id}`);
   }
 
   if (!cart.groups.length)
@@ -247,15 +279,39 @@ export function CartView({ initial, addresses }: { initial: CartContent; address
                     : "Báo giá đã hết hạn"
                 : `Giá được giữ đến ${timeOnly.format(new Date(quote.expiresAt))}`}
             </strong>
-            <span>Tổng sản phẩm trong báo giá: {formatMoney(quote.content.itemsTotal)}</span>
+            <span>Tiền hàng: {formatMoney(quote.content.itemsTotal)}</span>
+            <span>
+              Phí vận chuyển:{" "}
+              {quote.content.notCalculated.includes("SHIPPING")
+                ? "chưa tính được"
+                : formatMoney(quote.content.shippingTotal)}
+            </span>
+            <strong>Tổng phải trả: {formatMoney(quote.content.payableTotal)}</strong>
             {quote.shipTo && (
               <span>
                 Giao đến: {quote.shipTo.ward}, {quote.shipTo.province}
               </span>
             )}
-            <p className="form-note">
-              Thanh toán và đặt hàng chưa mở, nên báo giá này chưa tạo đơn và chưa giữ hàng.
-            </p>
+            {quote.content.notCalculated.includes("SHIPPING") ? (
+              <p className="form-note" role="status">
+                Chưa thể đặt hàng: chính sách phí vận chuyển và thanh toán chưa được quản trị viên
+                duyệt.
+              </p>
+            ) : (
+              <>
+                <p className="form-note">
+                  Thanh toán khi nhận hàng (COD). Đặt hàng sẽ giữ và trừ tồn kho ngay.
+                </p>
+                <Button
+                  size="3"
+                  onClick={placeOrder}
+                  loading={busy === "order"}
+                  disabled={busy !== null || quoteStale || !quote.content.canCheckout}
+                >
+                  Đặt hàng (COD)
+                </Button>
+              </>
+            )}
           </div>
         )}
       </aside>

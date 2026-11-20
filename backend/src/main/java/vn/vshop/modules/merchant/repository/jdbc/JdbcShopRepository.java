@@ -132,6 +132,21 @@ public class JdbcShopRepository implements ShopRepository {
     }
 
     @Override
+    public java.util.Set<UUID> findMemberShops(UUID accountId, java.util.Collection<UUID> shopIds) {
+        if (shopIds.isEmpty()) {
+            return java.util.Set.of();
+        }
+        return new java.util.HashSet<>(
+                jdbc.sql(
+                                "SELECT shop_id FROM merchant.shop_member"
+                                        + " WHERE account_id = :account AND shop_id IN (:shops)")
+                        .param("account", accountId)
+                        .param("shops", shopIds)
+                        .query(UUID.class)
+                        .list());
+    }
+
+    @Override
     public void insertReview(ShopReview review) {
         jdbc.sql(
                         """

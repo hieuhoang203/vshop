@@ -10,6 +10,9 @@ public interface EventRepository {
 
     void appendOutbox(AuditEvent event);
 
+    void appendOutbox(
+            UUID id, String aggregateType, String eventType, UUID aggregateId, String payloadJson);
+
     List<OutboxEvent> lockPending(int limit);
 
     void insertReceipt(OutboxEvent event);

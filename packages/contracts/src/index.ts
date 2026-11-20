@@ -63,3 +63,15 @@ export type UpdateAddressInput = Schemas["UpdateAddressRequest"];
 
 // Account
 export type Profile = Schemas["ProfileResponse"];
+
+// Orders and checkout
+export type PlaceOrderInput = Schemas["PlaceOrderRequest"];
+export type CheckoutGroup = Schemas["CheckoutGroupResponse"];
+export type Order = Schemas["OrderResponse"];
+export type OrderLine = Schemas["OrderLineResponse"];
+export type OrderSummary = Schemas["OrderSummaryResponse"];
+export type OrderPage = Schemas["PageResponseOrderSummaryResponse"];
+
+// Policies (admin)
+export type Policy = Schemas["PolicyResponse"];
+export type CreatePolicyInput = Schemas["CreatePolicyRequest"];

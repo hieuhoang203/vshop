@@ -168,8 +168,11 @@ platform,event_receipt,platform_event_receipt_pkey,CREATE UNIQUE INDEX platform_
 platform,outbox_event,ix_outbox_aggregate_created,"CREATE INDEX ix_outbox_aggregate_created ON platform.outbox_event USING btree (aggregate_id, created_at)"
 platform,outbox_event,outbox_event_pkey,CREATE UNIQUE INDEX outbox_event_pkey ON platform.outbox_event USING btree (id)
 platform,outbox_event,outbox_pending,CREATE INDEX outbox_pending ON platform.outbox_event USING btree (created_at) WHERE (processed_at IS NULL)
+platform,policy_version,ix_policy_approved_by,CREATE INDEX ix_policy_approved_by ON platform.policy_version USING btree (approved_by_account_id)
+platform,policy_version,ix_policy_created_by,CREATE INDEX ix_policy_created_by ON platform.policy_version USING btree (created_by_account_id)
 platform,policy_version,policy_version_pkey,CREATE UNIQUE INDEX policy_version_pkey ON platform.policy_version USING btree (id)
-platform,policy_version,policy_version_policy_type_version_key,"CREATE UNIQUE INDEX policy_version_policy_type_version_key ON platform.policy_version USING btree (policy_type, version)"
+platform,policy_version,uq_policy_current,CREATE UNIQUE INDEX uq_policy_current ON platform.policy_version USING btree (policy_type) WHERE ((status)::text = 'APPROVED'::text)
+platform,policy_version,uq_policy_type_version,"CREATE UNIQUE INDEX uq_policy_type_version ON platform.policy_version USING btree (policy_type, version)"
 promotion,redemption,ix_redemption_checkout,CREATE INDEX ix_redemption_checkout ON promotion.redemption USING btree (checkout_group_id)
 promotion,redemption,redemption_pkey,CREATE UNIQUE INDEX redemption_pkey ON promotion.redemption USING btree (id)
 promotion,redemption,redemption_voucher_id_checkout_group_id_key,"CREATE UNIQUE INDEX redemption_voucher_id_checkout_group_id_key ON promotion.redemption USING btree (voucher_id, checkout_group_id)"
@@ -177,21 +180,28 @@ promotion,voucher,ix_voucher_policy,CREATE INDEX ix_voucher_policy ON promotion.
 promotion,voucher,ix_voucher_shop,CREATE INDEX ix_voucher_shop ON promotion.voucher USING btree (shop_id)
 promotion,voucher,voucher_code_key,CREATE UNIQUE INDEX voucher_code_key ON promotion.voucher USING btree (code)
 promotion,voucher,voucher_pkey,CREATE UNIQUE INDEX voucher_pkey ON promotion.voucher USING btree (id)
-sales,checkout_group,checkout_group_buyer_account_id_idempotency_key_key,"CREATE UNIQUE INDEX checkout_group_buyer_account_id_idempotency_key_key ON sales.checkout_group USING btree (buyer_account_id, idempotency_key)"
 sales,checkout_group,checkout_group_pkey,CREATE UNIQUE INDEX checkout_group_pkey ON sales.checkout_group USING btree (id)
-sales,checkout_group,checkout_group_quote_id_key,CREATE UNIQUE INDEX checkout_group_quote_id_key ON sales.checkout_group USING btree (quote_id)
+sales,checkout_group,ix_group_buyer,"CREATE INDEX ix_group_buyer ON sales.checkout_group USING btree (buyer_account_id, created_at DESC)"
+sales,checkout_group,uq_group_buyer_key,"CREATE UNIQUE INDEX uq_group_buyer_key ON sales.checkout_group USING btree (buyer_account_id, idempotency_key)"
+sales,checkout_group,uq_group_quote,CREATE UNIQUE INDEX uq_group_quote ON sales.checkout_group USING btree (quote_id)
 sales,order_adjustment,ix_adjustment_line_order,"CREATE INDEX ix_adjustment_line_order ON sales.order_adjustment USING btree (order_line_id, seller_order_id)"
 sales,order_adjustment,ix_adjustment_order,CREATE INDEX ix_adjustment_order ON sales.order_adjustment USING btree (seller_order_id)
 sales,order_adjustment,ix_adjustment_policy,CREATE INDEX ix_adjustment_policy ON sales.order_adjustment USING btree (policy_id)
 sales,order_adjustment,order_adjustment_pkey,CREATE UNIQUE INDEX order_adjustment_pkey ON sales.order_adjustment USING btree (id)
 sales,order_line,ix_order_line_order_shop,"CREATE INDEX ix_order_line_order_shop ON sales.order_line USING btree (seller_order_id, shop_id)"
+sales,order_line,ix_order_line_product,CREATE INDEX ix_order_line_product ON sales.order_line USING btree (product_id)
 sales,order_line,ix_order_line_sku_shop,"CREATE INDEX ix_order_line_sku_shop ON sales.order_line USING btree (sku_id, shop_id)"
-sales,order_line,order_line_id_seller_order_id_key,"CREATE UNIQUE INDEX order_line_id_seller_order_id_key ON sales.order_line USING btree (id, seller_order_id)"
 sales,order_line,order_line_pkey,CREATE UNIQUE INDEX order_line_pkey ON sales.order_line USING btree (id)
+sales,order_line,uq_order_line_id_order,"CREATE UNIQUE INDEX uq_order_line_id_order ON sales.order_line USING btree (id, seller_order_id)"
+sales,order_line_reservation,order_line_reservation_pkey,CREATE UNIQUE INDEX order_line_reservation_pkey ON sales.order_line_reservation USING btree (order_line_id)
+sales,order_line_reservation,order_line_reservation_reservation_id_key,CREATE UNIQUE INDEX order_line_reservation_reservation_id_key ON sales.order_line_reservation USING btree (reservation_id)
+sales,order_status_history,ix_history_order,"CREATE INDEX ix_history_order ON sales.order_status_history USING btree (seller_order_id, created_at, id)"
+sales,order_status_history,order_status_history_pkey,CREATE UNIQUE INDEX order_status_history_pkey ON sales.order_status_history USING btree (id)
+sales,seller_order,ix_order_deadline,CREATE INDEX ix_order_deadline ON sales.seller_order USING btree (payment_deadline) WHERE ((status)::text = 'PENDING_PAYMENT'::text)
 sales,seller_order,ix_order_policy,CREATE INDEX ix_order_policy ON sales.seller_order USING btree (return_policy_id)
 sales,seller_order,ix_order_shop_created,"CREATE INDEX ix_order_shop_created ON sales.seller_order USING btree (shop_id, created_at DESC)"
-sales,seller_order,seller_order_checkout_group_id_shop_id_key,"CREATE UNIQUE INDEX seller_order_checkout_group_id_shop_id_key ON sales.seller_order USING btree (checkout_group_id, shop_id)"
-sales,seller_order,seller_order_id_checkout_group_id_key,"CREATE UNIQUE INDEX seller_order_id_checkout_group_id_key ON sales.seller_order USING btree (id, checkout_group_id)"
-sales,seller_order,seller_order_id_shop_id_key,"CREATE UNIQUE INDEX seller_order_id_shop_id_key ON sales.seller_order USING btree (id, shop_id)"
-sales,seller_order,seller_order_order_number_key,CREATE UNIQUE INDEX seller_order_order_number_key ON sales.seller_order USING btree (order_number)
 sales,seller_order,seller_order_pkey,CREATE UNIQUE INDEX seller_order_pkey ON sales.seller_order USING btree (id)
+sales,seller_order,uq_order_group_shop,"CREATE UNIQUE INDEX uq_order_group_shop ON sales.seller_order USING btree (checkout_group_id, shop_id)"
+sales,seller_order,uq_order_id_group,"CREATE UNIQUE INDEX uq_order_id_group ON sales.seller_order USING btree (id, checkout_group_id)"
+sales,seller_order,uq_order_id_shop,"CREATE UNIQUE INDEX uq_order_id_shop ON sales.seller_order USING btree (id, shop_id)"
+sales,seller_order,uq_order_number,CREATE UNIQUE INDEX uq_order_number ON sales.seller_order USING btree (order_number)

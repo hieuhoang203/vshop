@@ -12,6 +12,7 @@ import vn.vshop.common.exception.BusinessException;
 import vn.vshop.common.exception.ErrorCode;
 import vn.vshop.modules.checkout.entity.Cart;
 import vn.vshop.modules.checkout.entity.Quote;
+import vn.vshop.modules.checkout.model.OrderBasis;
 import vn.vshop.modules.checkout.model.PricedCart;
 import vn.vshop.modules.checkout.model.QuoteView;
 import vn.vshop.modules.checkout.repository.CartRepository;
@@ -74,7 +75,7 @@ public class QuoteService {
                         buyer,
                         cart.id(),
                         cart.version(),
-                        priced.itemsTotal(),
+                        priced.payableTotal(),
                         "VND",
                         json.writeValueAsString(priced),
                         null,
@@ -85,6 +86,90 @@ public class QuoteService {
                         shipTo == null ? null : shipTo.ward()),
                 ttl.toSeconds());
         return view(subject, quotes.findForBuyer(id, buyer).orElseThrow(), cart.version());
+    }
+
+    /**
+     * First step of placing an order: locks the caller's cart row for the rest of the transaction,
+     * the same lock every cart change takes, and returns the buyer account.
+     */
+    public UUID lockCart(String subject) {
+        UUID buyer = accounts.requireActiveAccount(subject);
+        carts.ensureAndLock(buyer);
+        return buyer;
+    }
+
+    /**
+     * Validates a quote for ordering and prices the cart again. Must run in the transaction that
+     * called {@link #lockCart}. Anything that differs from what the buyer was shown (expiry, cart
+     * or address change, price, shipping, stock) is a {@code QUOTE_STALE} conflict; an order is
+     * never placed at a price the buyer has not seen (BR04).
+     */
+    public OrderBasis prepareOrder(String subject, UUID quoteId) {
+        QuoteView quote = get(subject, quoteId);
+        if (!quote.current()) {
+            throw new BusinessException(
+                    ErrorCode.QUOTE_STALE,
+                    quote.expired()
+                            ? "Báo giá đã hết hạn. Vui lòng tính lại trước khi đặt hàng."
+                            : "Giỏ hàng hoặc địa chỉ đã thay đổi. Vui lòng tính lại báo giá.");
+        }
+        if (quote.shipTo() == null || quote.shipTo().addressId() == null) {
+            throw new BusinessException(
+                    ErrorCode.QUOTE_ADDRESS_REQUIRED, "Cần chọn địa chỉ giao hàng để đặt hàng.");
+        }
+        UUID buyer = accounts.requireActiveAccount(subject);
+        Cart cart = carts.ensureAndLock(buyer);
+        PricedCart priced = pricer.price(carts.findLines(cart.id()));
+        if (!priced.canCheckout()) {
+            throw new BusinessException(
+                    ErrorCode.SKU_UNAVAILABLE,
+                    "Có sản phẩm không còn đủ hàng hoặc đã ngừng bán. Hãy kiểm tra lại giỏ hàng.");
+        }
+        if (!sameCharges(quote.cart(), priced)) {
+            throw new BusinessException(
+                    ErrorCode.QUOTE_STALE,
+                    "Giá đã thay đổi: báo giá "
+                            + quote.cart().payableTotal()
+                            + "đ, hiện tại "
+                            + priced.payableTotal()
+                            + "đ. Vui lòng xem lại báo giá mới.");
+        }
+        return new OrderBasis(buyer, cart.id(), quote.id(), quote.shipTo().addressId(), priced);
+    }
+
+    /** Removes the purchased lines after an order was placed and bumps the cart version. */
+    public void clearCart(UUID cartId) {
+        carts.deleteAllLines(cartId);
+        carts.bumpVersion(cartId);
+    }
+
+    /** Same shops, unit prices, quantities and fees; stock counts may differ harmlessly. */
+    private static boolean sameCharges(PricedCart shown, PricedCart now) {
+        if (shown.payableTotal() != now.payableTotal()
+                || shown.shippingTotal() != now.shippingTotal()
+                || shown.groups().size() != now.groups().size()) {
+            return false;
+        }
+        for (int i = 0; i < shown.groups().size(); i++) {
+            var a = shown.groups().get(i);
+            var b = now.groups().get(i);
+            if (!a.shopId().equals(b.shopId())
+                    || a.subtotal() != b.subtotal()
+                    || a.shippingFee() != b.shippingFee()
+                    || a.lines().size() != b.lines().size()) {
+                return false;
+            }
+            for (int j = 0; j < a.lines().size(); j++) {
+                var x = a.lines().get(j);
+                var y = b.lines().get(j);
+                if (!x.skuId().equals(y.skuId())
+                        || x.unitPrice() != y.unitPrice()
+                        || x.quantity() != y.quantity()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public QuoteView get(String subject, UUID quoteId) {

@@ -20,6 +20,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["adminPolicyList"];
+        put?: never;
+        post: operations["adminPolicyDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/policies/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["adminPolicyApprove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/products/review-queue": {
         parameters: {
             query?: never;
@@ -196,6 +228,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/checkout/groups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["orderGroup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkout/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["orderPlace"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/checkout/quotes": {
         parameters: {
             query?: never;
@@ -285,6 +349,38 @@ export interface paths {
         };
         get?: never;
         put: operations["addressMakeDefault"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["orderList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["orderOrder"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -503,6 +599,10 @@ export interface components {
             itemsTotal: number;
             notCalculated: string[];
             /** Format: int64 */
+            payableTotal: number;
+            /** Format: int64 */
+            shippingTotal: number;
+            /** Format: int64 */
             version: number;
         };
         CategoryResponse: {
@@ -518,6 +618,25 @@ export interface components {
             expectedVersion: number;
             /** @enum {string} */
             status: "DRAFT" | "PENDING_REVIEW" | "REJECTED" | "ACTIVE" | "HIDDEN";
+        };
+        CheckoutGroupResponse: {
+            /** Format: date-time */
+            createdAt: string;
+            currency: string;
+            /** Format: uuid */
+            id: string;
+            orders: components["schemas"]["OrderResponse"][];
+            /** @enum {string} */
+            paymentMethod: "COD" | "PSP";
+            /** Format: int64 */
+            totalAmount: number;
+        };
+        CreatePolicyRequest: {
+            content: {
+                [key: string]: number;
+            };
+            /** @enum {string} */
+            policyType: "SHIPPING_FLAT" | "RETURN" | "COD_LIMITS" | "PAYMENT_WINDOW";
         };
         CreateProductRequest: {
             /** Format: uuid */
@@ -563,6 +682,101 @@ export interface components {
             name: string;
             values: components["schemas"]["ValueResponse"][];
         };
+        OrderLineResponse: {
+            /** Format: int64 */
+            discountAmount: number;
+            /** Format: int64 */
+            grossAmount: number;
+            imageKey: string | null;
+            /** Format: int64 */
+            netAmount: number;
+            /** Format: uuid */
+            productId: string;
+            productName: string;
+            productSlug: string;
+            /** Format: int32 */
+            quantity: number;
+            sellerSku: string;
+            /** Format: uuid */
+            skuId: string;
+            /** Format: int64 */
+            unitPrice: number;
+            variantLabel: string | null;
+        };
+        OrderRecipientResponse: {
+            name: string;
+            phone: string;
+            province: string;
+            street: string;
+            ward: string;
+        };
+        OrderResponse: {
+            cancelReason: string | null;
+            /** Format: date-time */
+            canceledAt: string | null;
+            /** Format: uuid */
+            checkoutGroupId: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            discountAmount: number;
+            history: components["schemas"]["OrderStatusEventResponse"][];
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            itemAmount: number;
+            lines: components["schemas"]["OrderLineResponse"][];
+            orderNumber: string;
+            /** Format: int64 */
+            payableAmount: number;
+            /** Format: date-time */
+            paymentDeadline: string | null;
+            recipient: components["schemas"]["OrderRecipientResponse"];
+            /** Format: int64 */
+            shippingAmount: number;
+            /** Format: uuid */
+            shopId: string;
+            shopName: string;
+            /** @enum {string} */
+            status: "PENDING_PAYMENT" | "AWAITING_SELLER" | "CONFIRMED" | "PACKING" | "READY_TO_SHIP" | "IN_FULFILLMENT" | "DELIVERED" | "COMPLETED" | "CANCEL_REQUESTED" | "CANCELED" | "REJECTED";
+        };
+        OrderStatusEventResponse: {
+            actorType: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** @enum {string|null} */
+            fromStatus: "PENDING_PAYMENT" | "AWAITING_SELLER" | "CONFIRMED" | "PACKING" | "READY_TO_SHIP" | "IN_FULFILLMENT" | "DELIVERED" | "COMPLETED" | "CANCEL_REQUESTED" | "CANCELED" | "REJECTED" | null;
+            reason: string | null;
+            /** @enum {string} */
+            toStatus: "PENDING_PAYMENT" | "AWAITING_SELLER" | "CONFIRMED" | "PACKING" | "READY_TO_SHIP" | "IN_FULFILLMENT" | "DELIVERED" | "COMPLETED" | "CANCEL_REQUESTED" | "CANCELED" | "REJECTED";
+        };
+        OrderSummaryResponse: {
+            /** Format: uuid */
+            checkoutGroupId: string;
+            /** Format: date-time */
+            createdAt: string;
+            firstImageKey: string | null;
+            firstProductName: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            itemCount: number;
+            orderNumber: string;
+            /** Format: int64 */
+            payableAmount: number;
+            shopName: string;
+            /** @enum {string} */
+            status: "PENDING_PAYMENT" | "AWAITING_SELLER" | "CONFIRMED" | "PACKING" | "READY_TO_SHIP" | "IN_FULFILLMENT" | "DELIVERED" | "COMPLETED" | "CANCEL_REQUESTED" | "CANCELED" | "REJECTED";
+        };
+        PageResponseOrderSummaryResponse: {
+            items: components["schemas"]["OrderSummaryResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
         PageResponseProductResponse: {
             items: components["schemas"]["ProductResponse"][];
             /** Format: int32 */
@@ -581,6 +795,12 @@ export interface components {
             /** Format: int64 */
             total: number;
         };
+        PlaceOrderRequest: {
+            /** @enum {string} */
+            paymentMethod: "COD" | "PSP";
+            /** Format: uuid */
+            quoteId: string;
+        };
         Point: {
             /** Format: int64 */
             approved: number;
@@ -590,6 +810,27 @@ export interface components {
             rejected: number;
             /** Format: int64 */
             submitted: number;
+        };
+        PolicyResponse: {
+            /** Format: date-time */
+            approvedAt: string | null;
+            content: {
+                [key: string]: number;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            effectiveFrom: string | null;
+            /** Format: date-time */
+            effectiveTo: string | null;
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            policyType: "SHIPPING_FLAT" | "RETURN" | "COD_LIMITS" | "PAYMENT_WINDOW";
+            /** @enum {string} */
+            status: "DRAFT" | "APPROVED" | "RETIRED";
+            /** Format: int32 */
+            version: number;
         };
         ProductResponse: {
             categoryName: string;
@@ -694,6 +935,10 @@ export interface components {
         };
         ShopGroupResponse: {
             lines: components["schemas"]["LineResponse"][];
+            /** Format: int64 */
+            payable: number;
+            /** Format: int64 */
+            shippingFee: number;
             /** Format: uuid */
             shopId: string;
             shopName: string;
@@ -845,6 +1090,99 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ShopActivityResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    adminPolicyList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyResponse"][];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    adminPolicyDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    adminPolicyApprove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyResponse"];
                 };
             };
             /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
@@ -1274,6 +1612,72 @@ export interface operations {
             };
         };
     };
+    orderGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutGroupResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    orderPlace: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlaceOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutGroupResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     quoteCreate: {
         parameters: {
             query?: never;
@@ -1511,6 +1915,69 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AddressResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    orderList: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResponseOrderSummaryResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    orderOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderResponse"];
                 };
             };
             /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */

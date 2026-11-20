@@ -8,7 +8,6 @@ import vn.vshop.modules.checkout.model.PricedCart;
 import vn.vshop.modules.checkout.model.QuoteView;
 
 public final class CheckoutMapper {
-    private static final List<String> NOT_CALCULATED = List.of("SHIPPING", "DISCOUNT", "TAX");
 
     private CheckoutMapper() {}
 
@@ -39,8 +38,12 @@ public final class CheckoutMapper {
                 "VND",
                 cart.groups().stream().map(CheckoutMapper::toResponse).toList(),
                 cart.itemsTotal(),
+                cart.shippingTotal(),
+                cart.payableTotal(),
                 cart.canCheckout(),
-                NOT_CALCULATED);
+                cart.shippingCalculated()
+                        ? List.of("DISCOUNT", "TAX")
+                        : List.of("SHIPPING", "DISCOUNT", "TAX"));
     }
 
     private static CartResponse.ShopGroupResponse toResponse(PricedCart.ShopGroup group) {
@@ -48,6 +51,8 @@ public final class CheckoutMapper {
                 group.shopId(),
                 group.shopName(),
                 group.subtotal(),
+                group.shippingFee(),
+                group.payable(),
                 group.lines().stream().map(CheckoutMapper::toResponse).toList());
     }
 

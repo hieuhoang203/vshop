@@ -8,6 +8,7 @@ const LINKS = {
   admin: [
     { href: "/admin", label: "Hồ sơ gian hàng" },
     { href: "/admin/products", label: "Duyệt sản phẩm" },
+    { href: "/admin/policies", label: "Chính sách" },
   ],
 } as const;
 

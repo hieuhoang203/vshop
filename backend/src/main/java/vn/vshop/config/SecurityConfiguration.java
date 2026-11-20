@@ -132,7 +132,11 @@ public class SecurityConfiguration {
                                         .access(this::adminWithSecondFactor)
                                         .requestMatchers("/api/v1/seller/**")
                                         .hasAnyRole("SELLER", "BUYER")
-                                        .requestMatchers("/api/v1/cart/**", "/api/v1/checkout/**")
+                                        .requestMatchers(
+                                                "/api/v1/cart/**",
+                                                "/api/v1/checkout/**",
+                                                "/api/v1/orders/**",
+                                                "/api/v1/orders")
                                         .hasAnyRole("BUYER", "SELLER")
                                         .requestMatchers(
                                                 "/api/v1/me/addresses/**", "/api/v1/me/addresses")

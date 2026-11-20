@@ -13,6 +13,7 @@ import vn.vshop.common.security.PiiCipher;
 import vn.vshop.modules.identity.entity.Address;
 import vn.vshop.modules.identity.model.AddressDetails;
 import vn.vshop.modules.identity.model.AddressInput;
+import vn.vshop.modules.identity.model.Recipient;
 import vn.vshop.modules.identity.model.ShipTo;
 import vn.vshop.modules.identity.repository.AddressRepository;
 
@@ -113,6 +114,20 @@ public class AddressService {
         UUID account = accounts.requireActiveAccount(subject);
         Address address = owned(account, id);
         return new ShipTo(address.id(), address.version(), address.province(), address.ward());
+    }
+
+    /** Full delivery details of an owned address for an order snapshot. */
+    public Recipient recipient(String subject, UUID id) {
+        UUID account = accounts.requireActiveAccount(subject);
+        AddressDetails d = open(owned(account, id));
+        return new Recipient(
+                d.id(),
+                d.version(),
+                d.recipientName(),
+                d.phone(),
+                d.street(),
+                d.ward(),
+                d.province());
     }
 
     /** Current version of an owned address, or empty when it no longer exists. */

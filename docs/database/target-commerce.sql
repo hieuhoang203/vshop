@@ -3,7 +3,11 @@
 -- The associated APIs, state machines and money-handling services are not implemented.
 BEGIN;
 
-CREATE SCHEMA sales;
+-- sales, platform.policy_version, sales.checkout_group, seller_order, order_line and the order
+-- tables are implemented by Flyway V1006 and V1007. The two keys below are what the reference
+-- tables that follow reference.
+ALTER TABLE sales.seller_order ADD CONSTRAINT uq_order_id_group UNIQUE (id, checkout_group_id);
+ALTER TABLE sales.order_line ADD CONSTRAINT uq_order_line_id_order UNIQUE (id, seller_order_id);
 CREATE SCHEMA promotion;
 CREATE SCHEMA payment;
 CREATE SCHEMA fulfillment;
@@ -12,17 +16,6 @@ CREATE SCHEMA finance;
 CREATE SCHEMA engagement;
 CREATE SCHEMA media;
 
-CREATE TABLE platform.policy_version (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    policy_type VARCHAR(50) NOT NULL,
-    version INTEGER NOT NULL CHECK (version > 0),
-    content JSONB NOT NULL CHECK (jsonb_typeof(content) = 'object'),
-    effective_from TIMESTAMPTZ NOT NULL,
-    effective_to TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (policy_type, version),
-    CHECK (effective_to IS NULL OR effective_to > effective_from)
-);
 
 -- identity.address is implemented by Flyway V1005 (with encrypted phone and street).
 
@@ -72,63 +65,6 @@ CREATE INDEX ix_product_media_asset ON catalog.product_media(asset_id);
 ALTER TABLE checkout.quote ADD COLUMN price_policy_id UUID REFERENCES platform.policy_version(id);
 CREATE INDEX ix_quote_policy ON checkout.quote(price_policy_id);
 
-CREATE TABLE sales.checkout_group (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    buyer_account_id UUID NOT NULL REFERENCES identity.account(id),
-    quote_id UUID NOT NULL UNIQUE REFERENCES checkout.quote(id),
-    idempotency_key VARCHAR(150) NOT NULL,
-    request_hash CHAR(64) NOT NULL,
-    currency CHAR(3) NOT NULL DEFAULT 'VND' CHECK (currency = 'VND'),
-    total_amount BIGINT NOT NULL CHECK (total_amount >= 0),
-    payment_method VARCHAR(20) NOT NULL CHECK (payment_method IN ('COD', 'PSP')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (buyer_account_id, idempotency_key)
-);
-CREATE TABLE sales.seller_order (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    checkout_group_id UUID NOT NULL REFERENCES sales.checkout_group(id),
-    shop_id UUID NOT NULL REFERENCES merchant.shop(id),
-    order_number VARCHAR(40) NOT NULL UNIQUE,
-    status VARCHAR(30) NOT NULL CHECK (status IN ('PENDING_PAYMENT', 'AWAITING_SELLER', 'CONFIRMED', 'PACKING', 'READY_TO_SHIP', 'IN_FULFILLMENT', 'DELIVERED', 'COMPLETED', 'CANCEL_REQUESTED', 'CANCELED', 'REJECTED')),
-    version BIGINT NOT NULL DEFAULT 0 CHECK (version >= 0),
-    item_amount BIGINT NOT NULL CHECK (item_amount >= 0),
-    discount_amount BIGINT NOT NULL CHECK (discount_amount >= 0),
-    shipping_amount BIGINT NOT NULL CHECK (shipping_amount >= 0),
-    payable_amount BIGINT NOT NULL CHECK (payable_amount >= 0),
-    recipient_snapshot_ciphertext TEXT NOT NULL,
-    return_policy_id UUID NOT NULL REFERENCES platform.policy_version(id),
-    delivered_at TIMESTAMPTZ,
-    return_eligible_until TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (checkout_group_id, shop_id),
-    UNIQUE (id, checkout_group_id),
-    UNIQUE (id, shop_id),
-    CHECK (discount_amount <= item_amount),
-    CHECK (payable_amount = item_amount - discount_amount + shipping_amount)
-);
-CREATE INDEX ix_order_shop_created ON sales.seller_order(shop_id, created_at DESC);
-CREATE INDEX ix_order_policy ON sales.seller_order(return_policy_id);
-CREATE TABLE sales.order_line (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    seller_order_id UUID NOT NULL,
-    shop_id UUID NOT NULL,
-    sku_id UUID NOT NULL,
-    product_name_snapshot VARCHAR(200) NOT NULL,
-    variant_snapshot JSONB NOT NULL,
-    quantity INTEGER NOT NULL CHECK (quantity > 0),
-    unit_price BIGINT NOT NULL CHECK (unit_price > 0),
-    gross_amount BIGINT NOT NULL CHECK (gross_amount > 0),
-    discount_amount BIGINT NOT NULL CHECK (discount_amount >= 0),
-    net_amount BIGINT NOT NULL CHECK (net_amount >= 0),
-    UNIQUE (id, seller_order_id),
-    FOREIGN KEY (seller_order_id, shop_id) REFERENCES sales.seller_order(id, shop_id),
-    FOREIGN KEY (sku_id, shop_id) REFERENCES catalog.product_sku(id, shop_id),
-    CHECK (gross_amount = unit_price * quantity),
-    CHECK (net_amount = gross_amount - discount_amount)
-);
-CREATE INDEX ix_order_line_order_shop ON sales.order_line(seller_order_id, shop_id);
-CREATE INDEX ix_order_line_sku_shop ON sales.order_line(sku_id, shop_id);
 CREATE TABLE sales.order_adjustment (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     seller_order_id UUID NOT NULL REFERENCES sales.seller_order(id),

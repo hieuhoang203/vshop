@@ -9,12 +9,24 @@ import java.util.UUID;
  * of any amount here.
  */
 public record PricedCart(
-        List<ShopGroup> groups, int itemCount, long itemsTotal, boolean canCheckout) {
+        List<ShopGroup> groups,
+        int itemCount,
+        long itemsTotal,
+        long shippingTotal,
+        long payableTotal,
+        boolean shippingCalculated,
+        boolean canCheckout) {
     public PricedCart {
         groups = List.copyOf(groups);
     }
 
-    public record ShopGroup(UUID shopId, String shopName, List<Line> lines, long subtotal) {
+    public record ShopGroup(
+            UUID shopId,
+            String shopName,
+            List<Line> lines,
+            long subtotal,
+            long shippingFee,
+            long payable) {
         public ShopGroup {
             lines = List.copyOf(lines);
         }

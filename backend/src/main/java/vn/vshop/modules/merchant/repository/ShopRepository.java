@@ -25,4 +25,7 @@ public interface ShopRepository {
     void updateDecision(UUID id, ShopStatus status, String rejectionReason);
 
     void insertReview(ShopReview review);
+
+    /** The subset of {@code shopIds} the account is a member of. */
+    java.util.Set<UUID> findMemberShops(UUID accountId, java.util.Collection<UUID> shopIds);
 }

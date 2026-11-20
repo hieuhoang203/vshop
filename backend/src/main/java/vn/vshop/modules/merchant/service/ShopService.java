@@ -32,6 +32,13 @@ public class ShopService {
         return shops.findOwnedBySubject(subject);
     }
 
+    /**
+     * The subset of {@code shopIds} the account works for (any role), e.g. to forbid self-purchase.
+     */
+    public java.util.Set<UUID> memberShops(UUID accountId, java.util.Collection<UUID> shopIds) {
+        return shops.findMemberShops(accountId, shopIds);
+    }
+
     public List<Shop> reviewQueue() {
         return shops.findSubmitted(100);
     }

@@ -3,6 +3,10 @@ import type {
   Address,
   CartContent,
   CatalogPage,
+  CheckoutGroup,
+  Order,
+  OrderPage,
+  Policy,
   PublicSku,
   Category,
   Product,
@@ -49,5 +53,11 @@ export const getReviewQueue = (page = 0, size = 20) =>
 export const getCart = () => api<CartContent>("/cart", true);
 export const getProductSkus = (slug: string) =>
   api<PublicSku[]>(`/catalog/products/${encodeURIComponent(slug)}/skus`);
+
+export const getCheckoutGroup = (id: string) =>
+  api<CheckoutGroup>(`/checkout/groups/${encodeURIComponent(id)}`, true);
+export const getOrders = (page = 0) => api<OrderPage>(`/orders?page=${page}&size=20`, true);
+export const getOrder = (id: string) => api<Order>(`/orders/${encodeURIComponent(id)}`, true);
+export const getPolicies = () => api<Policy[]>("/admin/policies", true);
 
 export const getAddresses = () => api<Address[]>("/me/addresses", true);

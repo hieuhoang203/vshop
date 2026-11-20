@@ -1,4 +1,6 @@
 # 20. Thiết kế checkout, đơn hàng và thanh toán
+> **Cập nhật 20/11/2026:** S0 và S1 đã được triển khai; xem [21-checkout-cod.md](21-checkout-cod.md) cho phần đã làm và các điểm khác thiết kế (idempotency kiểm dưới khóa giỏ, mã lỗi `QUOTE_STALE`).
+
 
 Ngày: **20/11/2026**. Trạng thái: **bản thiết kế để chủ sản phẩm duyệt. Chưa có code, chưa có migration.** Mục tiêu của tài liệu là để bạn chốt các quyết định ở mục 2 mà code không thể tự quyết, và để từ đó mỗi lát cắt triển khai có đầu vào rõ ràng. Mọi quy tắc, con số và tên bảng dưới đây là **đề xuất của VShop**; không có khẳng định nào về năng lực của một PSP, hãng vận chuyển hay quy định pháp luật cụ thể (xem mục 14).
 
