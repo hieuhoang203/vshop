@@ -474,6 +474,13 @@ public class ReturnCaseService {
     private void event(
             ReturnCase c, String from, String to, String type, String actor, String note) {
         cases.insertEvent(c.id(), from, to, type, actor, note);
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("returnCaseId", c.id());
+        payload.put("orderId", c.sellerOrderId());
+        payload.put("shopId", c.shopId());
+        payload.put("toStatus", to);
+        payload.put("actor", type);
+        outbox.append("return", "ReturnCaseUpdated", c.id(), json.writeValueAsString(payload));
     }
 
     private void publish(String type, UUID caseId, SellerOrder order) {

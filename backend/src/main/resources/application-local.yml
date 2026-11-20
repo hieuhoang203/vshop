@@ -1,3 +1,9 @@
 spring:
   flyway:
     locations: classpath:db/migration,classpath:db/local
+vshop:
+  worker:
+    # One process is enough on a developer machine: the same API process also runs the outbox,
+    # reservation and unpaid-order jobs. In production the worker is a separate process
+    # (profile "worker"); the jobs are safe to run in both at once (rows are claimed with SKIP LOCKED).
+    enabled: true

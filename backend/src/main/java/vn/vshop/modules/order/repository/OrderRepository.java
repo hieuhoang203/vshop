@@ -65,6 +65,12 @@ public interface OrderRepository {
 
     List<UUID> findReservationIds(UUID orderId);
 
+    /** Who an order concerns, for notifications. */
+    record Parties(
+            String orderNumber, UUID buyerAccountId, UUID shopOwnerAccountId, String shopName) {}
+
+    Optional<Parties> findParties(UUID orderId);
+
     String paymentMethodOfGroup(UUID groupId);
 
     /** Unscoped lookup for system actions (webhooks); callers must already be authorised. */

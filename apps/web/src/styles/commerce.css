@@ -177,3 +177,40 @@
     width: 100%;
   }
 }
+
+/* Notification bell in the header and unread rows in the notification list */
+.header-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-left: auto;
+  color: var(--ink);
+  border-radius: 10px;
+}
+.header-bell:hover,
+.header-bell:focus-visible {
+  background: var(--surface);
+}
+.header-bell-count {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--purple);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+.header-bell + .header-actions {
+  margin-left: 0;
+}
+.cart-line.unread {
+  border-left: 4px solid var(--purple);
+}

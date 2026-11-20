@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Search, Store, Sparkles, ShoppingBag } from "lucide-react";
 import { TextField, Button } from "@radix-ui/themes";
 import { getSession } from "@/lib/auth";
-import { getCart } from "@/lib/api";
+import { getCart, getUnreadCount } from "@/lib/api";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { HeaderActions } from "@/components/discovery/header-actions";
 
 export async function Header() {
@@ -14,6 +15,7 @@ export async function Header() {
         .then((c) => c.itemCount)
         .catch(() => 0)
     : null;
+  const unread = canShop ? await getUnreadCount().catch(() => 0) : null;
   return (
     <>
       <div className="topbar">
@@ -57,6 +59,7 @@ export async function Header() {
               Tìm kiếm
             </Button>
           </form>
+          {unread !== null && <NotificationBell initial={unread} />}
           <HeaderActions name={session?.name} roles={session?.roles ?? []} cartCount={cartCount} />
         </div>
         <div className="container nav-row">

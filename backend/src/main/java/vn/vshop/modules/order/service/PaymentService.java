@@ -344,6 +344,7 @@ public class PaymentService {
 
     private void publish(String type, UUID aggregateId, UUID groupId, UUID shopId) {
         Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("actor", "SYSTEM");
         payload.put("checkoutGroupId", groupId);
         if (shopId != null) {
             payload.put("shopId", shopId);

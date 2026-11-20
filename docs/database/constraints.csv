@@ -662,6 +662,16 @@ platform,event_receipt,platform_event_receipt_event_id_not_null,n,NOT NULL event
 platform,event_receipt,platform_event_receipt_event_type_not_null,n,NOT NULL event_type
 platform,event_receipt,platform_event_receipt_pkey,p,PRIMARY KEY (event_id)
 platform,event_receipt,platform_event_receipt_received_at_not_null,n,NOT NULL received_at
+platform,notification,notification_body_not_null,n,NOT NULL body
+platform,notification,notification_created_at_not_null,n,NOT NULL created_at
+platform,notification,notification_dedupe_key_not_null,n,NOT NULL dedupe_key
+platform,notification,notification_id_not_null,n,NOT NULL id
+platform,notification,notification_kind_not_null,n,NOT NULL kind
+platform,notification,notification_pkey,p,PRIMARY KEY (id)
+platform,notification,notification_recipient_account_id_fkey,f,FOREIGN KEY (recipient_account_id) REFERENCES identity.account(id)
+platform,notification,notification_recipient_account_id_not_null,n,NOT NULL recipient_account_id
+platform,notification,notification_title_not_null,n,NOT NULL title
+platform,notification,uq_notification_dedupe,u,"UNIQUE (recipient_account_id, dedupe_key)"
 platform,outbox_event,outbox_event_aggregate_id_not_null,n,NOT NULL aggregate_id
 platform,outbox_event,outbox_event_aggregate_type_not_null,n,NOT NULL aggregate_type
 platform,outbox_event,outbox_event_created_at_not_null,n,NOT NULL created_at

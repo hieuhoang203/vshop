@@ -103,3 +103,8 @@ export type OpenReturnInput = Schemas["OpenReturnRequest"];
 export type OfferRefundInput = Schemas["OfferRefundRequest"];
 export type ConfirmReceivedInput = Schemas["ConfirmReceivedRequest"];
 export type DecideReturnInput = Schemas["DecideReturnRequest"];
+
+// Notifications
+export type Notification = Schemas["NotificationResponse"];
+export type NotificationPage = Schemas["PageResponseNotificationResponse"];
+export type UnreadCount = Schemas["UnreadCountResponse"];

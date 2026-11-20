@@ -27,6 +27,7 @@ public class GlobalExceptionHandler {
                             POLICY_NOT_FOUND,
                             REFUND_NOT_FOUND,
                             RETURN_CASE_NOT_FOUND,
+                            NOTIFICATION_NOT_FOUND,
                             ORDER_NOT_FOUND ->
                             HttpStatus.NOT_FOUND;
                     case ACCOUNT_SUSPENDED -> HttpStatus.FORBIDDEN;

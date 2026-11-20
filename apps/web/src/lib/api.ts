@@ -7,6 +7,8 @@ import type {
   Order,
   OrderPage,
   OverdueOrders,
+  NotificationPage,
+  UnreadCount,
   ReturnCase,
   ReturnCasePage,
   AdminRefund,
@@ -98,3 +100,8 @@ export const getSellerReturnCases = (shopId: string, status = "") =>
     true,
   );
 export const getAdminReturnCases = () => api<ReturnCase[]>("/admin/return-cases", true);
+
+export const getUnreadCount = () =>
+  api<UnreadCount>("/me/notifications/unread-count", true).then((r) => r.unread);
+export const getNotifications = (page = 0) =>
+  api<NotificationPage>(`/me/notifications?page=${page}&size=30`, true);

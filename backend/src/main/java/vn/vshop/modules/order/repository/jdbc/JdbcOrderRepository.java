@@ -407,6 +407,18 @@ public class JdbcOrderRepository implements OrderRepository {
     }
 
     @Override
+    public Optional<Parties> findParties(UUID orderId) {
+        return jdbc.sql(
+                        "SELECT o.order_number, g.buyer_account_id, s.owner_account_id AS shop_owner_account_id,"
+                                + " s.name AS shop_name FROM sales.seller_order o"
+                                + " JOIN sales.checkout_group g ON g.id = o.checkout_group_id"
+                                + " JOIN merchant.shop s ON s.id = o.shop_id WHERE o.id = :id")
+                .param("id", orderId)
+                .query(Parties.class)
+                .optional();
+    }
+
+    @Override
     public String paymentMethodOfGroup(UUID groupId) {
         return jdbc.sql("SELECT payment_method FROM sales.checkout_group WHERE id = :id")
                 .param("id", groupId)

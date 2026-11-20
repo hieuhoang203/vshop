@@ -66,6 +66,7 @@ jobs:
             backend/src/main/resources/db/migration/V1012__payment_sessions.sql \
             backend/src/main/resources/db/migration/V1013__refunds.sql \
             backend/src/main/resources/db/migration/V1014__return_cases.sql \
+            backend/src/main/resources/db/migration/V1015__notifications.sql \
             docs/database/target-commerce.sql \
             docs/database/target-design-checks.sql; do
             psql -v ON_ERROR_STOP=1 -h localhost -U vshop -d vshop_design_ci -f "$ddl"

@@ -214,7 +214,7 @@ public class OrderFulfillmentService {
         restock(order);
         refunds.createForOrder(orderId, "ORDER_CANCELED");
         record(order, OrderStatus.AWAITING_SELLER, OrderStatus.CANCELED, "BUYER", subject, clean);
-        publish("OrderCanceled", order);
+        publish("OrderCanceled", order, "BUYER");
         return orderService.open(orders.findOrder(buyer, orderId).orElseThrow());
     }
 
@@ -283,7 +283,12 @@ public class OrderFulfillmentService {
     }
 
     private void publish(String type, SellerOrder order) {
+        publish(type, order, "SELLER");
+    }
+
+    private void publish(String type, SellerOrder order, String actor) {
         Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("actor", actor);
         payload.put("orderId", order.id());
         payload.put("shopId", order.shopId());
         payload.put("checkoutGroupId", order.checkoutGroupId());

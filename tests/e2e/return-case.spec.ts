@@ -126,6 +126,20 @@ test("return case: buyer opens, shop offers, buyer declines, admin decides, refu
         .innerText()
     ).trim();
 
+    // The shop is told about the new order (the worker turns the event into a notification).
+    await expect
+      .poll(
+        async () => {
+          await sellerPage.goto("/notifications");
+          return sellerPage.getByText(`Đơn mới ${orderNumber}`).count();
+        },
+        { timeout: 30_000 },
+      )
+      .toBeGreaterThan(0);
+    await expect(sellerPage.getByRole("link", { name: /Thông báo, \d+ chưa đọc/ })).toBeVisible();
+    await sellerPage.getByRole("button", { name: "Đánh dấu đã đọc tất cả" }).click();
+    await expect(sellerPage.getByRole("link", { name: "Thông báo", exact: true })).toBeVisible();
+
     // The shop delivers it by hand.
     await sellerPage.goto("/seller/orders");
     const order = sellerPage.getByTestId(`seller-order-${orderNumber}`);
@@ -136,6 +150,18 @@ test("return case: buyer opens, shop offers, buyer declines, admin decides, refu
     await order.getByRole("button", { name: "Đã giao cho đơn vị vận chuyển" }).click();
     await order.getByRole("button", { name: "Xác nhận đã giao" }).click();
     await expect(order).toContainText("Đã giao");
+
+    // The buyer is told it was delivered.
+    await expect
+      .poll(
+        async () => {
+          await buyer.goto("/notifications");
+          return buyer.getByText(`Đơn ${orderNumber} đã giao`).count();
+        },
+        { timeout: 30_000 },
+      )
+      .toBeGreaterThan(0);
+    await buyer.screenshot({ path: ".local/screenshots/notifications-buyer.png", fullPage: true });
 
     // Buyer asks for a refund (damaged goods, keeps them).
     await buyer.goto("/orders");

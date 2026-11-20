@@ -178,6 +178,10 @@ platform,audit_event,audit_event_pkey,CREATE UNIQUE INDEX audit_event_pkey ON pl
 platform,audit_event,ix_audit_actor_created,"CREATE INDEX ix_audit_actor_created ON platform.audit_event USING btree (actor_subject, created_at DESC)"
 platform,audit_event,ix_audit_resource_created,"CREATE INDEX ix_audit_resource_created ON platform.audit_event USING btree (resource_id, created_at DESC)"
 platform,event_receipt,platform_event_receipt_pkey,CREATE UNIQUE INDEX platform_event_receipt_pkey ON platform.event_receipt USING btree (event_id)
+platform,notification,ix_notification_recipient,"CREATE INDEX ix_notification_recipient ON platform.notification USING btree (recipient_account_id, created_at DESC)"
+platform,notification,ix_notification_unread,CREATE INDEX ix_notification_unread ON platform.notification USING btree (recipient_account_id) WHERE (read_at IS NULL)
+platform,notification,notification_pkey,CREATE UNIQUE INDEX notification_pkey ON platform.notification USING btree (id)
+platform,notification,uq_notification_dedupe,"CREATE UNIQUE INDEX uq_notification_dedupe ON platform.notification USING btree (recipient_account_id, dedupe_key)"
 platform,outbox_event,ix_outbox_aggregate_created,"CREATE INDEX ix_outbox_aggregate_created ON platform.outbox_event USING btree (aggregate_id, created_at)"
 platform,outbox_event,outbox_event_pkey,CREATE UNIQUE INDEX outbox_event_pkey ON platform.outbox_event USING btree (id)
 platform,outbox_event,outbox_pending,CREATE INDEX outbox_pending ON platform.outbox_event USING btree (created_at) WHERE (processed_at IS NULL)

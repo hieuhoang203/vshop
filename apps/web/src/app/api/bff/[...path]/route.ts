@@ -58,6 +58,10 @@ const routes: { method: string; path: RegExp; maxBytes: number }[] = [
     maxBytes: 1_024,
   },
   { method: "POST", path: new RegExp(`^admin/return-cases/${uuid}/decide$`), maxBytes: 1_024 },
+  // Notifications of the signed-in person
+  { method: "GET", path: /^me\/notifications\/unread-count$/, maxBytes: 0 },
+  { method: "POST", path: new RegExp(`^me/notifications/${uuid}/read$`), maxBytes: 64 },
+  { method: "POST", path: /^me\/notifications\/read-all$/, maxBytes: 64 },
   // Policies (admin, second factor enforced by the API)
   { method: "POST", path: /^admin\/policies$/, maxBytes: 1_024 },
   { method: "POST", path: new RegExp(`^admin/policies/${uuid}/approve$`), maxBytes: 64 },
