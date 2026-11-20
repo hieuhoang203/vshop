@@ -3,7 +3,6 @@
 -- The associated APIs, state machines and money-handling services are not implemented.
 BEGIN;
 
-CREATE SCHEMA checkout;
 CREATE SCHEMA sales;
 CREATE SCHEMA promotion;
 CREATE SCHEMA payment;
@@ -76,32 +75,10 @@ CREATE TABLE catalog.product_media (
 );
 CREATE INDEX ix_product_media_asset ON catalog.product_media(asset_id);
 
-CREATE TABLE checkout.cart (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    buyer_account_id UUID NOT NULL UNIQUE REFERENCES identity.account(id),
-    version BIGINT NOT NULL DEFAULT 0 CHECK (version >= 0),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE TABLE checkout.cart_line (
-    cart_id UUID NOT NULL REFERENCES checkout.cart(id),
-    sku_id UUID NOT NULL REFERENCES catalog.product_sku(id),
-    quantity INTEGER NOT NULL CHECK (quantity > 0),
-    PRIMARY KEY (cart_id, sku_id)
-);
-CREATE INDEX ix_cart_line_sku ON checkout.cart_line(sku_id);
-CREATE TABLE checkout.quote (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    buyer_account_id UUID NOT NULL REFERENCES identity.account(id),
-    version INTEGER NOT NULL CHECK (version > 0),
-    total_amount BIGINT NOT NULL CHECK (total_amount >= 0),
-    currency CHAR(3) NOT NULL DEFAULT 'VND' CHECK (currency = 'VND'),
-    price_policy_id UUID NOT NULL REFERENCES platform.policy_version(id),
-    snapshot JSONB NOT NULL CHECK (jsonb_typeof(snapshot) = 'object'),
-    expires_at TIMESTAMPTZ NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CHECK (expires_at > created_at)
-);
-CREATE INDEX ix_quote_buyer ON checkout.quote(buyer_account_id, created_at DESC);
+-- checkout.cart, checkout.cart_line and checkout.quote are implemented by Flyway V1004.
+-- Reference-only addition: the price policy a quote was calculated under (nullable until the
+-- policy module exists, because existing rows have none).
+ALTER TABLE checkout.quote ADD COLUMN price_policy_id UUID REFERENCES platform.policy_version(id);
 CREATE INDEX ix_quote_policy ON checkout.quote(price_policy_id);
 
 CREATE TABLE sales.checkout_group (

@@ -135,37 +135,41 @@ catalog,sku_option_value,sku_option_value_pkey,p,"PRIMARY KEY (sku_id, option_id
 catalog,sku_option_value,sku_option_value_product_id_not_null,n,NOT NULL product_id
 catalog,sku_option_value,sku_option_value_sku_id_not_null,n,NOT NULL sku_id
 checkout,cart,cart_buyer_account_id_fkey,f,FOREIGN KEY (buyer_account_id) REFERENCES identity.account(id)
-checkout,cart,cart_buyer_account_id_key,u,UNIQUE (buyer_account_id)
 checkout,cart,cart_buyer_account_id_not_null,n,NOT NULL buyer_account_id
+checkout,cart,cart_created_at_not_null,n,NOT NULL created_at
 checkout,cart,cart_id_not_null,n,NOT NULL id
 checkout,cart,cart_pkey,p,PRIMARY KEY (id)
 checkout,cart,cart_updated_at_not_null,n,NOT NULL updated_at
-checkout,cart,cart_version_check,c,CHECK ((version >= 0))
 checkout,cart,cart_version_not_null,n,NOT NULL version
+checkout,cart,ck_cart_version,c,CHECK ((version >= 0))
+checkout,cart,uq_cart_buyer,u,UNIQUE (buyer_account_id)
 checkout,cart_line,cart_line_cart_id_fkey,f,FOREIGN KEY (cart_id) REFERENCES checkout.cart(id)
 checkout,cart_line,cart_line_cart_id_not_null,n,NOT NULL cart_id
+checkout,cart_line,cart_line_created_at_not_null,n,NOT NULL created_at
 checkout,cart_line,cart_line_pkey,p,"PRIMARY KEY (cart_id, sku_id)"
-checkout,cart_line,cart_line_quantity_check,c,CHECK ((quantity > 0))
 checkout,cart_line,cart_line_quantity_not_null,n,NOT NULL quantity
 checkout,cart_line,cart_line_sku_id_fkey,f,FOREIGN KEY (sku_id) REFERENCES catalog.product_sku(id)
 checkout,cart_line,cart_line_sku_id_not_null,n,NOT NULL sku_id
+checkout,cart_line,cart_line_updated_at_not_null,n,NOT NULL updated_at
+checkout,cart_line,ck_cart_line_quantity,c,CHECK (((quantity >= 1) AND (quantity <= 99)))
+checkout,quote,ck_quote_cart_version,c,CHECK ((cart_version >= 0))
+checkout,quote,ck_quote_currency,c,CHECK ((currency = 'VND'::bpchar))
+checkout,quote,ck_quote_expiry,c,CHECK ((expires_at > created_at))
+checkout,quote,ck_quote_snapshot,c,CHECK ((jsonb_typeof(snapshot) = 'object'::text))
+checkout,quote,ck_quote_total,c,CHECK ((total_amount >= 0))
 checkout,quote,quote_buyer_account_id_fkey,f,FOREIGN KEY (buyer_account_id) REFERENCES identity.account(id)
 checkout,quote,quote_buyer_account_id_not_null,n,NOT NULL buyer_account_id
-checkout,quote,quote_check,c,CHECK ((expires_at > created_at))
+checkout,quote,quote_cart_id_fkey,f,FOREIGN KEY (cart_id) REFERENCES checkout.cart(id)
+checkout,quote,quote_cart_id_not_null,n,NOT NULL cart_id
+checkout,quote,quote_cart_version_not_null,n,NOT NULL cart_version
 checkout,quote,quote_created_at_not_null,n,NOT NULL created_at
-checkout,quote,quote_currency_check,c,CHECK ((currency = 'VND'::bpchar))
 checkout,quote,quote_currency_not_null,n,NOT NULL currency
 checkout,quote,quote_expires_at_not_null,n,NOT NULL expires_at
 checkout,quote,quote_id_not_null,n,NOT NULL id
 checkout,quote,quote_pkey,p,PRIMARY KEY (id)
 checkout,quote,quote_price_policy_id_fkey,f,FOREIGN KEY (price_policy_id) REFERENCES platform.policy_version(id)
-checkout,quote,quote_price_policy_id_not_null,n,NOT NULL price_policy_id
-checkout,quote,quote_snapshot_check,c,CHECK ((jsonb_typeof(snapshot) = 'object'::text))
 checkout,quote,quote_snapshot_not_null,n,NOT NULL snapshot
-checkout,quote,quote_total_amount_check,c,CHECK ((total_amount >= 0))
 checkout,quote,quote_total_amount_not_null,n,NOT NULL total_amount
-checkout,quote,quote_version_check,c,CHECK ((version > 0))
-checkout,quote,quote_version_not_null,n,NOT NULL version
 engagement,review,review_buyer_account_id_fkey,f,FOREIGN KEY (buyer_account_id) REFERENCES identity.account(id)
 engagement,review,review_buyer_account_id_not_null,n,NOT NULL buyer_account_id
 engagement,review,review_check,c,CHECK ((((status)::text <> 'HIDDEN'::text) OR (moderation_reason IS NOT NULL)))

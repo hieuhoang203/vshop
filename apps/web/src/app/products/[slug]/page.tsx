@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge, Button } from "@radix-ui/themes";
 import { Store, Package, Heart, Sparkles } from "lucide-react";
-import { getProduct, getCatalog } from "@/lib/api";
+import { getProduct, getCatalog, getProductSkus } from "@/lib/api";
+import { getSession } from "@/lib/auth";
+import { AddToCart } from "@/components/cart/add-to-cart";
 import { formatMoney } from "@/lib/format";
 import { DetailActions } from "@/components/discovery/detail-actions";
 import { ProductCard } from "@/components/product-card";
@@ -14,6 +16,11 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
     if (error instanceof Error && error.message === "API_404") notFound();
     throw error;
   }
+  const [session, skus] = await Promise.all([
+    getSession(),
+    getProductSkus(product.slug).catch(() => []),
+  ]);
+  const canShop = session?.roles.some((r) => r === "BUYER" || r === "SELLER") ?? false;
   const related = await getCatalog("", product.categorySlug)
     .then((result) => result.items.filter((item) => item.id !== product.id).slice(0, 3))
     .catch(() => []);
@@ -53,14 +60,15 @@ export default async function ProductDetail({ params }: { params: Promise<{ slug
           </p>
           <div className="detail-price">{formatMoney(product.price)}</div>
           <p className="detail-description">{product.description}</p>
+          <AddToCart slug={product.slug} skus={skus} canShop={canShop} />
           <DetailActions product={product} />
           <div className="notice">
             <Package size={21} />
             <div>
-              <strong>Chưa mở bán trực tuyến</strong>
+              <strong>Chưa mở thanh toán</strong>
               <p>
-                VShop đang thử nghiệm. Bạn có thể lưu món yêu thích và quay lại khi gian hàng mở
-                bán.
+                Bạn có thể thêm vào giỏ và chốt báo giá. Đặt hàng và thanh toán sẽ mở ở giai đoạn
+                tiếp theo.
               </p>
             </div>
           </div>

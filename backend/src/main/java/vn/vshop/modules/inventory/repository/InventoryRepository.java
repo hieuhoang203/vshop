@@ -27,6 +27,11 @@ public interface InventoryRepository {
 
     List<StockBalance> findBalances(UUID skuId, UUID shopId);
 
+    /**
+     * Sellable quantity (on_hand - reserved - blocked, ACTIVE warehouses) per SKU; absent means 0.
+     */
+    java.util.Map<UUID, Long> availableBySku(java.util.Collection<UUID> skuIds);
+
     /** False when the change would break on_hand/reserved/blocked invariants. */
     boolean applyDelta(UUID skuId, UUID warehouseId, long deltaOnHand, long deltaReserved);
 

@@ -2,10 +2,18 @@ import Link from "next/link";
 import { Search, Store, Sparkles, ShoppingBag } from "lucide-react";
 import { TextField, Button } from "@radix-ui/themes";
 import { getSession } from "@/lib/auth";
+import { getCart } from "@/lib/api";
 import { HeaderActions } from "@/components/discovery/header-actions";
 
 export async function Header() {
   const session = await getSession();
+  const canShop = session?.roles.some((r) => r === "BUYER" || r === "SELLER") ?? false;
+  // A failed cart lookup must never break the page chrome.
+  const cartCount = canShop
+    ? await getCart()
+        .then((c) => c.itemCount)
+        .catch(() => 0)
+    : null;
   return (
     <>
       <div className="topbar">
@@ -49,7 +57,7 @@ export async function Header() {
               Tìm kiếm
             </Button>
           </form>
-          <HeaderActions name={session?.name} roles={session?.roles ?? []} />
+          <HeaderActions name={session?.name} roles={session?.roles ?? []} cartCount={cartCount} />
         </div>
         <div className="container nav-row">
           <nav className="nav" aria-label="Danh mục chính">

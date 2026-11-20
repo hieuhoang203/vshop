@@ -53,7 +53,9 @@ export async function getSession(): Promise<Session | null> {
   }
 }
 export function safeReturnTo(value: string | null) {
-  return value === "/seller" || value === "/admin" ? value : "/";
+  if (value === "/seller" || value === "/admin" || value === "/cart") return value;
+  // Product pages only, so the return path can never point off-site or at an API route.
+  return value !== null && /^\/products\/[a-z0-9-]{1,160}$/.test(value) ? value : "/";
 }
 let jwks: ReturnType<typeof createRemoteJWKSet> | undefined;
 export async function verifyTokens(access: string, id: string, nonce: string) {

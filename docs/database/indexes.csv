@@ -43,11 +43,12 @@ catalog,sku_option_value,ix_sku_option_option_product,"CREATE INDEX ix_sku_optio
 catalog,sku_option_value,ix_sku_option_product,CREATE INDEX ix_sku_option_product ON catalog.sku_option_value USING btree (product_id)
 catalog,sku_option_value,ix_sku_option_value_option,"CREATE INDEX ix_sku_option_value_option ON catalog.sku_option_value USING btree (option_value_id, option_id)"
 catalog,sku_option_value,sku_option_value_pkey,"CREATE UNIQUE INDEX sku_option_value_pkey ON catalog.sku_option_value USING btree (sku_id, option_id)"
-checkout,cart,cart_buyer_account_id_key,CREATE UNIQUE INDEX cart_buyer_account_id_key ON checkout.cart USING btree (buyer_account_id)
 checkout,cart,cart_pkey,CREATE UNIQUE INDEX cart_pkey ON checkout.cart USING btree (id)
+checkout,cart,uq_cart_buyer,CREATE UNIQUE INDEX uq_cart_buyer ON checkout.cart USING btree (buyer_account_id)
 checkout,cart_line,cart_line_pkey,"CREATE UNIQUE INDEX cart_line_pkey ON checkout.cart_line USING btree (cart_id, sku_id)"
 checkout,cart_line,ix_cart_line_sku,CREATE INDEX ix_cart_line_sku ON checkout.cart_line USING btree (sku_id)
 checkout,quote,ix_quote_buyer,"CREATE INDEX ix_quote_buyer ON checkout.quote USING btree (buyer_account_id, created_at DESC)"
+checkout,quote,ix_quote_cart,CREATE INDEX ix_quote_cart ON checkout.quote USING btree (cart_id)
 checkout,quote,ix_quote_policy,CREATE INDEX ix_quote_policy ON checkout.quote USING btree (price_policy_id)
 checkout,quote,quote_pkey,CREATE UNIQUE INDEX quote_pkey ON checkout.quote USING btree (id)
 engagement,review,ix_review_buyer,CREATE INDEX ix_review_buyer ON engagement.review USING btree (buyer_account_id)

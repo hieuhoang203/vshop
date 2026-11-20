@@ -28,7 +28,7 @@ test("catalog search categories and detail use persisted data", async ({ page })
   await expect(page.locator(".product-card")).toHaveCount(1);
   await page.getByRole("link", { name: "Đèn bàn Luma", exact: true }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Đèn bàn Luma");
-  await expect(page.getByText("Chưa mở bán trực tuyến", { exact: true })).toBeVisible();
+  await expect(page.getByText("Chưa mở thanh toán", { exact: true })).toBeVisible();
   await page.goto("/?category=nha-cua#san-pham");
   await expect(page.locator(".product-card")).toHaveCount(2);
   await page.goto("/?q=khong-co-san-pham-xyz");

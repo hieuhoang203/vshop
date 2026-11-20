@@ -115,3 +115,53 @@ export type StockMovement = {
   reason: string;
   createdAt: string;
 };
+
+export type PublicSku = {
+  id: string;
+  /** null for single-SKU products */
+  variantLabel: string | null;
+  price: number;
+  available: number;
+};
+export type CartLineIssue = "UNAVAILABLE" | "OUT_OF_STOCK" | "INSUFFICIENT_STOCK";
+export type CartLine = {
+  skuId: string;
+  productId: string;
+  productSlug: string;
+  productName: string;
+  imageKey: string;
+  variantLabel: string | null;
+  sellerSku: string;
+  unitPrice: number;
+  quantity: number;
+  lineTotal: number;
+  issue: CartLineIssue | null;
+  availableQuantity: number;
+};
+export type CartGroup = {
+  shopId: string;
+  shopName: string;
+  /** Sum of lines without an issue. */
+  subtotal: number;
+  lines: CartLine[];
+};
+/** Used for both the live cart and a stored quote's content. Amounts are integer VND. */
+export type CartContent = {
+  version: number;
+  itemCount: number;
+  currency: "VND";
+  groups: CartGroup[];
+  itemsTotal: number;
+  canCheckout: boolean;
+  /** Price components that are not calculated yet: shipping, discounts, tax. */
+  notCalculated: string[];
+};
+export type Quote = {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+  expired: boolean;
+  /** false once expired or once the cart changed after the quote was calculated */
+  current: boolean;
+  content: CartContent;
+};

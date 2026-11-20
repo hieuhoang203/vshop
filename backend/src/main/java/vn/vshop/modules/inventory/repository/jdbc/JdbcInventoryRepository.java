@@ -97,6 +97,29 @@ public class JdbcInventoryRepository implements InventoryRepository {
     }
 
     @Override
+    public java.util.Map<UUID, Long> availableBySku(java.util.Collection<UUID> skuIds) {
+        java.util.Map<UUID, Long> result = new java.util.HashMap<>();
+        if (skuIds.isEmpty()) {
+            return result;
+        }
+        jdbc.sql(
+                        """
+            SELECT b.sku_id, coalesce(sum(b.on_hand - b.reserved - b.blocked), 0) AS available
+            FROM inventory.stock_balance b
+            JOIN inventory.warehouse w ON w.id = b.warehouse_id AND w.status = 'ACTIVE'
+            WHERE b.sku_id IN (:ids) GROUP BY b.sku_id
+            """)
+                .param("ids", skuIds)
+                .query(
+                        (rs, row) -> {
+                            result.put(rs.getObject("sku_id", UUID.class), rs.getLong("available"));
+                            return row;
+                        })
+                .list();
+        return result;
+    }
+
+    @Override
     public boolean applyDelta(UUID skuId, UUID warehouseId, long deltaOnHand, long deltaReserved) {
         return jdbc.sql(
                                 """

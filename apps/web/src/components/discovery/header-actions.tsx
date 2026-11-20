@@ -9,13 +9,32 @@ import {
   TextField,
   DropdownMenu,
 } from "@radix-ui/themes";
-import { Heart, Search, Command, X, UserRound, Store, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  Heart,
+  Search,
+  Command,
+  X,
+  UserRound,
+  Store,
+  ShieldCheck,
+  Sparkles,
+  ShoppingCart,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useDiscovery } from "@/components/providers";
 import { formatMoney } from "@/lib/format";
 
-export function HeaderActions({ name, roles }: { name?: string; roles: string[] }) {
+export function HeaderActions({
+  name,
+  roles,
+  cartCount = null,
+}: {
+  name?: string;
+  roles: string[];
+  /** null hides the cart link (signed out, or an account that cannot shop). */
+  cartCount?: number | null;
+}) {
   const { saved, toggleSaved } = useDiscovery();
   const [searchOpen, setSearchOpen] = useState(false);
   useEffect(() => {
@@ -83,6 +102,16 @@ export function HeaderActions({ name, roles }: { name?: string; roles: string[] 
           </p>
         </Dialog.Content>
       </Dialog.Root>
+      {cartCount !== null && (
+        <Link
+          href="/cart"
+          className="saved-trigger cart-link"
+          aria-label={`Giỏ hàng${cartCount ? ` (${cartCount} sản phẩm)` : ""}`}
+        >
+          <ShoppingCart size={21} />
+          <span className="saved-count">{cartCount}</span>
+        </Link>
+      )}
       <Dialog.Root>
         <Tooltip content="Món đã lưu trên thiết bị này">
           <Dialog.Trigger>

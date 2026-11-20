@@ -10,6 +10,8 @@ import vn.vshop.common.model.SearchResult;
 import vn.vshop.modules.catalog.model.CategorySummary;
 import vn.vshop.modules.catalog.model.ProductSearchCriteria;
 import vn.vshop.modules.catalog.model.ProductSummary;
+import vn.vshop.modules.catalog.model.PublicSku;
+import vn.vshop.modules.catalog.model.SkuOffer;
 import vn.vshop.modules.catalog.repository.CatalogRepository;
 
 @Repository
@@ -118,5 +120,56 @@ public class JdbcCatalogRepository implements CatalogRepository {
                 .param("slug", slug)
                 .query(ProductSummary.class)
                 .optional();
+    }
+
+    @Override
+    public List<PublicSku> findActiveSkus(String slug) {
+        return jdbc.sql(
+                        """
+            SELECT k.id,
+                   (SELECT string_agg(v.label, ' / ' ORDER BY o.sort_order, o.code)
+                      FROM catalog.sku_option_value sv
+                      JOIN catalog.product_option o ON o.id = sv.option_id
+                      JOIN catalog.option_value v ON v.id = sv.option_value_id
+                     WHERE sv.sku_id = k.id) AS variant_label,
+                   k.price,
+                   (SELECT coalesce(sum(b.on_hand - b.reserved - b.blocked), 0)
+                      FROM inventory.stock_balance b
+                      JOIN inventory.warehouse w ON w.id = b.warehouse_id AND w.status = 'ACTIVE'
+                     WHERE b.sku_id = k.id) AS available
+            FROM catalog.product p
+            JOIN merchant.shop s ON s.id = p.shop_id AND s.status = 'APPROVED'
+            JOIN catalog.product_sku k ON k.product_id = p.id AND k.status = 'ACTIVE'
+            WHERE p.slug = :slug AND p.status = 'ACTIVE'
+            ORDER BY k.price, k.id
+            """)
+                .param("slug", slug)
+                .query(PublicSku.class)
+                .list();
+    }
+
+    @Override
+    public List<SkuOffer> findOffers(java.util.Collection<java.util.UUID> skuIds) {
+        if (skuIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql(
+                        """
+            SELECT k.id AS sku_id, p.id AS product_id, p.slug AS product_slug, p.name AS product_name,
+                   p.image_key, k.seller_sku, k.price, s.id AS shop_id, s.name AS shop_name,
+                   (SELECT string_agg(v.label, ' / ' ORDER BY o.sort_order, o.code)
+                      FROM catalog.sku_option_value sv
+                      JOIN catalog.product_option o ON o.id = sv.option_id
+                      JOIN catalog.option_value v ON v.id = sv.option_value_id
+                     WHERE sv.sku_id = k.id) AS variant_label,
+                   (k.status = 'ACTIVE' AND p.status = 'ACTIVE' AND s.status = 'APPROVED') AS saleable
+            FROM catalog.product_sku k
+            JOIN catalog.product p ON p.id = k.product_id
+            JOIN merchant.shop s ON s.id = k.shop_id
+            WHERE k.id IN (:ids)
+            """)
+                .param("ids", skuIds)
+                .query(SkuOffer.class)
+                .list();
     }
 }

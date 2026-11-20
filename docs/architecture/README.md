@@ -18,6 +18,7 @@ backend/src/main/java/vn/vshop/
     ├── merchant/
     ├── catalog/
     ├── inventory/                # Nhập/điều chỉnh tồn (seller API) và vòng đời reservation (service nội bộ)
+    ├── checkout/                 # Giỏ hàng và báo giá (ghi giỏ/quote của chính buyer)
     └── platform/
         └── worker/               # Scheduler gọi service, không chứa SQL
 ```

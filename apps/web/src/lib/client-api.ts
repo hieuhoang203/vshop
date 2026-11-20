@@ -2,7 +2,7 @@ export type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; 
 
 /** Calls the same-origin BFF. Never throws; network failures become a 0-status result. */
 export async function bff<T = unknown>(
-  method: "GET" | "POST" | "PUT",
+  method: "GET" | "POST" | "PUT" | "DELETE",
   path: string,
   body?: unknown,
   headers: Record<string, string> = {},

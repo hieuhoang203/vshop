@@ -16,7 +16,14 @@ const routes: { method: string; path: RegExp; maxBytes: number }[] = [
   { method: "POST", path: new RegExp(`^${product}/skus$`), maxBytes: 4_096 },
   { method: "PUT", path: new RegExp(`^${product}/skus/${uuid}$`), maxBytes: 1_024 },
   { method: "POST", path: new RegExp(`^admin/products/${uuid}/review$`), maxBytes: 4_096 },
+  // Buyer cart and quotes
+  { method: "POST", path: /^cart\/lines$/, maxBytes: 1_024 },
+  { method: "PUT", path: new RegExp(`^cart/lines/${uuid}$`), maxBytes: 1_024 },
+  { method: "DELETE", path: new RegExp(`^cart/lines/${uuid}$`), maxBytes: 64 },
+  { method: "DELETE", path: /^cart$/, maxBytes: 64 },
+  { method: "POST", path: /^checkout\/quotes$/, maxBytes: 64 },
   // Inventory
+
   { method: "POST", path: new RegExp(`^${shop}/inventory/adjustments$`), maxBytes: 2_048 },
   { method: "GET", path: new RegExp(`^${shop}/inventory/skus/${uuid}$`), maxBytes: 0 },
   { method: "GET", path: new RegExp(`^${shop}/inventory/skus/${uuid}/movements$`), maxBytes: 0 },
@@ -87,3 +94,4 @@ async function forward(request: NextRequest, context: { params: Promise<{ path: 
 export const GET = forward;
 export const POST = forward;
 export const PUT = forward;
+export const DELETE = forward;

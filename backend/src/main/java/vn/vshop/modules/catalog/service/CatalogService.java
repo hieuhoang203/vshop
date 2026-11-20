@@ -10,6 +10,8 @@ import vn.vshop.common.model.SearchResult;
 import vn.vshop.modules.catalog.model.CategorySummary;
 import vn.vshop.modules.catalog.model.ProductSearchCriteria;
 import vn.vshop.modules.catalog.model.ProductSummary;
+import vn.vshop.modules.catalog.model.PublicSku;
+import vn.vshop.modules.catalog.model.SkuOffer;
 import vn.vshop.modules.catalog.repository.CatalogRepository;
 
 @Service
@@ -41,5 +43,16 @@ public class CatalogService {
                                 new BusinessException(
                                         ErrorCode.PRODUCT_NOT_FOUND,
                                         "Sản phẩm không còn hiển thị."));
+    }
+
+    /** Buyable SKUs of a visible product; 404 when the product is not visible. */
+    public List<PublicSku> skus(String slug) {
+        detail(slug);
+        return catalog.findActiveSkus(slug);
+    }
+
+    /** Current price, variant and saleability for SKUs; unknown IDs are simply absent. */
+    public List<SkuOffer> offers(java.util.Collection<java.util.UUID> skuIds) {
+        return catalog.findOffers(skuIds);
     }
 }

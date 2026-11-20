@@ -12,6 +12,7 @@ import vn.vshop.common.web.dto.PageResponse;
 import vn.vshop.modules.catalog.dto.request.ProductSearchRequest;
 import vn.vshop.modules.catalog.dto.response.CategoryResponse;
 import vn.vshop.modules.catalog.dto.response.ProductResponse;
+import vn.vshop.modules.catalog.dto.response.PublicSkuResponse;
 import vn.vshop.modules.catalog.mapper.CatalogMapper;
 import vn.vshop.modules.catalog.service.CatalogService;
 
@@ -38,5 +39,15 @@ public class CatalogController {
     @GetMapping("/products/{slug}")
     public ProductResponse detail(@PathVariable @Size(max = 160) String slug) {
         return CatalogMapper.toResponse(service.detail(slug));
+    }
+
+    @GetMapping("/products/{slug}/skus")
+    public List<PublicSkuResponse> skus(@PathVariable @Size(max = 160) String slug) {
+        return service.skus(slug).stream()
+                .map(
+                        sku ->
+                                new PublicSkuResponse(
+                                        sku.id(), sku.variantLabel(), sku.price(), sku.available()))
+                .toList();
     }
 }

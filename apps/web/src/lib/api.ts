@@ -1,6 +1,8 @@
 import "server-only";
 import type {
+  CartContent,
   CatalogPage,
+  PublicSku,
   Category,
   Product,
   SellerProduct,
@@ -42,3 +44,7 @@ export const getSellerProduct = (shopId: string, productId: string) =>
   api<SellerProduct>(`/seller/shops/${shopId}/products/${productId}`, true);
 export const getReviewQueue = (page = 0, size = 20) =>
   api<SellerProductPage>(`/admin/products/review-queue?page=${page}&size=${size}`, true);
+
+export const getCart = () => api<CartContent>("/cart", true);
+export const getProductSkus = (slug: string) =>
+  api<PublicSku[]>(`/catalog/products/${encodeURIComponent(slug)}/skus`);
