@@ -75,3 +75,9 @@ export type OrderPage = Schemas["PageResponseOrderSummaryResponse"];
 // Policies (admin)
 export type Policy = Schemas["PolicyResponse"];
 export type CreatePolicyInput = Schemas["CreatePolicyRequest"];
+
+// Seller order handling and buyer cancel
+export type SellerOrder = Schemas["SellerOrderResponse"];
+export type SellerOrderPage = Schemas["PageResponseSellerOrderResponse"];
+export type ReasonInput = Schemas["ReasonRequest"];
+export type ShipOrderInput = Schemas["ShipOrderRequest"];

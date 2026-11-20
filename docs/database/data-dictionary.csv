@@ -441,3 +441,5 @@ ImplementedSchema,sales,seller_order,20,delivered_at,timestamp with time zone,ti
 ImplementedSchema,sales,seller_order,21,return_eligible_until,timestamp with time zone,timestamptz,YES,,,,,NEVER,
 ImplementedSchema,sales,seller_order,22,created_at,timestamp with time zone,timestamptz,NO,now(),,,,NEVER,
 ImplementedSchema,sales,seller_order,23,updated_at,timestamp with time zone,timestamptz,NO,now(),,,,NEVER,
+ImplementedSchema,sales,seller_order,24,manual_tracking_code,character varying,varchar,YES,,100,,,NEVER,
+ImplementedSchema,sales,seller_order,25,shipped_at,timestamp with time zone,timestamptz,YES,,,,,NEVER,

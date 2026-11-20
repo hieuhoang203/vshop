@@ -13,6 +13,8 @@ public interface PolicyRepository {
 
     Optional<PolicyVersion> findForUpdate(UUID id);
 
+    Optional<PolicyVersion> find(UUID id);
+
     Optional<PolicyVersion> findCurrent(PolicyType type);
 
     List<PolicyVersion> list();

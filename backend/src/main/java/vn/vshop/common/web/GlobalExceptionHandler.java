@@ -33,7 +33,8 @@ public class GlobalExceptionHandler {
                             INVALID_STOCK_INPUT,
                             INVALID_CART_INPUT,
                             INVALID_ADDRESS_INPUT,
-                            INVALID_POLICY_INPUT ->
+                            INVALID_POLICY_INPUT,
+                            INVALID_ORDER_INPUT ->
                             HttpStatus.BAD_REQUEST;
                     case SHOP_ALREADY_EXISTS,
                             INVALID_SHOP_STATE,
@@ -47,6 +48,7 @@ public class GlobalExceptionHandler {
                             CART_EMPTY,
                             ADDRESS_LIMIT_REACHED,
                             INVALID_POLICY_STATE,
+                            INVALID_ORDER_STATE,
                             CHECKOUT_POLICY_MISSING,
                             QUOTE_STALE,
                             QUOTE_ADDRESS_REQUIRED,

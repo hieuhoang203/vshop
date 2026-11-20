@@ -6,11 +6,13 @@ import tools.jackson.databind.ObjectMapper;
 import vn.vshop.modules.order.dto.response.CheckoutGroupResponse;
 import vn.vshop.modules.order.dto.response.OrderResponse;
 import vn.vshop.modules.order.dto.response.OrderSummaryResponse;
+import vn.vshop.modules.order.dto.response.SellerOrderResponse;
 import vn.vshop.modules.order.entity.OrderLine;
 import vn.vshop.modules.order.entity.OrderStatusEvent;
 import vn.vshop.modules.order.model.GroupDetail;
 import vn.vshop.modules.order.model.OrderDetail;
 import vn.vshop.modules.order.model.OrderSummary;
+import vn.vshop.modules.order.model.SellerOrderDetail;
 
 public final class OrderMapper {
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -51,6 +53,26 @@ public final class OrderMapper {
                 o.createdAt(),
                 detail.lines().stream().map(OrderMapper::toResponse).toList(),
                 detail.history().stream().map(OrderMapper::toResponse).toList());
+    }
+
+    public static SellerOrderResponse toResponse(SellerOrderDetail d) {
+        var o = d.order();
+        var r = d.recipient();
+        return new SellerOrderResponse(
+                o.id(),
+                o.orderNumber(),
+                o.status(),
+                o.version(),
+                o.itemAmount(),
+                o.shippingAmount(),
+                o.payableAmount(),
+                new SellerOrderResponse.SellerRecipientResponse(
+                        r.name(), r.phone(), r.street(), r.ward(), r.province()),
+                o.manualTrackingCode(),
+                o.cancelReason(),
+                o.createdAt(),
+                d.lines().stream().map(OrderMapper::toResponse).toList(),
+                d.history().stream().map(OrderMapper::toResponse).toList());
     }
 
     public static OrderSummaryResponse toResponse(OrderSummary s) {

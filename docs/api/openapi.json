@@ -640,6 +640,30 @@
         "required" : [ "items", "page", "size", "total" ],
         "type" : "object"
       },
+      "PageResponseSellerOrderResponse" : {
+        "properties" : {
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/SellerOrderResponse"
+            },
+            "type" : "array"
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "total" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "items", "page", "size", "total" ],
+        "type" : "object"
+      },
       "PageResponseSellerProductResponse" : {
         "properties" : {
           "items" : {
@@ -873,6 +897,17 @@
         "required" : [ "roles" ],
         "type" : "object"
       },
+      "ReasonRequest" : {
+        "properties" : {
+          "reason" : {
+            "maxLength" : 600,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "reason" ],
+        "type" : "object"
+      },
       "ReviewProductRequest" : {
         "properties" : {
           "decision" : {
@@ -906,6 +941,64 @@
           }
         },
         "required" : [ "decision", "reason" ],
+        "type" : "object"
+      },
+      "SellerOrderResponse" : {
+        "properties" : {
+          "cancelReason" : {
+            "type" : [ "string", "null" ]
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "history" : {
+            "items" : {
+              "$ref" : "#/components/schemas/OrderStatusEventResponse"
+            },
+            "type" : "array"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "itemAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "lines" : {
+            "items" : {
+              "$ref" : "#/components/schemas/OrderLineResponse"
+            },
+            "type" : "array"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "payableAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "recipient" : {
+            "$ref" : "#/components/schemas/SellerRecipientResponse"
+          },
+          "shippingAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "status" : {
+            "enum" : [ "PENDING_PAYMENT", "AWAITING_SELLER", "CONFIRMED", "PACKING", "READY_TO_SHIP", "IN_FULFILLMENT", "DELIVERED", "COMPLETED", "CANCEL_REQUESTED", "CANCELED", "REJECTED" ],
+            "type" : "string"
+          },
+          "trackingCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "version" : {
+            "format" : "int64",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "cancelReason", "createdAt", "history", "id", "itemAmount", "lines", "orderNumber", "payableAmount", "recipient", "shippingAmount", "status", "trackingCode", "version" ],
         "type" : "object"
       },
       "SellerProductResponse" : {
@@ -972,6 +1065,27 @@
         "required" : [ "categoryId", "createdAt", "description", "id", "imageKey", "name", "options", "rejectionReason", "shopId", "shopName", "skus", "slug", "status", "updatedAt", "version" ],
         "type" : "object"
       },
+      "SellerRecipientResponse" : {
+        "properties" : {
+          "name" : {
+            "type" : [ "string", "null" ]
+          },
+          "phone" : {
+            "type" : [ "string", "null" ]
+          },
+          "province" : {
+            "type" : "string"
+          },
+          "street" : {
+            "type" : [ "string", "null" ]
+          },
+          "ward" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "name", "phone", "province", "street", "ward" ],
+        "type" : "object"
+      },
       "SetQuantityRequest" : {
         "properties" : {
           "quantity" : {
@@ -982,6 +1096,17 @@
           }
         },
         "required" : [ "quantity" ],
+        "type" : "object"
+      },
+      "ShipOrderRequest" : {
+        "properties" : {
+          "trackingCode" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "trackingCode" ],
         "type" : "object"
       },
       "ShipToResponse" : {
@@ -2742,6 +2867,60 @@
         }
       }
     },
+    "/api/v1/orders/{id}/cancel" : {
+      "post" : {
+        "operationId" : "orderCancel",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
     "/api/v1/seller/shops" : {
       "get" : {
         "operationId" : "sellerShopOwned",
@@ -3096,6 +3275,464 @@
           "bearerAuth" : [ ]
         } ],
         "tags" : [ "seller-inventory-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/seller/shops/{shopId}/orders" : {
+      "get" : {
+        "operationId" : "sellerOrderList",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "shopId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "enum" : [ "PENDING_PAYMENT", "AWAITING_SELLER", "CONFIRMED", "PACKING", "READY_TO_SHIP", "IN_FULFILLMENT", "DELIVERED", "COMPLETED", "CANCEL_REQUESTED", "CANCELED", "REJECTED" ],
+            "type" : "string"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "default" : 0,
+            "format" : "int32",
+            "maximum" : 10000,
+            "minimum" : 0,
+            "type" : "integer"
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "default" : 20,
+            "format" : "int32",
+            "maximum" : 50,
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseSellerOrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "seller-order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}" : {
+      "get" : {
+        "operationId" : "sellerOrderGet",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "shopId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SellerOrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "seller-order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/confirm" : {
+      "post" : {
+        "operationId" : "sellerOrderConfirm",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "shopId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SellerOrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "seller-order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/delivered" : {
+      "post" : {
+        "operationId" : "sellerOrderDelivered",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "shopId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SellerOrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "seller-order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/pack" : {
+      "post" : {
+        "operationId" : "sellerOrderPack",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "shopId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SellerOrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "seller-order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/ready" : {
+      "post" : {
+        "operationId" : "sellerOrderReady",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "shopId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SellerOrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "seller-order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/reject" : {
+      "post" : {
+        "operationId" : "sellerOrderReject",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "shopId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SellerOrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "seller-order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/ship" : {
+      "post" : {
+        "operationId" : "sellerOrderShip",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "shopId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ShipOrderRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SellerOrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "seller-order-controller" ],
         "x-vshop-access" : {
           "anyOfRoles" : [ "BUYER", "SELLER" ],
           "public" : false

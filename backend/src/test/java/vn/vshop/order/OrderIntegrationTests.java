@@ -443,6 +443,195 @@ class OrderIntegrationTests {
         assertThat(count("sales.seller_order")).isZero();
     }
 
+    // ---------------------------------------------------------------- fulfilment (S2)
+
+    @Test
+    void shopWorksAnOrderToDeliveredAndSeesBuyerDetailsOnlyAfterConfirming() throws Exception {
+        JsonNode order = placedOrderOfShopA(2);
+        String id = order.get("id").asText();
+        String base = "/api/v1/seller/shops/" + shopA + "/orders";
+
+        // Before confirming only the region is visible.
+        mvc.perform(get(base + "/" + id).with(seller("order-seller-a")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("AWAITING_SELLER"))
+                .andExpect(jsonPath("$.recipient.name").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.recipient.phone").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.recipient.ward").value("Ben Nghe"));
+        mvc.perform(get(base).with(seller("order-seller-a")))
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(id));
+        mvc.perform(get(base + "?status=CONFIRMED").with(seller("order-seller-a")))
+                .andExpect(jsonPath("$.total").value(0));
+
+        // Steps cannot be skipped.
+        for (String skipped : List.of("pack", "ready", "delivered")) {
+            mvc.perform(post(base + "/" + id + "/" + skipped).with(seller("order-seller-a")))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("INVALID_ORDER_STATE"));
+        }
+        mvc.perform(post(base + "/" + id + "/confirm").with(seller("order-seller-a")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CONFIRMED"))
+                .andExpect(jsonPath("$.recipient.phone").value("0912345678"));
+        mvc.perform(post(base + "/" + id + "/confirm").with(seller("order-seller-a")))
+                .andExpect(status().isConflict());
+        mvc.perform(post(base + "/" + id + "/pack").with(seller("order-seller-a")))
+                .andExpect(jsonPath("$.status").value("PACKING"));
+        mvc.perform(post(base + "/" + id + "/ready").with(seller("order-seller-a")))
+                .andExpect(jsonPath("$.status").value("READY_TO_SHIP"));
+        for (String bad : List.of("", "ab", "has space", "x".repeat(101))) {
+            mvc.perform(
+                            post(base + "/" + id + "/ship")
+                                    .with(seller("order-seller-a"))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("{\"trackingCode\":\"" + bad + "\"}"))
+                    .andExpect(status().isBadRequest());
+        }
+        mvc.perform(
+                        post(base + "/" + id + "/ship")
+                                .with(seller("order-seller-a"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"trackingCode\":\"VN123-456\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("IN_FULFILLMENT"))
+                .andExpect(jsonPath("$.trackingCode").value("VN123-456"));
+        mvc.perform(post(base + "/" + id + "/delivered").with(seller("order-seller-a")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DELIVERED"))
+                .andExpect(jsonPath("$.history.length()").value(6));
+        assertThat(
+                        jdbc.sql(
+                                        "SELECT delivered_at IS NOT NULL AND return_eligible_until > delivered_at + interval '6 days' AND return_eligible_until < delivered_at + interval '8 days' FROM sales.seller_order WHERE id = :id")
+                                .param("id", UUID.fromString(id))
+                                .query(Boolean.class)
+                                .single())
+                .isTrue();
+        // The buyer sees the progress, and can no longer cancel.
+        mvc.perform(get("/api/v1/orders/" + id).with(buyer("buyer-1")))
+                .andExpect(jsonPath("$.status").value("DELIVERED"));
+        cancel("buyer-1", id, "Tôi đổi ý không mua nữa").andExpect(status().isConflict());
+    }
+
+    @Test
+    void rejectingOrCancelingPutsTheStockBackExactlyOnce() throws Exception {
+        JsonNode rejected = placedOrderOfShopA(3);
+        assertThat(onHand(skuA1)).isEqualTo(7);
+        String base = "/api/v1/seller/shops/" + shopA + "/orders/" + rejected.get("id").asText();
+        mvc.perform(
+                        post(base + "/reject")
+                                .with(seller("order-seller-a"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"reason\":\"ngắn\"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(
+                        post(base + "/reject")
+                                .with(seller("order-seller-a"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"reason\":\"Hết hàng thực tế ở kho\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REJECTED"))
+                .andExpect(jsonPath("$.cancelReason").value("Hết hàng thực tế ở kho"));
+        assertThat(onHand(skuA1)).isEqualTo(10);
+        mvc.perform(
+                        post(base + "/reject")
+                                .with(seller("order-seller-a"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"reason\":\"Hết hàng thực tế ở kho\"}"))
+                .andExpect(status().isConflict());
+        assertThat(onHand(skuA1)).isEqualTo(10);
+
+        // Buyer cancel before the shop starts.
+        JsonNode second = placedOrderOfShopA(4);
+        assertThat(onHand(skuA1)).isEqualTo(6);
+        String secondId = second.get("id").asText();
+        cancel("buyer-1", secondId, "x").andExpect(status().isBadRequest());
+        cancel("buyer-2", secondId, "Tôi đổi ý không mua nữa").andExpect(status().isNotFound());
+        cancel("buyer-1", secondId, "Tôi đổi ý không mua nữa")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELED"))
+                .andExpect(jsonPath("$.cancelReason").value("Tôi đổi ý không mua nữa"));
+        assertThat(onHand(skuA1)).isEqualTo(10);
+        cancel("buyer-1", secondId, "Tôi đổi ý không mua nữa").andExpect(status().isConflict());
+        assertThat(onHand(skuA1)).isEqualTo(10);
+        assertThat(
+                        jdbc.sql(
+                                        "SELECT count(*) FROM inventory.stock_movement WHERE movement_type = 'RETURN' AND sku_id = :s")
+                                .param("s", skuA1)
+                                .query(Long.class)
+                                .single())
+                .isEqualTo(2);
+
+        // Once the shop confirmed, the buyer can no longer cancel directly.
+        JsonNode third = placedOrderOfShopA(1);
+        mvc.perform(
+                        post("/api/v1/seller/shops/"
+                                        + shopA
+                                        + "/orders/"
+                                        + third.get("id").asText()
+                                        + "/confirm")
+                                .with(seller("order-seller-a")))
+                .andExpect(status().isOk());
+        cancel("buyer-1", third.get("id").asText(), "Tôi đổi ý không mua nữa")
+                .andExpect(status().isConflict());
+        assertThat(onHand(skuA1)).isEqualTo(9);
+    }
+
+    @Test
+    void onlyTheOwningShopCanSeeOrChangeItsOrders() throws Exception {
+        JsonNode order = placedOrderOfShopA(1);
+        String id = order.get("id").asText();
+        // Another seller on this shop's path, and the owner on another shop's path.
+        mvc.perform(get("/api/v1/seller/shops/" + shopA + "/orders").with(seller("order-seller-b")))
+                .andExpect(status().isNotFound());
+        mvc.perform(
+                        post("/api/v1/seller/shops/" + shopA + "/orders/" + id + "/confirm")
+                                .with(seller("order-seller-b")))
+                .andExpect(status().isNotFound());
+        mvc.perform(
+                        get("/api/v1/seller/shops/" + shopB + "/orders/" + id)
+                                .with(seller("order-seller-b")))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/seller/shops/" + shopA + "/orders"))
+                .andExpect(status().isUnauthorized());
+        assertThat(
+                        jdbc.sql("SELECT status FROM sales.seller_order WHERE id = :id")
+                                .param("id", UUID.fromString(id))
+                                .query(String.class)
+                                .single())
+                .isEqualTo("AWAITING_SELLER");
+    }
+
+    private JsonNode placedOrderOfShopA(int quantity) throws Exception {
+        if (jdbc.sql("SELECT count(*) FROM platform.policy_version WHERE status = 'APPROVED'")
+                        .query(Long.class)
+                        .single()
+                < 4) {
+            approveAll(30_000, 7, 5_000_000, 5);
+        }
+        UUID address = address("buyer-1");
+        add("buyer-1", skuA1, quantity);
+        JsonNode quote = quote("buyer-1", address);
+        JsonNode group =
+                body(
+                        place("buyer-1", quote, "ful-" + UUID.randomUUID())
+                                .andExpect(status().isCreated()));
+        return group.get("orders").get(0);
+    }
+
+    private ResultActions cancel(String subject, String orderId, String reason) throws Exception {
+        return mvc.perform(
+                post("/api/v1/orders/" + orderId + "/cancel")
+                        .with(buyer(subject))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"" + reason + "\"}"));
+    }
+
+    private static JwtRequestPostProcessor seller(String subject) {
+        return jwt().jwt(j -> j.subject(subject))
+                .authorities(new SimpleGrantedAuthority("ROLE_SELLER"));
+    }
+
     // ---------------------------------------------------------------- helpers
 
     private ResultActions place(String subject, JsonNode quote, String key) throws Exception {

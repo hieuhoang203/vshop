@@ -24,6 +24,14 @@ const routes: { method: string; path: RegExp; maxBytes: number }[] = [
   { method: "POST", path: /^checkout\/quotes$/, maxBytes: 256 },
   // Orders: the idempotency key is forwarded by the generic header handling below
   { method: "POST", path: /^checkout\/orders$/, maxBytes: 512 },
+  // Order handling by the shop, and buyer cancel
+  {
+    method: "POST",
+    path: new RegExp(`^${shop}/orders/${uuid}/(confirm|pack|ready|delivered)$`),
+    maxBytes: 64,
+  },
+  { method: "POST", path: new RegExp(`^${shop}/orders/${uuid}/(reject|ship)$`), maxBytes: 1_024 },
+  { method: "POST", path: new RegExp(`^orders/${uuid}/cancel$`), maxBytes: 1_024 },
   // Policies (admin, second factor enforced by the API)
   { method: "POST", path: /^admin\/policies$/, maxBytes: 1_024 },
   { method: "POST", path: new RegExp(`^admin/policies/${uuid}/approve$`), maxBytes: 64 },

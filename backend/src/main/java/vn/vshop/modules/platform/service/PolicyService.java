@@ -101,6 +101,11 @@ public class PolicyService {
         return policies.list();
     }
 
+    /** Return window of the (possibly retired) policy version an order was placed under. */
+    public int returnWindowDays(UUID policyId) {
+        return (int) value(policies.find(policyId).orElseThrow(), "windowDays");
+    }
+
     public Map<String, Long> content(PolicyVersion policy) {
         return json.readValue(policy.content(), NUMBERS);
     }

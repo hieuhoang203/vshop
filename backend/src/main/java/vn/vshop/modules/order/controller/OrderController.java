@@ -20,10 +20,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import vn.vshop.common.web.dto.PageResponse;
 import vn.vshop.modules.order.dto.request.PlaceOrderRequest;
+import vn.vshop.modules.order.dto.request.ReasonRequest;
 import vn.vshop.modules.order.dto.response.CheckoutGroupResponse;
 import vn.vshop.modules.order.dto.response.OrderResponse;
 import vn.vshop.modules.order.dto.response.OrderSummaryResponse;
 import vn.vshop.modules.order.mapper.OrderMapper;
+import vn.vshop.modules.order.service.OrderFulfillmentService;
 import vn.vshop.modules.order.service.OrderService;
 
 @RestController
@@ -31,8 +33,11 @@ import vn.vshop.modules.order.service.OrderService;
 public class OrderController {
     private final OrderService service;
 
-    public OrderController(OrderService service) {
+    private final OrderFulfillmentService fulfillment;
+
+    public OrderController(OrderService service, OrderFulfillmentService fulfillment) {
         this.service = service;
+        this.fulfillment = fulfillment;
     }
 
     /**
@@ -70,6 +75,16 @@ public class OrderController {
                         .map(OrderMapper::toResponse)
                         .toList();
         return new PageResponse<>(items, service.count(jwt.getSubject()), page, size);
+    }
+
+    /** The buyer can cancel only until the shop starts on the order; the stock goes back. */
+    @PostMapping("/orders/{id}/cancel")
+    public OrderResponse cancel(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody ReasonRequest request) {
+        return OrderMapper.toResponse(
+                fulfillment.cancelByBuyer(jwt.getSubject(), id, request.reason()));
     }
 
     @GetMapping("/orders/{id}")

@@ -42,6 +42,7 @@ class OrderConcurrencyTests {
     @Autowired CartService carts;
     @Autowired QuoteService quotes;
     @Autowired OrderService orders;
+    @Autowired vn.vshop.modules.order.service.OrderFulfillmentService fulfillment;
     @Autowired AddressService addresses;
     @Autowired PolicyService policies;
     @MockitoBean JwtDecoder jwtDecoder;
@@ -279,6 +280,60 @@ class OrderConcurrencyTests {
         }
         assertThat(onHand(x)).isEqualTo(100 - 12);
         assertThat(onHand(y)).isEqualTo(100 - 12);
+    }
+
+    @Test
+    void confirmAndBuyerCancelRacingHaveExactlyOneWinnerAndStockReturnsOnlyIfCanceled()
+            throws Exception {
+        UUID sku = sku("race", 20_000, 20);
+        UUID shop = shops.get(shops.size() - 1);
+        String owner = "order-conc-owner-race-" + run;
+        String buyer = buyer("race");
+        UUID address = address(buyer);
+        int canceled = 0;
+        for (int round = 0; round < 8; round++) {
+            carts.addLine(buyer, sku, 1);
+            UUID quote = quotes.create(buyer, address).id();
+            UUID orderId =
+                    orders.place(buyer, quote, PaymentMethod.COD, "race-" + round + "-" + run)
+                            .orders()
+                            .get(0)
+                            .order()
+                            .id();
+            List<Callable<Object>> tries =
+                    List.of(
+                            () -> fulfillment.confirm(owner, shop, orderId),
+                            () -> fulfillment.cancelByBuyer(buyer, orderId, "Tôi đổi ý không mua"));
+            int ok = 0;
+            for (Future<Object> f : submit(tries)) {
+                try {
+                    f.get();
+                    ok++;
+                } catch (ExecutionException e) {
+                    assertThat(((BusinessException) e.getCause()).code())
+                            .isEqualTo("INVALID_ORDER_STATE");
+                }
+            }
+            assertThat(ok).as("round " + round).isEqualTo(1);
+            String status =
+                    jdbc.sql("SELECT status FROM sales.seller_order WHERE id = :id")
+                            .param("id", orderId)
+                            .query(String.class)
+                            .single();
+            assertThat(status).isIn("CONFIRMED", "CANCELED");
+            if (status.equals("CANCELED")) {
+                canceled++;
+            }
+        }
+        // Stock: 8 sold, minus the canceled ones returned, never more and never less.
+        assertThat(onHand(sku)).isEqualTo(20 - 8 + canceled);
+        assertThat(
+                        jdbc.sql(
+                                        "SELECT count(*) FROM inventory.stock_movement WHERE movement_type='RETURN' AND sku_id=:s")
+                                .param("s", sku)
+                                .query(Long.class)
+                                .single())
+                .isEqualTo(canceled);
     }
 
     // ------------------------------------------------------------------ helpers

@@ -4,6 +4,7 @@ const LINKS = {
   seller: [
     { href: "/seller", label: "Gian hàng" },
     { href: "/seller/products", label: "Sản phẩm" },
+    { href: "/seller/orders", label: "Đơn hàng" },
   ],
   admin: [
     { href: "/admin", label: "Hồ sơ gian hàng" },

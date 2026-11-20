@@ -125,6 +125,41 @@ public class ReservationService {
         return existing(reservationId);
     }
 
+    /**
+     * Puts the stock of a COMMITTED reservation back on hand (order canceled or rejected before it
+     * left the warehouse). Exactly once: the RETURN movement has a key derived from the reservation
+     * id, so a repeat finds it and changes nothing.
+     */
+    public StockReservation returnCommitted(UUID reservationId) {
+        StockReservation reservation = existing(reservationId);
+        if (reservation.status() != ReservationStatus.COMMITTED) {
+            throw state(reservation);
+        }
+        inventory.lockBalance(reservation.skuId(), reservation.warehouseId()).orElseThrow();
+        boolean first =
+                inventory.insertMovement(
+                        new StockMovement(
+                                UUID.randomUUID(),
+                                reservation.skuId(),
+                                reservation.warehouseId(),
+                                MovementType.RETURN,
+                                reservation.quantity(),
+                                0,
+                                0,
+                                "return:" + reservationId,
+                                "reservation " + reservationId,
+                                null));
+        if (first
+                && !inventory.applyDelta(
+                        reservation.skuId(),
+                        reservation.warehouseId(),
+                        reservation.quantity(),
+                        0)) {
+            throw new IllegalStateException("Cannot return stock for " + reservationId);
+        }
+        return reservation;
+    }
+
     /** Expires HELD reservations past their deadline. Safe to run concurrently and repeatedly. */
     public int expireDue(int limit) {
         List<StockReservation> due = inventory.lockExpiredReservations(limit);

@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 import vn.vshop.modules.order.entity.CheckoutGroup;
 import vn.vshop.modules.order.entity.OrderLine;
+import vn.vshop.modules.order.entity.OrderStatus;
 import vn.vshop.modules.order.entity.OrderStatusEvent;
 import vn.vshop.modules.order.entity.SellerOrder;
 import vn.vshop.modules.order.model.OrderSummary;
@@ -40,4 +41,27 @@ public interface OrderRepository {
     List<OrderSummary> listSummaries(UUID buyer, int limit, int offset);
 
     long countOrders(UUID buyer);
+
+    // ---- seller side and status changes
+
+    Optional<SellerOrder> findOrderOfShop(UUID shopId, UUID orderId);
+
+    /** {@code status} may be null for all statuses; newest first. */
+    List<SellerOrder> listForShop(UUID shopId, String status, int limit, int offset);
+
+    long countForShop(UUID shopId, String status);
+
+    /**
+     * Moves the order from one status to another only if it is still in {@code from}. Returns false
+     * when it was not (someone else changed it first), which callers report as a conflict.
+     */
+    boolean transition(UUID orderId, OrderStatus from, OrderStatus to, String cancelReason);
+
+    boolean markCanceled(UUID orderId, OrderStatus from, String reason);
+
+    boolean markShipped(UUID orderId, String trackingCode);
+
+    boolean markDelivered(UUID orderId, int returnWindowDays);
+
+    List<UUID> findReservationIds(UUID orderId);
 }

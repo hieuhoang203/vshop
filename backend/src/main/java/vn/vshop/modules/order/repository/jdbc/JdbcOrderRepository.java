@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 import vn.vshop.modules.order.entity.CheckoutGroup;
 import vn.vshop.modules.order.entity.OrderLine;
+import vn.vshop.modules.order.entity.OrderStatus;
 import vn.vshop.modules.order.entity.OrderStatusEvent;
 import vn.vshop.modules.order.entity.SellerOrder;
 import vn.vshop.modules.order.model.OrderSummary;
@@ -26,7 +27,7 @@ public class JdbcOrderRepository implements OrderRepository {
             o.discount_amount, o.shipping_amount, o.payable_amount, o.shop_name_snapshot,
             o.recipient_snapshot_ciphertext, o.ship_province, o.ship_ward, o.return_policy_id,
             o.payment_deadline, o.confirmed_at, o.canceled_at, o.cancel_reason, o.delivered_at,
-            o.return_eligible_until, o.created_at, o.updated_at
+            o.return_eligible_until, o.created_at, o.updated_at, o.manual_tracking_code, o.shipped_at
             """;
 
     private final JdbcClient jdbc;
@@ -271,6 +272,123 @@ public class JdbcOrderRepository implements OrderRepository {
                 .param("limit", limit)
                 .param("offset", offset)
                 .query(OrderSummary.class)
+                .list();
+    }
+
+    @Override
+    public Optional<SellerOrder> findOrderOfShop(UUID shopId, UUID orderId) {
+        return jdbc.sql(
+                        "SELECT "
+                                + ORDER_COLUMNS
+                                + " FROM sales.seller_order o WHERE o.id = :id AND o.shop_id = :shop")
+                .param("id", orderId)
+                .param("shop", shopId)
+                .query(SellerOrder.class)
+                .optional();
+    }
+
+    @Override
+    public List<SellerOrder> listForShop(UUID shopId, String status, int limit, int offset) {
+        return jdbc.sql(
+                        "SELECT "
+                                + ORDER_COLUMNS
+                                + " FROM sales.seller_order o WHERE o.shop_id = :shop"
+                                + " AND (CAST(:status AS text) IS NULL OR o.status = :status)"
+                                + " ORDER BY o.created_at DESC, o.id LIMIT :limit OFFSET :offset")
+                .param("shop", shopId)
+                .param("status", status, Types.VARCHAR)
+                .param("limit", limit)
+                .param("offset", offset)
+                .query(SellerOrder.class)
+                .list();
+    }
+
+    @Override
+    public long countForShop(UUID shopId, String status) {
+        return jdbc.sql(
+                        "SELECT count(*) FROM sales.seller_order o WHERE o.shop_id = :shop"
+                                + " AND (CAST(:status AS text) IS NULL OR o.status = :status)")
+                .param("shop", shopId)
+                .param("status", status, Types.VARCHAR)
+                .query(Long.class)
+                .single();
+    }
+
+    @Override
+    public boolean transition(UUID orderId, OrderStatus from, OrderStatus to, String cancelReason) {
+        return jdbc.sql(
+                                """
+            UPDATE sales.seller_order
+            SET status = :to, version = version + 1, updated_at = now(),
+                cancel_reason = COALESCE(:reason, cancel_reason),
+                confirmed_at = CASE WHEN :to = 'CONFIRMED' THEN now() ELSE confirmed_at END
+            WHERE id = :id AND status = :from
+            """)
+                        .param("id", orderId)
+                        .param("from", from.name())
+                        .param("to", to.name())
+                        .param("reason", cancelReason, Types.VARCHAR)
+                        .update()
+                == 1;
+    }
+
+    @Override
+    public boolean markCanceled(UUID orderId, OrderStatus from, String reason) {
+        return jdbc.sql(
+                                """
+            UPDATE sales.seller_order
+            SET status = 'CANCELED', canceled_at = now(), cancel_reason = :reason,
+                version = version + 1, updated_at = now()
+            WHERE id = :id AND status = :from
+            """)
+                        .param("id", orderId)
+                        .param("from", from.name())
+                        .param("reason", reason, Types.VARCHAR)
+                        .update()
+                == 1;
+    }
+
+    @Override
+    public boolean markShipped(UUID orderId, String trackingCode) {
+        return jdbc.sql(
+                                """
+            UPDATE sales.seller_order
+            SET status = 'IN_FULFILLMENT', manual_tracking_code = :code, shipped_at = now(),
+                version = version + 1, updated_at = now()
+            WHERE id = :id AND status = 'READY_TO_SHIP'
+            """)
+                        .param("id", orderId)
+                        .param("code", trackingCode)
+                        .update()
+                == 1;
+    }
+
+    @Override
+    public boolean markDelivered(UUID orderId, int returnWindowDays) {
+        return jdbc.sql(
+                                """
+            UPDATE sales.seller_order
+            SET status = 'DELIVERED', delivered_at = now(),
+                return_eligible_until = now() + make_interval(days => :days),
+                version = version + 1, updated_at = now()
+            WHERE id = :id AND status = 'IN_FULFILLMENT'
+            """)
+                        .param("id", orderId)
+                        .param("days", returnWindowDays)
+                        .update()
+                == 1;
+    }
+
+    @Override
+    public List<UUID> findReservationIds(UUID orderId) {
+        return jdbc.sql(
+                        """
+            SELECT r.reservation_id FROM sales.order_line_reservation r
+            JOIN sales.order_line l ON l.id = r.order_line_id
+            WHERE l.seller_order_id = :order ORDER BY r.reservation_id
+            """)
+                .param("order", orderId)
+                .query(UUID.class)
                 .list();
     }
 

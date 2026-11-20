@@ -726,7 +726,9 @@ sales,seller_order,ck_order_amounts,c,CHECK (((item_amount >= 0) AND (discount_a
 sales,seller_order,ck_order_cancel,c,CHECK ((((status)::text = 'CANCELED'::text) = (canceled_at IS NOT NULL)))
 sales,seller_order,ck_order_discount,c,CHECK ((discount_amount <= item_amount))
 sales,seller_order,ck_order_payable,c,CHECK ((payable_amount = ((item_amount - discount_amount) + shipping_amount)))
+sales,seller_order,ck_order_shipped,c,"CHECK ((((status)::text <> ALL ((ARRAY['IN_FULFILLMENT'::character varying, 'DELIVERED'::character varying, 'COMPLETED'::character varying])::text[])) OR ((manual_tracking_code IS NOT NULL) AND (shipped_at IS NOT NULL))))"
 sales,seller_order,ck_order_status,c,"CHECK (((status)::text = ANY ((ARRAY['PENDING_PAYMENT'::character varying, 'AWAITING_SELLER'::character varying, 'CONFIRMED'::character varying, 'PACKING'::character varying, 'READY_TO_SHIP'::character varying, 'IN_FULFILLMENT'::character varying, 'DELIVERED'::character varying, 'COMPLETED'::character varying, 'CANCEL_REQUESTED'::character varying, 'CANCELED'::character varying, 'REJECTED'::character varying])::text[])))"
+sales,seller_order,ck_order_tracking,c,CHECK (((manual_tracking_code IS NULL) OR (length(btrim((manual_tracking_code)::text)) > 0)))
 sales,seller_order,ck_order_version,c,CHECK ((version >= 0))
 sales,seller_order,seller_order_checkout_group_id_fkey,f,FOREIGN KEY (checkout_group_id) REFERENCES sales.checkout_group(id)
 sales,seller_order,seller_order_checkout_group_id_not_null,n,NOT NULL checkout_group_id

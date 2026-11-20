@@ -56,6 +56,14 @@ public class JdbcPolicyRepository implements PolicyRepository {
     }
 
     @Override
+    public Optional<PolicyVersion> find(UUID id) {
+        return jdbc.sql("SELECT " + COLUMNS + " FROM platform.policy_version WHERE id = :id")
+                .param("id", id)
+                .query(PolicyVersion.class)
+                .optional();
+    }
+
+    @Override
     public Optional<PolicyVersion> findCurrent(PolicyType type) {
         return jdbc.sql(
                         "SELECT "

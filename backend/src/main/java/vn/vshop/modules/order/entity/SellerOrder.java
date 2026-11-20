@@ -27,4 +27,6 @@ public record SellerOrder(
         OffsetDateTime deliveredAt,
         OffsetDateTime returnEligibleUntil,
         OffsetDateTime createdAt,
-        OffsetDateTime updatedAt) {}
+        OffsetDateTime updatedAt,
+        String manualTrackingCode,
+        OffsetDateTime shippedAt) {}

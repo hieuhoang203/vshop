@@ -44,3 +44,34 @@ Ngày: **20/11/2026**. Phạm vi: triển khai lát cắt S0 và S1 của [docs/
 3. Tồn kho trừ ngay khi đặt COD; chưa có luồng hủy hoàn tồn (S2).
 4. Phí ship cố định theo shop; chưa phân bổ hay báo giá từ carrier.
 5. Dữ liệu E2E để lại chính sách đã duyệt và đơn COD trong DB local.
+
+## 6. S2: shop xử lý đơn (chế độ giao thủ công)
+
+Ngày: **20/11/2026**. Phạm vi: docs/20 mục S2 với D11 (giao thủ công). Chưa có carrier, thanh toán trực tuyến, hoàn tiền hay phần phải thu COD.
+
+**Chuyển trạng thái (mỗi bước là `UPDATE ... WHERE status = :from`, ghi lịch sử và outbox):**
+
+| Từ                                        | Đến              | Ai        | Ghi chú                                                                                            |
+| ----------------------------------------- | ---------------- | --------- | -------------------------------------------------------------------------------------------------- |
+| `AWAITING_SELLER`                         | `CONFIRMED`      | Shop      | Từ lúc này shop mới thấy tên, số điện thoại, địa chỉ cụ thể của người nhận                         |
+| `AWAITING_SELLER`                         | `REJECTED`       | Shop      | Bắt buộc lý do 5–500 ký tự; hoàn tồn                                                               |
+| `AWAITING_SELLER`                         | `CANCELED`       | Người mua | Bắt buộc lý do; hoàn tồn                                                                           |
+| `CONFIRMED` → `PACKING` → `READY_TO_SHIP` |                  | Shop      |                                                                                                    |
+| `READY_TO_SHIP`                           | `IN_FULFILLMENT` | Shop      | Nhập mã vận đơn (3–100 ký tự), không do carrier xác minh                                           |
+| `IN_FULFILLMENT`                          | `DELIVERED`      | Shop      | **Do shop tự khai**; đặt `delivered_at` và `return_eligible_until` theo chính sách đổi trả lúc đặt |
+
+**API:** `GET /api/v1/seller/shops/{shopId}/orders` (lọc `status`, phân trang), `GET .../{orderId}`, `POST .../{orderId}/confirm | reject | pack | ready | ship | delivered`, và `POST /api/v1/orders/{id}/cancel` cho người mua. Chỉ chủ gian hàng thao tác được (người khác nhận 404, như gian hàng không tồn tại). Web: `/seller/orders` và nút "Hủy đơn" ở `/orders/{id}`.
+
+**Hoàn tồn đúng một lần:** `ReservationService.returnCommitted` ghi movement `RETURN` với khóa `return:{reservationId}` rồi mới cộng tồn; lặp lại không tác dụng. Xác nhận và hủy đồng thời chỉ có một bên thắng (test 8 vòng).
+
+**V1008:** `manual_tracking_code`, `shipped_at`, CHECK đơn đã giao hàng phải có mã và thời điểm giao.
+
+**Kiểm chứng:** 3 test tích hợp mới (quy trình đến `DELIVERED`, ẩn thông tin người mua trước khi xác nhận, từ chối/hủy hoàn tồn đúng một lần, cô lập giữa các shop), 1 test đồng thời (xác nhận và người mua hủy cùng lúc), và Playwright `seller-orders.spec.ts` (shop và người bán thật qua Keycloak; sản phẩm và tồn được seed bằng SQL vì catalog có test riêng).
+
+**Giới hạn và việc còn mở:**
+
+1. **D8 chưa có con số:** chưa có thời hạn xác nhận và chưa có hàng đợi hỗ trợ cho đơn quá hạn. Theo thiết kế, quá hạn sẽ chuyển hỗ trợ chứ không tự hủy; chưa làm vì cần số do chủ sản phẩm chốt.
+2. "Đã giao" do shop tự khai, không dùng để chi trả (docs/20 mục 12).
+3. Chỉ chủ gian hàng xử lý đơn; vai trò FULFILLMENT/SUPPORT của `shop_member` chưa được dùng ở đâu cả.
+4. Chưa có `CANCEL_REQUESTED` (người mua hủy sau khi shop xác nhận), trả hàng, hoàn tiền; cần S3/E.
+5. Bản ghi phải thu COD (`fulfillment.cod_receivable`) chưa tạo; thuộc S4.

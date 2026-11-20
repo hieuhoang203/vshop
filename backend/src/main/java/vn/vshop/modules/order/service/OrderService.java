@@ -212,6 +212,8 @@ public class OrderService {
                             null,
                             null,
                             null,
+                            null,
+                            null,
                             null));
             for (PricedCart.Line l : g.lines()) {
                 UUID lineId = UUID.randomUUID();
@@ -324,7 +326,7 @@ public class OrderService {
                 replayed);
     }
 
-    private OrderDetail open(SellerOrder order) {
+    public OrderDetail open(SellerOrder order) {
         Map<String, String> r =
                 json.readValue(
                         cipher.decrypt(order.recipientSnapshotCiphertext(), context(order.id())),

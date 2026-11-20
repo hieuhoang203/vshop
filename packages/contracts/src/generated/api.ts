@@ -388,6 +388,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["orderCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/seller/shops": {
         parameters: {
             query?: never;
@@ -462,6 +478,134 @@ export interface paths {
         get: operations["sellerInventoryMovements"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/shops/{shopId}/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sellerOrderList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sellerOrderGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sellerOrderConfirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/delivered": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sellerOrderDelivered"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/pack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sellerOrderPack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sellerOrderReady"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sellerOrderReject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/ship": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sellerOrderShip"];
         delete?: never;
         options?: never;
         head?: never;
@@ -786,6 +930,15 @@ export interface components {
             /** Format: int64 */
             total: number;
         };
+        PageResponseSellerOrderResponse: {
+            items: components["schemas"]["SellerOrderResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
         PageResponseSellerProductResponse: {
             items: components["schemas"]["SellerProductResponse"][];
             /** Format: int32 */
@@ -879,6 +1032,9 @@ export interface components {
         RealmAccess: {
             roles: string[];
         };
+        ReasonRequest: {
+            reason: string;
+        };
         ReviewProductRequest: {
             /** @enum {string} */
             decision: "APPROVED" | "REJECTED";
@@ -890,6 +1046,28 @@ export interface components {
             /** @enum {string} */
             decision: "APPROVED" | "REJECTED";
             reason: string;
+        };
+        SellerOrderResponse: {
+            cancelReason: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            history: components["schemas"]["OrderStatusEventResponse"][];
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            itemAmount: number;
+            lines: components["schemas"]["OrderLineResponse"][];
+            orderNumber: string;
+            /** Format: int64 */
+            payableAmount: number;
+            recipient: components["schemas"]["SellerRecipientResponse"];
+            /** Format: int64 */
+            shippingAmount: number;
+            /** @enum {string} */
+            status: "PENDING_PAYMENT" | "AWAITING_SELLER" | "CONFIRMED" | "PACKING" | "READY_TO_SHIP" | "IN_FULFILLMENT" | "DELIVERED" | "COMPLETED" | "CANCEL_REQUESTED" | "CANCELED" | "REJECTED";
+            trackingCode: string | null;
+            /** Format: int64 */
+            version: number;
         };
         SellerProductResponse: {
             /** Format: uuid */
@@ -915,9 +1093,19 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        SellerRecipientResponse: {
+            name: string | null;
+            phone: string | null;
+            province: string;
+            street: string | null;
+            ward: string;
+        };
         SetQuantityRequest: {
             /** Format: int32 */
             quantity: number;
+        };
+        ShipOrderRequest: {
+            trackingCode: string;
         };
         ShipToResponse: {
             /** Format: uuid */
@@ -1991,6 +2179,41 @@ export interface operations {
             };
         };
     };
+    orderCancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     sellerShopOwned: {
         parameters: {
             query?: never;
@@ -2209,6 +2432,273 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StockMovementResponse"][];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    sellerOrderList: {
+        parameters: {
+            query?: {
+                status?: "PENDING_PAYMENT" | "AWAITING_SELLER" | "CONFIRMED" | "PACKING" | "READY_TO_SHIP" | "IN_FULFILLMENT" | "DELIVERED" | "COMPLETED" | "CANCEL_REQUESTED" | "CANCELED" | "REJECTED";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                shopId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResponseSellerOrderResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    sellerOrderGet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shopId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerOrderResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    sellerOrderConfirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shopId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerOrderResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    sellerOrderDelivered: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shopId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerOrderResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    sellerOrderPack: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shopId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerOrderResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    sellerOrderReady: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shopId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerOrderResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    sellerOrderReject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shopId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReasonRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerOrderResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    sellerOrderShip: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shopId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShipOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerOrderResponse"];
                 };
             };
             /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */

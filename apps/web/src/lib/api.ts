@@ -6,6 +6,8 @@ import type {
   CheckoutGroup,
   Order,
   OrderPage,
+  SellerOrder,
+  SellerOrderPage,
   Policy,
   PublicSku,
   Category,
@@ -61,3 +63,11 @@ export const getOrder = (id: string) => api<Order>(`/orders/${encodeURIComponent
 export const getPolicies = () => api<Policy[]>("/admin/policies", true);
 
 export const getAddresses = () => api<Address[]>("/me/addresses", true);
+
+export const getSellerOrders = (shopId: string, status = "", page = 0) =>
+  api<SellerOrderPage>(
+    `/seller/shops/${shopId}/orders?page=${page}&size=20${status ? `&status=${encodeURIComponent(status)}` : ""}`,
+    true,
+  );
+export const getSellerOrder = (shopId: string, orderId: string) =>
+  api<SellerOrder>(`/seller/shops/${shopId}/orders/${encodeURIComponent(orderId)}`, true);
