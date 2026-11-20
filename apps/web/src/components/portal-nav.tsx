@@ -11,6 +11,7 @@ const LINKS = {
     { href: "/admin/products", label: "Duyệt sản phẩm" },
     { href: "/admin/policies", label: "Chính sách" },
     { href: "/admin/orders", label: "Đơn quá hạn" },
+    { href: "/admin/refunds", label: "Hoàn tiền" },
   ],
 } as const;
 

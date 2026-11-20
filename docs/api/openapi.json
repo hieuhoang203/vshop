@@ -83,6 +83,56 @@
         "required" : [ "createdAt", "id", "isDefault", "label", "phone", "province", "recipientName", "street", "updatedAt", "version", "ward" ],
         "type" : "object"
       },
+      "AdminRefundResponse" : {
+        "properties" : {
+          "accountName" : {
+            "type" : [ "string", "null" ]
+          },
+          "accountNumber" : {
+            "type" : [ "string", "null" ]
+          },
+          "amount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "bankName" : {
+            "type" : [ "string", "null" ]
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "note" : {
+            "type" : [ "string", "null" ]
+          },
+          "orderId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "paidAt" : {
+            "format" : "date-time",
+            "type" : [ "string", "null" ]
+          },
+          "payoutReference" : {
+            "type" : [ "string", "null" ]
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "accountName", "accountNumber", "amount", "bankName", "createdAt", "id", "note", "orderId", "orderNumber", "paidAt", "payoutReference", "reason", "status" ],
+        "type" : "object"
+      },
       "ApiErrorResponse" : {
         "properties" : {
           "code" : {
@@ -521,6 +571,13 @@
           "recipient" : {
             "$ref" : "#/components/schemas/OrderRecipientResponse"
           },
+          "refund" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/RefundResponse"
+            }, {
+              "type" : "null"
+            } ]
+          },
           "shippingAmount" : {
             "format" : "int64",
             "type" : "integer"
@@ -537,7 +594,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "cancelReason", "canceledAt", "checkoutGroupId", "createdAt", "discountAmount", "history", "id", "itemAmount", "lines", "orderNumber", "payableAmount", "paymentDeadline", "recipient", "shippingAmount", "shopId", "shopName", "status" ],
+        "required" : [ "cancelReason", "canceledAt", "checkoutGroupId", "createdAt", "discountAmount", "history", "id", "itemAmount", "lines", "orderNumber", "payableAmount", "paymentDeadline", "recipient", "refund", "shippingAmount", "shopId", "shopName", "status" ],
         "type" : "object"
       },
       "OrderStatusEventResponse" : {
@@ -1028,6 +1085,83 @@
           }
         },
         "required" : [ "reason" ],
+        "type" : "object"
+      },
+      "RefundAccountRequest" : {
+        "properties" : {
+          "accountName" : {
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "accountNumber" : {
+            "maxLength" : 40,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "bankName" : {
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "accountName", "accountNumber", "bankName" ],
+        "type" : "object"
+      },
+      "RefundPaidRequest" : {
+        "properties" : {
+          "note" : {
+            "maxLength" : 600,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "payoutReference" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "payoutReference" ],
+        "type" : "object"
+      },
+      "RefundResponse" : {
+        "properties" : {
+          "accountLast4" : {
+            "type" : [ "string", "null" ]
+          },
+          "amount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "bankName" : {
+            "type" : [ "string", "null" ]
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "needsAccount" : {
+            "type" : "boolean"
+          },
+          "paidAt" : {
+            "format" : "date-time",
+            "type" : [ "string", "null" ]
+          },
+          "payoutReference" : {
+            "type" : [ "string", "null" ]
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "accountLast4", "amount", "bankName", "createdAt", "id", "needsAccount", "paidAt", "payoutReference", "reason", "status" ],
         "type" : "object"
       },
       "ReviewProductRequest" : {
@@ -1959,6 +2093,164 @@
           "bearerAuth" : [ ]
         } ],
         "tags" : [ "admin-product-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "ADMIN" ],
+          "public" : false,
+          "requiresSecondFactor" : true
+        }
+      }
+    },
+    "/api/v1/admin/refunds" : {
+      "get" : {
+        "operationId" : "adminRefundList",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "pattern" : "[A-Z_]{3,20}",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/AdminRefundResponse"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "admin-refund-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "ADMIN" ],
+          "public" : false,
+          "requiresSecondFactor" : true
+        }
+      }
+    },
+    "/api/v1/admin/refunds/{id}/bad-account" : {
+      "post" : {
+        "operationId" : "adminRefundBadAccount",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReasonRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminRefundResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "admin-refund-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "ADMIN" ],
+          "public" : false,
+          "requiresSecondFactor" : true
+        }
+      }
+    },
+    "/api/v1/admin/refunds/{id}/paid" : {
+      "post" : {
+        "operationId" : "adminRefundPaid",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RefundPaidRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminRefundResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "admin-refund-controller" ],
         "x-vshop-access" : {
           "anyOfRoles" : [ "ADMIN" ],
           "public" : false,
@@ -3053,6 +3345,60 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/OrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/orders/{id}/refund-account" : {
+      "put" : {
+        "operationId" : "orderRefundAccount",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RefundAccountRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RefundResponse"
                 }
               }
             },

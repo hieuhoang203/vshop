@@ -49,6 +49,7 @@ public class PaymentService {
     private final OrderRepository orders;
     private final ReservationService reservations;
     private final OutboxService outbox;
+    private final RefundService refunds;
     private final ObjectMapper json;
     private final Clock clock;
     private final String returnBase;
@@ -60,6 +61,7 @@ public class PaymentService {
             OrderRepository orders,
             ReservationService reservations,
             OutboxService outbox,
+            RefundService refunds,
             ObjectMapper json,
             Clock clock,
             @Value("${vshop.payment.return-base-url:http://localhost:3100}") String returnBase,
@@ -78,6 +80,7 @@ public class PaymentService {
         this.orders = orders;
         this.reservations = reservations;
         this.outbox = outbox;
+        this.refunds = refunds;
         this.json = json;
         this.clock = clock;
         this.returnBase = returnBase;
@@ -254,6 +257,17 @@ public class PaymentService {
         if (!usable) {
             // Paid after the order was canceled or its stock released: keep the money trail and
             // leave the decision (refund) to a person. The order is not revived.
+            // The money belongs to these orders even though they are canceled: allocate it, then
+            // refund it, so the trail from charge to refund is complete.
+            for (SellerOrder order : group) {
+                payments.insertAllocation(
+                        UUID.randomUUID(),
+                        chargeId,
+                        order.id(),
+                        attempt.checkoutGroupId(),
+                        order.payableAmount());
+                refunds.createForOrder(order.id(), "PAID_AFTER_EXPIRY");
+            }
             payments.setIntentStatus(intent.id(), "UNKNOWN");
             payments.insertReview(chargeId, attempt.checkoutGroupId(), "PAID_AFTER_EXPIRY");
             publish(

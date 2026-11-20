@@ -89,3 +89,9 @@ export type CreateShipmentInput = Schemas["CreateShipmentRequest"];
 
 // Support queue
 export type OverdueOrders = Schemas["OverdueOrdersResponse"];
+
+// Refunds
+export type Refund = Schemas["RefundResponse"];
+export type AdminRefund = Schemas["AdminRefundResponse"];
+export type RefundAccountInput = Schemas["RefundAccountRequest"];
+export type RefundPaidInput = Schemas["RefundPaidRequest"];

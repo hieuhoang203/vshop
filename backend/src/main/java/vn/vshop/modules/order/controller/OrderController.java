@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,15 +22,18 @@ import org.springframework.web.bind.annotation.RestController;
 import vn.vshop.common.web.dto.PageResponse;
 import vn.vshop.modules.order.dto.request.PlaceOrderRequest;
 import vn.vshop.modules.order.dto.request.ReasonRequest;
+import vn.vshop.modules.order.dto.request.RefundAccountRequest;
 import vn.vshop.modules.order.dto.response.CheckoutGroupResponse;
 import vn.vshop.modules.order.dto.response.OrderResponse;
 import vn.vshop.modules.order.dto.response.OrderSummaryResponse;
+import vn.vshop.modules.order.dto.response.RefundResponse;
 import vn.vshop.modules.order.entity.PaymentMethod;
 import vn.vshop.modules.order.mapper.OrderMapper;
 import vn.vshop.modules.order.model.GroupDetail;
 import vn.vshop.modules.order.service.OrderFulfillmentService;
 import vn.vshop.modules.order.service.OrderService;
 import vn.vshop.modules.order.service.PaymentService;
+import vn.vshop.modules.order.service.RefundService;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -38,9 +42,14 @@ public class OrderController {
 
     private final OrderFulfillmentService fulfillment;
     private final PaymentService payments;
+    private final RefundService refunds;
 
     public OrderController(
-            OrderService service, OrderFulfillmentService fulfillment, PaymentService payments) {
+            OrderService service,
+            OrderFulfillmentService fulfillment,
+            PaymentService payments,
+            RefundService refunds) {
+        this.refunds = refunds;
         this.payments = payments;
         this.service = service;
         this.fulfillment = fulfillment;
@@ -112,6 +121,22 @@ public class OrderController {
             @Valid @RequestBody ReasonRequest request) {
         return OrderMapper.toResponse(
                 fulfillment.cancelByBuyer(jwt.getSubject(), id, request.reason()));
+    }
+
+    /** Where to send the refund of this order; allowed until it has been paid out. */
+    @PutMapping("/orders/{id}/refund-account")
+    public RefundResponse refundAccount(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody RefundAccountRequest request) {
+        return OrderMapper.toResponse(
+                refunds.provideAccount(
+                        jwt.getSubject(),
+                        id,
+                        new RefundService.Account(
+                                request.bankName(),
+                                request.accountNumber(),
+                                request.accountName())));
     }
 
     @GetMapping("/orders/{id}")

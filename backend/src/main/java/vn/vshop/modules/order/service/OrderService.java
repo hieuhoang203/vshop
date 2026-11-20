@@ -70,6 +70,7 @@ public class OrderService {
     private final ShopService shops;
     private final OutboxService outbox;
     private final PaymentService payments;
+    private final RefundService refunds;
     private final PiiCipher cipher;
     private final ObjectMapper json;
     private final Clock clock;
@@ -84,6 +85,7 @@ public class OrderService {
             ShopService shops,
             OutboxService outbox,
             PaymentService payments,
+            RefundService refunds,
             PiiCipher cipher,
             ObjectMapper json,
             Clock clock) {
@@ -96,6 +98,7 @@ public class OrderService {
         this.shops = shops;
         this.outbox = outbox;
         this.payments = payments;
+        this.refunds = refunds;
         this.cipher = cipher;
         this.json = json;
         this.clock = clock;
@@ -361,7 +364,8 @@ public class OrderService {
                         r.get("phone"),
                         r.get("street"),
                         r.get("ward"),
-                        r.get("province")));
+                        r.get("province")),
+                refunds.viewForOrder(order.id()).orElse(null));
     }
 
     private String sealRecipient(UUID orderId, Recipient r) {

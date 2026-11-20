@@ -7,6 +7,7 @@ import type {
   Order,
   OrderPage,
   OverdueOrders,
+  AdminRefund,
   PickupAddress,
   SellerOrder,
   SellerOrderPage,
@@ -79,3 +80,9 @@ export const getOverdueOrders = () => api<OverdueOrders>("/admin/orders/overdue"
 /** Null while the shop has not set a pickup address (the API answers with an empty body). */
 export const getPickupAddress = (shopId: string) =>
   api<PickupAddress>(`/seller/shops/${shopId}/pickup-address`, true).catch(() => null);
+
+export const getAdminRefunds = (status = "") =>
+  api<AdminRefund[]>(
+    `/admin/refunds${status ? `?status=${encodeURIComponent(status)}` : ""}`,
+    true,
+  );

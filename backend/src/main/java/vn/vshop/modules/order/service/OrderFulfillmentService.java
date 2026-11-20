@@ -52,6 +52,7 @@ public class OrderFulfillmentService {
     private final PolicyService policies;
     private final OutboxService outbox;
     private final ObjectMapper json;
+    private final RefundService refunds;
     private final java.time.Clock clock;
 
     OrderFulfillmentService(
@@ -63,6 +64,7 @@ public class OrderFulfillmentService {
             PolicyService policies,
             OutboxService outbox,
             ObjectMapper json,
+            RefundService refunds,
             java.time.Clock clock) {
         this.orders = orders;
         this.orderService = orderService;
@@ -72,6 +74,7 @@ public class OrderFulfillmentService {
         this.policies = policies;
         this.outbox = outbox;
         this.json = json;
+        this.refunds = refunds;
         this.clock = clock;
     }
 
@@ -133,6 +136,7 @@ public class OrderFulfillmentService {
         SellerOrder order = ownedOrder(subject, shopId, orderId);
         step(order, OrderStatus.AWAITING_SELLER, OrderStatus.REJECTED, clean);
         restock(order);
+        refunds.createForOrder(orderId, "SELLER_REJECTED");
         record(order, OrderStatus.AWAITING_SELLER, OrderStatus.REJECTED, "SELLER", subject, clean);
         publish("OrderRejected", order);
         return view(find(shopId, orderId));
@@ -208,6 +212,7 @@ public class OrderFulfillmentService {
                     "Người bán đã xử lý đơn này nên không thể hủy trực tiếp.");
         }
         restock(order);
+        refunds.createForOrder(orderId, "ORDER_CANCELED");
         record(order, OrderStatus.AWAITING_SELLER, OrderStatus.CANCELED, "BUYER", subject, clean);
         publish("OrderCanceled", order);
         return orderService.open(orders.findOrder(buyer, orderId).orElseThrow());

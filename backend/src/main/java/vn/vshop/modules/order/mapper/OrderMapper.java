@@ -3,17 +3,21 @@ package vn.vshop.modules.order.mapper;
 import java.util.Map;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
+import vn.vshop.modules.order.dto.response.AdminRefundResponse;
 import vn.vshop.modules.order.dto.response.CheckoutGroupResponse;
 import vn.vshop.modules.order.dto.response.OrderResponse;
 import vn.vshop.modules.order.dto.response.OrderSummaryResponse;
 import vn.vshop.modules.order.dto.response.OverdueOrdersResponse;
+import vn.vshop.modules.order.dto.response.RefundResponse;
 import vn.vshop.modules.order.dto.response.SellerOrderResponse;
 import vn.vshop.modules.order.entity.OrderLine;
 import vn.vshop.modules.order.entity.OrderStatusEvent;
+import vn.vshop.modules.order.model.AdminRefund;
 import vn.vshop.modules.order.model.GroupDetail;
 import vn.vshop.modules.order.model.OrderDetail;
 import vn.vshop.modules.order.model.OrderSummary;
 import vn.vshop.modules.order.model.OverdueOrders;
+import vn.vshop.modules.order.model.RefundView;
 import vn.vshop.modules.order.model.SellerOrderDetail;
 
 public final class OrderMapper {
@@ -55,7 +59,39 @@ public final class OrderMapper {
                 o.cancelReason(),
                 o.createdAt(),
                 detail.lines().stream().map(OrderMapper::toResponse).toList(),
-                detail.history().stream().map(OrderMapper::toResponse).toList());
+                detail.history().stream().map(OrderMapper::toResponse).toList(),
+                detail.refund() == null ? null : toResponse(detail.refund()));
+    }
+
+    public static RefundResponse toResponse(RefundView r) {
+        return new RefundResponse(
+                r.id(),
+                r.status(),
+                r.reason(),
+                r.amount(),
+                r.needsAccount(),
+                r.bankName(),
+                r.accountLast4(),
+                r.payoutReference(),
+                r.createdAt(),
+                r.paidAt());
+    }
+
+    public static AdminRefundResponse toResponse(AdminRefund r) {
+        return new AdminRefundResponse(
+                r.id(),
+                r.orderId(),
+                r.orderNumber(),
+                r.reason(),
+                r.status(),
+                r.amount(),
+                r.bankName(),
+                r.accountNumber(),
+                r.accountName(),
+                r.payoutReference(),
+                r.note(),
+                r.createdAt(),
+                r.paidAt());
     }
 
     public static SellerOrderResponse toResponse(SellerOrderDetail d) {

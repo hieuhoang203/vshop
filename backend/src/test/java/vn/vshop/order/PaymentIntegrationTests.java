@@ -238,7 +238,15 @@ class PaymentIntegrationTests {
         assertThat(orderStatus()).isEqualTo("CANCELED");
         assertThat(onHand()).isEqualTo(10);
         assertThat(count("payment.charge")).isEqualTo(1);
-        assertThat(count("payment.allocation")).isZero();
+        // The money is allocated to the canceled order and immediately queued for refund.
+        assertThat(count("payment.allocation")).isEqualTo(1);
+        assertThat(count("payment.refund")).isEqualTo(1);
+        assertThat(
+                        jdbc.sql(
+                                        "SELECT reason || ':' || amount || ':' || status FROM payment.refund")
+                                .query(String.class)
+                                .single())
+                .isEqualTo("PAID_AFTER_EXPIRY:225000:AWAITING_ACCOUNT");
         assertThat(jdbc.sql("SELECT reason FROM payment.review_case").query(String.class).single())
                 .isEqualTo("PAID_AFTER_EXPIRY");
         assertThat(jdbc.sql("SELECT status FROM payment.intent").query(String.class).single())

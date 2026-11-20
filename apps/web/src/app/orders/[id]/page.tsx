@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { getOrder } from "@/lib/api";
 import { CancelOrder } from "@/components/orders/cancel-order";
+import { RefundPanel } from "@/components/orders/refund-panel";
 import { OrderCard, STATUS_TEXT, dateTime } from "@/components/orders/order-card";
 
 export const metadata = { title: "Chi tiết đơn hàng" };
@@ -18,6 +19,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
       </div>
       <OrderCard order={order} />
       {order.status === "AWAITING_SELLER" && <CancelOrder orderId={order.id} />}
+      {order.refund && <RefundPanel orderId={order.id} refund={order.refund} />}
       <section className="panel" aria-label="Lịch sử trạng thái">
         <h2>Lịch sử</h2>
         <ol>

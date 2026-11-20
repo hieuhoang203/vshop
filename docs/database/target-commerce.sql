@@ -165,29 +165,7 @@ CREATE TABLE aftersales.case_evidence (
 CREATE INDEX ix_evidence_asset ON aftersales.case_evidence(asset_id);
 CREATE INDEX ix_evidence_submitter ON aftersales.case_evidence(submitted_by);
 
-CREATE TABLE payment.refund (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    charge_id UUID NOT NULL REFERENCES payment.charge(id),
-    return_case_id UUID REFERENCES aftersales.return_case(id),
-    idempotency_key VARCHAR(150) NOT NULL UNIQUE,
-    provider_refund_reference VARCHAR(150),
-    amount BIGINT NOT NULL CHECK (amount > 0),
-    status VARCHAR(20) NOT NULL CHECK (status IN ('APPROVED', 'SUBMITTED', 'PENDING', 'SUCCEEDED', 'FAILED', 'UNKNOWN')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (charge_id, provider_refund_reference),
-    UNIQUE (id, charge_id)
-);
-CREATE INDEX ix_payment_refund_case ON payment.refund(return_case_id);
-CREATE TABLE payment.refund_allocation (
-    refund_id UUID NOT NULL,
-    charge_id UUID NOT NULL,
-    allocation_id UUID NOT NULL,
-    amount BIGINT NOT NULL CHECK (amount > 0),
-    PRIMARY KEY (refund_id, allocation_id),
-    FOREIGN KEY (refund_id, charge_id) REFERENCES payment.refund(id, charge_id),
-    FOREIGN KEY (allocation_id, charge_id) REFERENCES payment.allocation(id, charge_id)
-);
-CREATE INDEX ix_refund_allocation_charge ON payment.refund_allocation(allocation_id, charge_id);
+-- payment.refund and payment.refund_allocation: Flyway V1013 (return_case_id joins with return cases).
 
 CREATE TABLE finance.ledger_account (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

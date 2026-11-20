@@ -10,7 +10,8 @@ public record OrderDetail(
         SellerOrder order,
         List<OrderLine> lines,
         List<OrderStatusEvent> history,
-        RecipientView recipient) {
+        RecipientView recipient,
+        RefundView refund) {
     public OrderDetail {
         lines = List.copyOf(lines);
         history = List.copyOf(history);

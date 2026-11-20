@@ -158,11 +158,12 @@ payment,intent,uq_intent_group,CREATE UNIQUE INDEX uq_intent_group ON payment.in
 payment,intent,uq_intent_id_group,"CREATE UNIQUE INDEX uq_intent_id_group ON payment.intent USING btree (id, checkout_group_id)"
 payment,provider_event,provider_event_pkey,CREATE UNIQUE INDEX provider_event_pkey ON payment.provider_event USING btree (id)
 payment,provider_event,uq_provider_event,"CREATE UNIQUE INDEX uq_provider_event ON payment.provider_event USING btree (provider, event_key)"
-payment,refund,ix_payment_refund_case,CREATE INDEX ix_payment_refund_case ON payment.refund USING btree (return_case_id)
-payment,refund,refund_charge_id_provider_refund_reference_key,"CREATE UNIQUE INDEX refund_charge_id_provider_refund_reference_key ON payment.refund USING btree (charge_id, provider_refund_reference)"
-payment,refund,refund_id_charge_id_key,"CREATE UNIQUE INDEX refund_id_charge_id_key ON payment.refund USING btree (id, charge_id)"
+payment,refund,ix_refund_open,"CREATE INDEX ix_refund_open ON payment.refund USING btree (created_at) WHERE ((status)::text = ANY ((ARRAY['AWAITING_ACCOUNT'::character varying, 'APPROVED'::character varying])::text[]))"
+payment,refund,ix_refund_order,CREATE INDEX ix_refund_order ON payment.refund USING btree (seller_order_id)
 payment,refund,refund_idempotency_key_key,CREATE UNIQUE INDEX refund_idempotency_key_key ON payment.refund USING btree (idempotency_key)
 payment,refund,refund_pkey,CREATE UNIQUE INDEX refund_pkey ON payment.refund USING btree (id)
+payment,refund,uq_refund_charge_provider_ref,"CREATE UNIQUE INDEX uq_refund_charge_provider_ref ON payment.refund USING btree (charge_id, provider_refund_reference)"
+payment,refund,uq_refund_id_charge,"CREATE UNIQUE INDEX uq_refund_id_charge ON payment.refund USING btree (id, charge_id)"
 payment,refund_allocation,ix_refund_allocation_charge,"CREATE INDEX ix_refund_allocation_charge ON payment.refund_allocation USING btree (allocation_id, charge_id)"
 payment,refund_allocation,refund_allocation_pkey,"CREATE UNIQUE INDEX refund_allocation_pkey ON payment.refund_allocation USING btree (refund_id, allocation_id)"
 payment,review_case,ix_review_group,CREATE INDEX ix_review_group ON payment.review_case USING btree (checkout_group_id)

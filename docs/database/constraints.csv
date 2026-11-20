@@ -582,27 +582,35 @@ payment,provider_event,provider_event_pkey,p,PRIMARY KEY (id)
 payment,provider_event,provider_event_provider_not_null,n,NOT NULL provider
 payment,provider_event,provider_event_received_at_not_null,n,NOT NULL received_at
 payment,provider_event,uq_provider_event,u,"UNIQUE (provider, event_key)"
+payment,refund,ck_refund_destination,c,CHECK ((((status)::text = 'AWAITING_ACCOUNT'::text) OR ((status)::text = 'FAILED'::text) OR ((bank_name IS NOT NULL) AND (account_number_ciphertext IS NOT NULL) AND (account_name_ciphertext IS NOT NULL))))
+payment,refund,ck_refund_paid,c,CHECK ((((status)::text <> 'SUCCEEDED'::text) OR ((payout_reference IS NOT NULL) AND (paid_at IS NOT NULL) AND (paid_by_subject IS NOT NULL))))
+payment,refund,fk_refund_charge_group,f,"FOREIGN KEY (charge_id, checkout_group_id) REFERENCES payment.charge(id, checkout_group_id)"
+payment,refund,fk_refund_order_group,f,"FOREIGN KEY (seller_order_id, checkout_group_id) REFERENCES sales.seller_order(id, checkout_group_id)"
 payment,refund,refund_amount_check,c,CHECK ((amount > 0))
 payment,refund,refund_amount_not_null,n,NOT NULL amount
 payment,refund,refund_charge_id_fkey,f,FOREIGN KEY (charge_id) REFERENCES payment.charge(id)
 payment,refund,refund_charge_id_not_null,n,NOT NULL charge_id
-payment,refund,refund_charge_id_provider_refund_reference_key,u,"UNIQUE (charge_id, provider_refund_reference)"
+payment,refund,refund_checkout_group_id_not_null,n,NOT NULL checkout_group_id
 payment,refund,refund_created_at_not_null,n,NOT NULL created_at
-payment,refund,refund_id_charge_id_key,u,"UNIQUE (id, charge_id)"
 payment,refund,refund_id_not_null,n,NOT NULL id
 payment,refund,refund_idempotency_key_key,u,UNIQUE (idempotency_key)
 payment,refund,refund_idempotency_key_not_null,n,NOT NULL idempotency_key
 payment,refund,refund_pkey,p,PRIMARY KEY (id)
-payment,refund,refund_return_case_id_fkey,f,FOREIGN KEY (return_case_id) REFERENCES aftersales.return_case(id)
-payment,refund,refund_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['APPROVED'::character varying, 'SUBMITTED'::character varying, 'PENDING'::character varying, 'SUCCEEDED'::character varying, 'FAILED'::character varying, 'UNKNOWN'::character varying])::text[])))"
+payment,refund,refund_reason_check,c,"CHECK (((reason)::text = ANY ((ARRAY['ORDER_CANCELED'::character varying, 'SELLER_REJECTED'::character varying, 'PAID_AFTER_EXPIRY'::character varying, 'ADMIN_GOODWILL'::character varying])::text[])))"
+payment,refund,refund_reason_not_null,n,NOT NULL reason
+payment,refund,refund_seller_order_id_not_null,n,NOT NULL seller_order_id
+payment,refund,refund_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['AWAITING_ACCOUNT'::character varying, 'APPROVED'::character varying, 'SUBMITTED'::character varying, 'PENDING'::character varying, 'SUCCEEDED'::character varying, 'FAILED'::character varying, 'UNKNOWN'::character varying])::text[])))"
 payment,refund,refund_status_not_null,n,NOT NULL status
-payment,refund_allocation,refund_allocation_allocation_id_charge_id_fkey,f,"FOREIGN KEY (allocation_id, charge_id) REFERENCES payment.allocation(id, charge_id)"
+payment,refund,refund_updated_at_not_null,n,NOT NULL updated_at
+payment,refund,uq_refund_charge_provider_ref,u,"UNIQUE (charge_id, provider_refund_reference)"
+payment,refund,uq_refund_id_charge,u,"UNIQUE (id, charge_id)"
+payment,refund_allocation,fk_refund_alloc_allocation,f,"FOREIGN KEY (allocation_id, charge_id) REFERENCES payment.allocation(id, charge_id)"
+payment,refund_allocation,fk_refund_alloc_refund,f,"FOREIGN KEY (refund_id, charge_id) REFERENCES payment.refund(id, charge_id)"
 payment,refund_allocation,refund_allocation_allocation_id_not_null,n,NOT NULL allocation_id
 payment,refund_allocation,refund_allocation_amount_check,c,CHECK ((amount > 0))
 payment,refund_allocation,refund_allocation_amount_not_null,n,NOT NULL amount
 payment,refund_allocation,refund_allocation_charge_id_not_null,n,NOT NULL charge_id
 payment,refund_allocation,refund_allocation_pkey,p,"PRIMARY KEY (refund_id, allocation_id)"
-payment,refund_allocation,refund_allocation_refund_id_charge_id_fkey,f,"FOREIGN KEY (refund_id, charge_id) REFERENCES payment.refund(id, charge_id)"
 payment,refund_allocation,refund_allocation_refund_id_not_null,n,NOT NULL refund_id
 payment,review_case,review_case_charge_id_fkey,f,FOREIGN KEY (charge_id) REFERENCES payment.charge(id)
 payment,review_case,review_case_charge_id_not_null,n,NOT NULL charge_id

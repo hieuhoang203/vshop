@@ -24,7 +24,8 @@ public record OrderResponse(
         @Nullable String cancelReason,
         OffsetDateTime createdAt,
         List<OrderLineResponse> lines,
-        List<OrderStatusEventResponse> history) {
+        List<OrderStatusEventResponse> history,
+        @Nullable RefundResponse refund) {
 
     public record OrderRecipientResponse(
             String name, String phone, String street, String ward, String province) {}

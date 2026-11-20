@@ -1,0 +1,44 @@
+package vn.vshop.modules.order.repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import vn.vshop.modules.order.entity.Refund;
+
+public interface RefundRepository {
+    /** Money collected for one order that has not been refunded yet, with the rows locked. */
+    record Refundable(UUID allocationId, UUID chargeId, UUID checkoutGroupId, long amount) {}
+
+    /**
+     * Allocations of the order with what is still refundable, locked until the transaction ends so
+     * two refunds of the same money cannot both be created.
+     */
+    List<Refundable> lockRefundable(UUID orderId);
+
+    /** False when a refund with this idempotency key exists (a repeat). */
+    boolean insertRefund(
+            UUID id,
+            UUID chargeId,
+            UUID groupId,
+            UUID orderId,
+            String reason,
+            String idempotencyKey,
+            long amount);
+
+    void insertAllocation(UUID refundId, UUID chargeId, UUID allocationId, long amount);
+
+    List<Refund> findByOrder(UUID orderId);
+
+    Optional<Refund> find(UUID refundId);
+
+    List<Refund> list(String status, int limit);
+
+    /** AWAITING_ACCOUNT or APPROVED to APPROVED with the given destination. */
+    boolean setAccount(UUID id, String bankName, String numberCiphertext, String nameCiphertext);
+
+    /** APPROVED to SUCCEEDED, once. */
+    boolean markPaid(UUID id, String payoutReference, String note, String subject);
+
+    /** APPROVED back to AWAITING_ACCOUNT: the account was wrong, the buyer must enter it again. */
+    boolean badAccount(UUID id, String note);
+}
