@@ -14,6 +14,9 @@ const FIELDS: Record<PolicyType, { key: string; label: string }[]> = {
     { key: "maxOpenOrders", label: "Số đơn COD đang mở tối đa" },
   ],
   SELLER_CONFIRMATION: [{ key: "confirmMinutes", label: "Hạn người bán xác nhận đơn (phút)" }],
+  RETURN_HANDLING: [
+    { key: "sellerResponseHours", label: "Giờ để người bán phản hồi yêu cầu trả hàng" },
+  ],
   PAYMENT_WINDOW: [
     { key: "paymentMinutes", label: "Thời gian thanh toán (phút)" },
     { key: "reservationBufferMinutes", label: "Đệm giữ hàng (phút)" },

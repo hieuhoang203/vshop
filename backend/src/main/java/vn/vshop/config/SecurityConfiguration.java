@@ -153,6 +153,7 @@ public class SecurityConfiguration {
                                                 "/api/v1/cart/**",
                                                 "/api/v1/checkout/**",
                                                 "/api/v1/orders/**",
+                                                "/api/v1/return-cases/**",
                                                 "/api/v1/orders")
                                         .hasAnyRole("BUYER", "SELLER")
                                         .requestMatchers(

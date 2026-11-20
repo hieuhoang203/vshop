@@ -5,6 +5,7 @@ const LINKS = {
     { href: "/seller", label: "Gian hàng" },
     { href: "/seller/products", label: "Sản phẩm" },
     { href: "/seller/orders", label: "Đơn hàng" },
+    { href: "/seller/returns", label: "Trả hàng" },
   ],
   admin: [
     { href: "/admin", label: "Hồ sơ gian hàng" },
@@ -12,6 +13,7 @@ const LINKS = {
     { href: "/admin/policies", label: "Chính sách" },
     { href: "/admin/orders", label: "Đơn quá hạn" },
     { href: "/admin/refunds", label: "Hoàn tiền" },
+    { href: "/admin/returns", label: "Trả hàng" },
   ],
 } as const;
 

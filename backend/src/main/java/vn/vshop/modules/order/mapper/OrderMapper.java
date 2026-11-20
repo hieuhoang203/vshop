@@ -9,6 +9,7 @@ import vn.vshop.modules.order.dto.response.OrderResponse;
 import vn.vshop.modules.order.dto.response.OrderSummaryResponse;
 import vn.vshop.modules.order.dto.response.OverdueOrdersResponse;
 import vn.vshop.modules.order.dto.response.RefundResponse;
+import vn.vshop.modules.order.dto.response.ReturnCaseResponse;
 import vn.vshop.modules.order.dto.response.SellerOrderResponse;
 import vn.vshop.modules.order.entity.OrderLine;
 import vn.vshop.modules.order.entity.OrderStatusEvent;
@@ -18,6 +19,7 @@ import vn.vshop.modules.order.model.OrderDetail;
 import vn.vshop.modules.order.model.OrderSummary;
 import vn.vshop.modules.order.model.OverdueOrders;
 import vn.vshop.modules.order.model.RefundView;
+import vn.vshop.modules.order.model.ReturnCaseDetail;
 import vn.vshop.modules.order.model.SellerOrderDetail;
 
 public final class OrderMapper {
@@ -61,6 +63,37 @@ public final class OrderMapper {
                 detail.lines().stream().map(OrderMapper::toResponse).toList(),
                 detail.history().stream().map(OrderMapper::toResponse).toList(),
                 detail.refund() == null ? null : toResponse(detail.refund()));
+    }
+
+    public static ReturnCaseResponse toResponse(ReturnCaseDetail d) {
+        var c = d.returnCase();
+        return new ReturnCaseResponse(
+                c.id(),
+                c.sellerOrderId(),
+                c.orderNumber(),
+                c.status(),
+                c.reasonCode(),
+                c.preferredResolution(),
+                c.resolution(),
+                c.description(),
+                c.requestedAmount(),
+                c.offeredAmount(),
+                c.approvedAmount(),
+                c.sellerDeadlineAt(),
+                c.sellerNote(),
+                c.adminNote(),
+                c.returnTrackingCode(),
+                c.createdAt(),
+                d.events().stream()
+                        .map(
+                                e ->
+                                        new ReturnCaseResponse.ReturnCaseEventResponse(
+                                                e.fromStatus(),
+                                                e.toStatus(),
+                                                e.actorType(),
+                                                e.note(),
+                                                e.createdAt()))
+                        .toList());
     }
 
     public static RefundResponse toResponse(RefundView r) {

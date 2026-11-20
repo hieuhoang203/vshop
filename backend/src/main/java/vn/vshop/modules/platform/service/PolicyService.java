@@ -41,7 +41,8 @@ public class PolicyService {
                                     "paymentMinutes", new long[] {5, 1440},
                                     "reservationBufferMinutes", new long[] {0, 60}),
                     PolicyType.SELLER_CONFIRMATION,
-                            Map.of("confirmMinutes", new long[] {60, 10_080}));
+                            Map.of("confirmMinutes", new long[] {60, 10_080}),
+                    PolicyType.RETURN_HANDLING, Map.of("sellerResponseHours", new long[] {1, 720}));
 
     private final PolicyRepository policies;
     private final AccountService accounts;
@@ -112,6 +113,15 @@ public class PolicyService {
     public java.util.Optional<Integer> sellerConfirmationMinutes() {
         return policies.findCurrent(PolicyType.SELLER_CONFIRMATION)
                 .map(p -> (int) value(p, "confirmMinutes"));
+    }
+
+    /** How a return case is handled: the approved policy version and the shop's response time. */
+    public record ReturnHandling(UUID policyId, int sellerResponseHours) {}
+
+    @Transactional(readOnly = true)
+    public java.util.Optional<ReturnHandling> returnHandling() {
+        return policies.findCurrent(PolicyType.RETURN_HANDLING)
+                .map(p -> new ReturnHandling(p.id(), (int) value(p, "sellerResponseHours")));
     }
 
     /** Return window of the (possibly retired) policy version an order was placed under. */

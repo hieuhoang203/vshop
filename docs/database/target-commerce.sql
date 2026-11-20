@@ -10,7 +10,7 @@ ALTER TABLE sales.order_line ADD CONSTRAINT uq_order_line_id_order UNIQUE (id, s
 CREATE SCHEMA promotion;
 -- payment.intent, attempt, charge, allocation, provider_event and review_case: Flyway V1010.
 -- fulfillment.shipment, shipment_event and pickup_address: Flyway V1011.
-CREATE SCHEMA aftersales;
+-- schema aftersales is created by Flyway V1014.
 CREATE SCHEMA finance;
 CREATE SCHEMA engagement;
 CREATE SCHEMA media;
@@ -129,23 +129,7 @@ CREATE TABLE fulfillment.cod_receivable (
     CHECK (remitted_amount <= collected_amount)
 );
 
-CREATE TABLE aftersales.return_case (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    seller_order_id UUID NOT NULL REFERENCES sales.seller_order(id),
-    buyer_account_id UUID NOT NULL REFERENCES identity.account(id),
-    status VARCHAR(30) NOT NULL CHECK (status IN ('REQUESTED', 'REVIEWING', 'RETURN_REQUIRED', 'AWAITING_RETURN', 'IN_RETURN', 'INSPECTING', 'REFUND_APPROVED', 'REJECTED', 'DISPUTED', 'CLOSED', 'CANCELED')),
-    resolution VARCHAR(30) CHECK (resolution IN ('REFUND_ONLY', 'RETURN_AND_REFUND', 'REJECT')),
-    reason_code VARCHAR(50) NOT NULL,
-    policy_id UUID NOT NULL REFERENCES platform.policy_version(id),
-    return_shipment_id UUID REFERENCES fulfillment.shipment(id),
-    deadline_at TIMESTAMPTZ NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (id, seller_order_id)
-);
-CREATE INDEX ix_case_order ON aftersales.return_case(seller_order_id);
-CREATE INDEX ix_case_buyer ON aftersales.return_case(buyer_account_id, created_at DESC);
-CREATE INDEX ix_case_policy ON aftersales.return_case(policy_id);
-CREATE INDEX ix_case_shipment ON aftersales.return_case(return_shipment_id);
+-- aftersales.return_case and return_case_event: Flyway V1014 (the shipment link joins with return shipping in R2).
 CREATE TABLE aftersales.return_line (
     return_case_id UUID NOT NULL,
     seller_order_id UUID NOT NULL,

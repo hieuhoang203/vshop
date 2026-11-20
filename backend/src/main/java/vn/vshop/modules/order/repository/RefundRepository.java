@@ -23,7 +23,17 @@ public interface RefundRepository {
             UUID orderId,
             String reason,
             String idempotencyKey,
-            long amount);
+            long amount,
+            String source,
+            UUID returnCaseId);
+
+    /**
+     * Cash-on-delivery money of the order not refunded yet (payable minus refunds that are not
+     * FAILED), with the order row locked. Empty when the order does not exist.
+     */
+    java.util.OptionalLong lockCodRefundable(UUID orderId);
+
+    UUID groupOf(UUID orderId);
 
     void insertAllocation(UUID refundId, UUID chargeId, UUID allocationId, long amount);
 

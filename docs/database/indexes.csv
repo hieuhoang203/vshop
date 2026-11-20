@@ -2,12 +2,15 @@
 aftersales,case_evidence,case_evidence_pkey,"CREATE UNIQUE INDEX case_evidence_pkey ON aftersales.case_evidence USING btree (return_case_id, asset_id)"
 aftersales,case_evidence,ix_evidence_asset,CREATE INDEX ix_evidence_asset ON aftersales.case_evidence USING btree (asset_id)
 aftersales,case_evidence,ix_evidence_submitter,CREATE INDEX ix_evidence_submitter ON aftersales.case_evidence USING btree (submitted_by)
+aftersales,return_case,ix_case_attention,"CREATE INDEX ix_case_attention ON aftersales.return_case USING btree (seller_deadline_at) WHERE ((status)::text = ANY ((ARRAY['REQUESTED'::character varying, 'REVIEWING'::character varying])::text[]))"
 aftersales,return_case,ix_case_buyer,"CREATE INDEX ix_case_buyer ON aftersales.return_case USING btree (buyer_account_id, created_at DESC)"
-aftersales,return_case,ix_case_order,CREATE INDEX ix_case_order ON aftersales.return_case USING btree (seller_order_id)
 aftersales,return_case,ix_case_policy,CREATE INDEX ix_case_policy ON aftersales.return_case USING btree (policy_id)
-aftersales,return_case,ix_case_shipment,CREATE INDEX ix_case_shipment ON aftersales.return_case USING btree (return_shipment_id)
-aftersales,return_case,return_case_id_seller_order_id_key,"CREATE UNIQUE INDEX return_case_id_seller_order_id_key ON aftersales.return_case USING btree (id, seller_order_id)"
+aftersales,return_case,ix_case_shop_status,"CREATE INDEX ix_case_shop_status ON aftersales.return_case USING btree (shop_id, status, created_at DESC)"
 aftersales,return_case,return_case_pkey,CREATE UNIQUE INDEX return_case_pkey ON aftersales.return_case USING btree (id)
+aftersales,return_case,uq_case_id_order,"CREATE UNIQUE INDEX uq_case_id_order ON aftersales.return_case USING btree (id, seller_order_id)"
+aftersales,return_case,uq_case_live_per_order,CREATE UNIQUE INDEX uq_case_live_per_order ON aftersales.return_case USING btree (seller_order_id) WHERE ((status)::text <> 'CANCELED'::text)
+aftersales,return_case_event,ix_case_event,"CREATE INDEX ix_case_event ON aftersales.return_case_event USING btree (return_case_id, created_at, id)"
+aftersales,return_case_event,return_case_event_pkey,CREATE UNIQUE INDEX return_case_event_pkey ON aftersales.return_case_event USING btree (id)
 aftersales,return_line,ix_return_line_order,"CREATE INDEX ix_return_line_order ON aftersales.return_line USING btree (order_line_id, seller_order_id)"
 aftersales,return_line,return_line_pkey,"CREATE UNIQUE INDEX return_line_pkey ON aftersales.return_line USING btree (return_case_id, order_line_id)"
 catalog,category,category_pkey,CREATE UNIQUE INDEX category_pkey ON catalog.category USING btree (id)
@@ -158,6 +161,7 @@ payment,intent,uq_intent_group,CREATE UNIQUE INDEX uq_intent_group ON payment.in
 payment,intent,uq_intent_id_group,"CREATE UNIQUE INDEX uq_intent_id_group ON payment.intent USING btree (id, checkout_group_id)"
 payment,provider_event,provider_event_pkey,CREATE UNIQUE INDEX provider_event_pkey ON payment.provider_event USING btree (id)
 payment,provider_event,uq_provider_event,"CREATE UNIQUE INDEX uq_provider_event ON payment.provider_event USING btree (provider, event_key)"
+payment,refund,ix_refund_case,CREATE INDEX ix_refund_case ON payment.refund USING btree (return_case_id)
 payment,refund,ix_refund_open,"CREATE INDEX ix_refund_open ON payment.refund USING btree (created_at) WHERE ((status)::text = ANY ((ARRAY['AWAITING_ACCOUNT'::character varying, 'APPROVED'::character varying])::text[]))"
 payment,refund,ix_refund_order,CREATE INDEX ix_refund_order ON payment.refund USING btree (seller_order_id)
 payment,refund,refund_idempotency_key_key,CREATE UNIQUE INDEX refund_idempotency_key_key ON payment.refund USING btree (idempotency_key)

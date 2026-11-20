@@ -95,3 +95,11 @@ export type Refund = Schemas["RefundResponse"];
 export type AdminRefund = Schemas["AdminRefundResponse"];
 export type RefundAccountInput = Schemas["RefundAccountRequest"];
 export type RefundPaidInput = Schemas["RefundPaidRequest"];
+
+// Return cases
+export type ReturnCase = Schemas["ReturnCaseResponse"];
+export type ReturnCasePage = Schemas["PageResponseReturnCaseResponse"];
+export type OpenReturnInput = Schemas["OpenReturnRequest"];
+export type OfferRefundInput = Schemas["OfferRefundRequest"];
+export type ConfirmReceivedInput = Schemas["ConfirmReceivedRequest"];
+export type DecideReturnInput = Schemas["DecideReturnRequest"];

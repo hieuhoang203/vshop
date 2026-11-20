@@ -7,6 +7,8 @@ import type {
   Order,
   OrderPage,
   OverdueOrders,
+  ReturnCase,
+  ReturnCasePage,
   AdminRefund,
   PickupAddress,
   SellerOrder,
@@ -86,3 +88,13 @@ export const getAdminRefunds = (status = "") =>
     `/admin/refunds${status ? `?status=${encodeURIComponent(status)}` : ""}`,
     true,
   );
+
+/** Null while the order has no return case (the API answers 404). */
+export const getReturnCase = (orderId: string) =>
+  api<ReturnCase>(`/orders/${encodeURIComponent(orderId)}/return-case`, true).catch(() => null);
+export const getSellerReturnCases = (shopId: string, status = "") =>
+  api<ReturnCasePage>(
+    `/seller/shops/${shopId}/return-cases?size=20${status ? `&status=${encodeURIComponent(status)}` : ""}`,
+    true,
+  );
+export const getAdminReturnCases = () => api<ReturnCase[]>("/admin/return-cases", true);

@@ -52,15 +52,26 @@ public class JdbcRefundRepository implements RefundRepository {
             UUID orderId,
             String reason,
             String idempotencyKey,
-            long amount) {
+            long amount,
+            String source,
+            UUID returnCaseId) {
         return jdbc.sql(
                                 "INSERT INTO payment.refund (id, charge_id, checkout_group_id,"
-                                        + " seller_order_id, reason, idempotency_key, amount, status)"
-                                        + " VALUES (:id, :charge, :group, :order, :reason, :key, :amount,"
-                                        + " 'AWAITING_ACCOUNT')"
+                                        + " seller_order_id, reason, idempotency_key, amount, status,"
+                                        + " source, return_case_id)"
+                                        + " VALUES (:id, CAST(:charge AS uuid), :group, :order, :reason, :key,"
+                                        + " :amount, 'AWAITING_ACCOUNT', :source, CAST(:case AS uuid))"
                                         + " ON CONFLICT (idempotency_key) DO NOTHING")
                         .param("id", id)
-                        .param("charge", chargeId)
+                        .param(
+                                "charge",
+                                chargeId == null ? null : chargeId.toString(),
+                                Types.VARCHAR)
+                        .param("source", source)
+                        .param(
+                                "case",
+                                returnCaseId == null ? null : returnCaseId.toString(),
+                                Types.VARCHAR)
                         .param("group", groupId)
                         .param("order", orderId)
                         .param("reason", reason)
@@ -68,6 +79,29 @@ public class JdbcRefundRepository implements RefundRepository {
                         .param("amount", amount)
                         .update()
                 == 1;
+    }
+
+    @Override
+    public java.util.OptionalLong lockCodRefundable(UUID orderId) {
+        var rows =
+                jdbc.sql(
+                                "SELECT o.payable_amount - COALESCE((SELECT SUM(r.amount) FROM payment.refund r"
+                                        + " WHERE r.seller_order_id = o.id AND r.status <> 'FAILED'), 0)"
+                                        + " FROM sales.seller_order o WHERE o.id = :id FOR UPDATE OF o")
+                        .param("id", orderId)
+                        .query(Long.class)
+                        .list();
+        return rows.isEmpty()
+                ? java.util.OptionalLong.empty()
+                : java.util.OptionalLong.of(rows.get(0));
+    }
+
+    @Override
+    public UUID groupOf(UUID orderId) {
+        return jdbc.sql("SELECT checkout_group_id FROM sales.seller_order WHERE id = :id")
+                .param("id", orderId)
+                .query(UUID.class)
+                .single();
     }
 
     @Override

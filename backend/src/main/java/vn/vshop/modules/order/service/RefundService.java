@@ -77,7 +77,15 @@ public class RefundService {
             UUID id = UUID.randomUUID();
             String key = "order:" + orderId + ":" + reason + ":" + r.allocationId();
             if (refunds.insertRefund(
-                    id, r.chargeId(), r.checkoutGroupId(), orderId, reason, key, r.amount())) {
+                    id,
+                    r.chargeId(),
+                    r.checkoutGroupId(),
+                    orderId,
+                    reason,
+                    key,
+                    r.amount(),
+                    "ONLINE",
+                    null)) {
                 refunds.insertAllocation(id, r.chargeId(), r.allocationId(), r.amount());
                 Map<String, Object> payload = new LinkedHashMap<>();
                 payload.put("refundId", id);
@@ -86,6 +94,66 @@ public class RefundService {
                 payload.put("reason", reason);
                 outbox.append("refund", "RefundRequested", id, json.writeValueAsString(payload));
             }
+        }
+    }
+
+    /**
+     * Refund for an approved return case, for {@code amount} (never more than what is left to
+     * refund). Online orders refund against their charge; cash-on-delivery orders have none, so the
+     * cap is the order total minus earlier refunds. One refund per case.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void createForReturn(UUID orderId, UUID caseId, long amount) {
+        String key = "return:" + caseId;
+        UUID id = UUID.randomUUID();
+        var online =
+                refunds.lockRefundable(orderId).stream().filter(r -> r.amount() > 0).findFirst();
+        boolean fresh;
+        long granted;
+        if (online.isPresent()) {
+            var r = online.get();
+            granted = Math.min(amount, r.amount());
+            fresh =
+                    refunds.insertRefund(
+                            id,
+                            r.chargeId(),
+                            r.checkoutGroupId(),
+                            orderId,
+                            "RETURN_APPROVED",
+                            key,
+                            granted,
+                            "ONLINE",
+                            caseId);
+            if (fresh) {
+                refunds.insertAllocation(id, r.chargeId(), r.allocationId(), granted);
+            }
+        } else {
+            long left = refunds.lockCodRefundable(orderId).orElse(0);
+            granted = Math.min(amount, left);
+            if (granted <= 0) {
+                throw new BusinessException(
+                        ErrorCode.INVALID_REFUND_STATE,
+                        "Đơn này không còn số tiền nào có thể hoàn.");
+            }
+            fresh =
+                    refunds.insertRefund(
+                            id,
+                            null,
+                            refunds.groupOf(orderId),
+                            orderId,
+                            "RETURN_APPROVED",
+                            key,
+                            granted,
+                            "COD",
+                            caseId);
+        }
+        if (fresh) {
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("refundId", id);
+            payload.put("orderId", orderId);
+            payload.put("amount", granted);
+            payload.put("reason", "RETURN_APPROVED");
+            outbox.append("refund", "RefundRequested", id, json.writeValueAsString(payload));
         }
     }
 

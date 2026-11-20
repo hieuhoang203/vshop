@@ -6,22 +6,45 @@ aftersales,case_evidence,case_evidence_return_case_id_fkey,f,FOREIGN KEY (return
 aftersales,case_evidence,case_evidence_return_case_id_not_null,n,NOT NULL return_case_id
 aftersales,case_evidence,case_evidence_submitted_by_fkey,f,FOREIGN KEY (submitted_by) REFERENCES identity.account(id)
 aftersales,case_evidence,case_evidence_submitted_by_not_null,n,NOT NULL submitted_by
+aftersales,return_case,ck_case_approved,c,CHECK (((approved_amount IS NULL) OR (approved_amount <= requested_amount)))
+aftersales,return_case,ck_case_changed_mind,c,CHECK ((((reason_code)::text <> 'CHANGED_MIND'::text) OR ((preferred_resolution)::text = 'RETURN_AND_REFUND'::text)))
+aftersales,return_case,ck_case_offer,c,CHECK (((offered_amount IS NULL) OR (offered_amount <= requested_amount)))
+aftersales,return_case,ck_case_refund_approved,c,CHECK ((((status)::text <> 'REFUND_APPROVED'::text) OR ((approved_amount IS NOT NULL) AND (resolution IS NOT NULL))))
+aftersales,return_case,ck_case_shipped,c,CHECK ((((status)::text <> 'IN_RETURN'::text) OR (return_tracking_code IS NOT NULL)))
+aftersales,return_case,fk_case_order_shop,f,"FOREIGN KEY (seller_order_id, shop_id) REFERENCES sales.seller_order(id, shop_id)"
+aftersales,return_case,return_case_approved_amount_check,c,CHECK ((approved_amount > 0))
 aftersales,return_case,return_case_buyer_account_id_fkey,f,FOREIGN KEY (buyer_account_id) REFERENCES identity.account(id)
 aftersales,return_case,return_case_buyer_account_id_not_null,n,NOT NULL buyer_account_id
 aftersales,return_case,return_case_created_at_not_null,n,NOT NULL created_at
-aftersales,return_case,return_case_deadline_at_not_null,n,NOT NULL deadline_at
+aftersales,return_case,return_case_description_not_null,n,NOT NULL description
 aftersales,return_case,return_case_id_not_null,n,NOT NULL id
-aftersales,return_case,return_case_id_seller_order_id_key,u,"UNIQUE (id, seller_order_id)"
+aftersales,return_case,return_case_offered_amount_check,c,CHECK ((offered_amount > 0))
 aftersales,return_case,return_case_pkey,p,PRIMARY KEY (id)
 aftersales,return_case,return_case_policy_id_fkey,f,FOREIGN KEY (policy_id) REFERENCES platform.policy_version(id)
 aftersales,return_case,return_case_policy_id_not_null,n,NOT NULL policy_id
+aftersales,return_case,return_case_preferred_resolution_check,c,"CHECK (((preferred_resolution)::text = ANY ((ARRAY['REFUND_ONLY'::character varying, 'RETURN_AND_REFUND'::character varying])::text[])))"
+aftersales,return_case,return_case_preferred_resolution_not_null,n,NOT NULL preferred_resolution
+aftersales,return_case,return_case_reason_code_check,c,"CHECK (((reason_code)::text = ANY ((ARRAY['NOT_RECEIVED'::character varying, 'MISSING_ITEMS'::character varying, 'WRONG_ITEM'::character varying, 'DAMAGED'::character varying, 'DEFECTIVE'::character varying, 'NOT_AS_DESCRIBED'::character varying, 'FAKE'::character varying, 'CHANGED_MIND'::character varying])::text[])))"
 aftersales,return_case,return_case_reason_code_not_null,n,NOT NULL reason_code
-aftersales,return_case,return_case_resolution_check,c,"CHECK (((resolution)::text = ANY ((ARRAY['REFUND_ONLY'::character varying, 'RETURN_AND_REFUND'::character varying, 'REJECT'::character varying])::text[])))"
-aftersales,return_case,return_case_return_shipment_id_fkey,f,FOREIGN KEY (return_shipment_id) REFERENCES fulfillment.shipment(id)
-aftersales,return_case,return_case_seller_order_id_fkey,f,FOREIGN KEY (seller_order_id) REFERENCES sales.seller_order(id)
+aftersales,return_case,return_case_requested_amount_check,c,CHECK ((requested_amount > 0))
+aftersales,return_case,return_case_requested_amount_not_null,n,NOT NULL requested_amount
+aftersales,return_case,return_case_resolution_check,c,"CHECK (((resolution)::text = ANY ((ARRAY['REFUND_ONLY'::character varying, 'RETURN_AND_REFUND'::character varying])::text[])))"
+aftersales,return_case,return_case_seller_deadline_at_not_null,n,NOT NULL seller_deadline_at
 aftersales,return_case,return_case_seller_order_id_not_null,n,NOT NULL seller_order_id
-aftersales,return_case,return_case_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['REQUESTED'::character varying, 'REVIEWING'::character varying, 'RETURN_REQUIRED'::character varying, 'AWAITING_RETURN'::character varying, 'IN_RETURN'::character varying, 'INSPECTING'::character varying, 'REFUND_APPROVED'::character varying, 'REJECTED'::character varying, 'DISPUTED'::character varying, 'CLOSED'::character varying, 'CANCELED'::character varying])::text[])))"
+aftersales,return_case,return_case_shop_id_not_null,n,NOT NULL shop_id
+aftersales,return_case,return_case_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['REQUESTED'::character varying, 'SELLER_OFFERED'::character varying, 'SELLER_REJECTED'::character varying, 'AWAITING_RETURN'::character varying, 'IN_RETURN'::character varying, 'REVIEWING'::character varying, 'REFUND_APPROVED'::character varying, 'REJECTED'::character varying, 'CANCELED'::character varying])::text[])))"
 aftersales,return_case,return_case_status_not_null,n,NOT NULL status
+aftersales,return_case,return_case_updated_at_not_null,n,NOT NULL updated_at
+aftersales,return_case,return_case_version_not_null,n,NOT NULL version
+aftersales,return_case,uq_case_id_order,u,"UNIQUE (id, seller_order_id)"
+aftersales,return_case_event,return_case_event_actor_type_check,c,"CHECK (((actor_type)::text = ANY ((ARRAY['BUYER'::character varying, 'SELLER'::character varying, 'ADMIN'::character varying, 'SYSTEM'::character varying])::text[])))"
+aftersales,return_case_event,return_case_event_actor_type_not_null,n,NOT NULL actor_type
+aftersales,return_case_event,return_case_event_created_at_not_null,n,NOT NULL created_at
+aftersales,return_case_event,return_case_event_id_not_null,n,NOT NULL id
+aftersales,return_case_event,return_case_event_pkey,p,PRIMARY KEY (id)
+aftersales,return_case_event,return_case_event_return_case_id_fkey,f,FOREIGN KEY (return_case_id) REFERENCES aftersales.return_case(id)
+aftersales,return_case_event,return_case_event_return_case_id_not_null,n,NOT NULL return_case_id
+aftersales,return_case_event,return_case_event_to_status_not_null,n,NOT NULL to_status
 aftersales,return_line,return_line_order_line_id_not_null,n,NOT NULL order_line_id
 aftersales,return_line,return_line_order_line_id_seller_order_id_fkey,f,"FOREIGN KEY (order_line_id, seller_order_id) REFERENCES sales.order_line(id, seller_order_id)"
 aftersales,return_line,return_line_pkey,p,"PRIMARY KEY (return_case_id, order_line_id)"
@@ -584,21 +607,24 @@ payment,provider_event,provider_event_received_at_not_null,n,NOT NULL received_a
 payment,provider_event,uq_provider_event,u,"UNIQUE (provider, event_key)"
 payment,refund,ck_refund_destination,c,CHECK ((((status)::text = 'AWAITING_ACCOUNT'::text) OR ((status)::text = 'FAILED'::text) OR ((bank_name IS NOT NULL) AND (account_number_ciphertext IS NOT NULL) AND (account_name_ciphertext IS NOT NULL))))
 payment,refund,ck_refund_paid,c,CHECK ((((status)::text <> 'SUCCEEDED'::text) OR ((payout_reference IS NOT NULL) AND (paid_at IS NOT NULL) AND (paid_by_subject IS NOT NULL))))
+payment,refund,ck_refund_source,c,CHECK ((((source)::text = 'ONLINE'::text) = (charge_id IS NOT NULL)))
 payment,refund,fk_refund_charge_group,f,"FOREIGN KEY (charge_id, checkout_group_id) REFERENCES payment.charge(id, checkout_group_id)"
 payment,refund,fk_refund_order_group,f,"FOREIGN KEY (seller_order_id, checkout_group_id) REFERENCES sales.seller_order(id, checkout_group_id)"
 payment,refund,refund_amount_check,c,CHECK ((amount > 0))
 payment,refund,refund_amount_not_null,n,NOT NULL amount
 payment,refund,refund_charge_id_fkey,f,FOREIGN KEY (charge_id) REFERENCES payment.charge(id)
-payment,refund,refund_charge_id_not_null,n,NOT NULL charge_id
 payment,refund,refund_checkout_group_id_not_null,n,NOT NULL checkout_group_id
 payment,refund,refund_created_at_not_null,n,NOT NULL created_at
 payment,refund,refund_id_not_null,n,NOT NULL id
 payment,refund,refund_idempotency_key_key,u,UNIQUE (idempotency_key)
 payment,refund,refund_idempotency_key_not_null,n,NOT NULL idempotency_key
 payment,refund,refund_pkey,p,PRIMARY KEY (id)
-payment,refund,refund_reason_check,c,"CHECK (((reason)::text = ANY ((ARRAY['ORDER_CANCELED'::character varying, 'SELLER_REJECTED'::character varying, 'PAID_AFTER_EXPIRY'::character varying, 'ADMIN_GOODWILL'::character varying])::text[])))"
+payment,refund,refund_reason_check,c,"CHECK (((reason)::text = ANY ((ARRAY['ORDER_CANCELED'::character varying, 'SELLER_REJECTED'::character varying, 'PAID_AFTER_EXPIRY'::character varying, 'ADMIN_GOODWILL'::character varying, 'RETURN_APPROVED'::character varying])::text[])))"
 payment,refund,refund_reason_not_null,n,NOT NULL reason
+payment,refund,refund_return_case_id_fkey,f,FOREIGN KEY (return_case_id) REFERENCES aftersales.return_case(id)
 payment,refund,refund_seller_order_id_not_null,n,NOT NULL seller_order_id
+payment,refund,refund_source_check,c,"CHECK (((source)::text = ANY ((ARRAY['ONLINE'::character varying, 'COD'::character varying])::text[])))"
+payment,refund,refund_source_not_null,n,NOT NULL source
 payment,refund,refund_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['AWAITING_ACCOUNT'::character varying, 'APPROVED'::character varying, 'SUBMITTED'::character varying, 'PENDING'::character varying, 'SUCCEEDED'::character varying, 'FAILED'::character varying, 'UNKNOWN'::character varying])::text[])))"
 payment,refund,refund_status_not_null,n,NOT NULL status
 payment,refund,refund_updated_at_not_null,n,NOT NULL updated_at
@@ -648,7 +674,7 @@ platform,policy_version,ck_policy_approved,c,CHECK (((((status)::text = 'DRAFT':
 platform,policy_version,ck_policy_content,c,CHECK ((jsonb_typeof(content) = 'object'::text))
 platform,policy_version,ck_policy_effective,c,CHECK (((effective_to IS NULL) OR ((effective_from IS NOT NULL) AND (effective_to > effective_from))))
 platform,policy_version,ck_policy_status,c,"CHECK (((status)::text = ANY ((ARRAY['DRAFT'::character varying, 'APPROVED'::character varying, 'RETIRED'::character varying])::text[])))"
-platform,policy_version,ck_policy_type,c,"CHECK (((policy_type)::text = ANY ((ARRAY['SHIPPING_FLAT'::character varying, 'RETURN'::character varying, 'COD_LIMITS'::character varying, 'PAYMENT_WINDOW'::character varying, 'SELLER_CONFIRMATION'::character varying])::text[])))"
+platform,policy_version,ck_policy_type,c,"CHECK (((policy_type)::text = ANY ((ARRAY['SHIPPING_FLAT'::character varying, 'RETURN'::character varying, 'COD_LIMITS'::character varying, 'PAYMENT_WINDOW'::character varying, 'SELLER_CONFIRMATION'::character varying, 'RETURN_HANDLING'::character varying])::text[])))"
 platform,policy_version,ck_policy_version,c,CHECK ((version > 0))
 platform,policy_version,policy_version_approved_by_account_id_fkey,f,FOREIGN KEY (approved_by_account_id) REFERENCES identity.account(id)
 platform,policy_version,policy_version_content_not_null,n,NOT NULL content

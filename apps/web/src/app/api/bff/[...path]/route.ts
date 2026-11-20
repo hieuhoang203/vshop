@@ -43,6 +43,21 @@ const routes: { method: string; path: RegExp; maxBytes: number }[] = [
     path: new RegExp(`^admin/refunds/${uuid}/(paid|bad-account)$`),
     maxBytes: 1_024,
   },
+  // Return cases: buyer, shop and administrator
+  { method: "POST", path: new RegExp(`^orders/${uuid}/return-case$`), maxBytes: 2_048 },
+  {
+    method: "POST",
+    path: new RegExp(`^return-cases/${uuid}/(accept-offer|decline-offer|escalate|ship|cancel)$`),
+    maxBytes: 1_024,
+  },
+  {
+    method: "POST",
+    path: new RegExp(
+      `^${shop}/return-cases/${uuid}/(offer-refund|approve-return|reject|confirm-received|inspection-failed)$`,
+    ),
+    maxBytes: 1_024,
+  },
+  { method: "POST", path: new RegExp(`^admin/return-cases/${uuid}/decide$`), maxBytes: 1_024 },
   // Policies (admin, second factor enforced by the API)
   { method: "POST", path: /^admin\/policies$/, maxBytes: 1_024 },
   { method: "POST", path: new RegExp(`^admin/policies/${uuid}/approve$`), maxBytes: 64 },
