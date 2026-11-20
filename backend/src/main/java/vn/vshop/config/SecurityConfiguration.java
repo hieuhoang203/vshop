@@ -128,6 +128,12 @@ public class SecurityConfiguration {
                                                 org.springframework.http.HttpMethod.GET,
                                                 "/api/v1/catalog/**")
                                         .permitAll()
+                                        // Provider callback: no token, authenticated only by the
+                                        // signature that PaymentService verifies.
+                                        .requestMatchers(
+                                                org.springframework.http.HttpMethod.GET,
+                                                "/api/v1/payments/vnpay/ipn")
+                                        .permitAll()
                                         .requestMatchers("/api/v1/admin/**")
                                         .access(this::adminWithSecondFactor)
                                         .requestMatchers("/api/v1/seller/**")

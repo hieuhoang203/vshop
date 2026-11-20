@@ -33,6 +33,7 @@ export function CartView({ initial, addresses }: { initial: CartContent; address
     () => (addresses.find((a) => a.isDefault) ?? addresses[0])?.id ?? "",
   );
   const [quote, setQuote] = useState<Quote | null>(null);
+  const [method, setMethod] = useState<"COD" | "PSP">("COD");
   const [orderKey, setOrderKey] = useState<{ quoteId: string; key: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -86,7 +87,7 @@ export function CartView({ initial, addresses }: { initial: CartContent; address
     const result = await bff<CheckoutGroup>(
       "POST",
       "checkout/orders",
-      { quoteId: quote.id, paymentMethod: "COD" } satisfies PlaceOrderInput,
+      { quoteId: quote.id, paymentMethod: method } satisfies PlaceOrderInput,
       { "Idempotency-Key": key },
     );
     setBusy(null);
@@ -94,7 +95,9 @@ export function CartView({ initial, addresses }: { initial: CartContent; address
       if (result.status !== 0) setOrderKey(null); // a definite answer: next try is a new attempt
       return setError(result.message);
     }
-    router.push(`/checkout/result/${result.data.id}`);
+    // Online payment: go to the provider. The result page reads the real state from the server.
+    if (result.data.paymentUrl) window.location.href = result.data.paymentUrl;
+    else router.push(`/checkout/result/${result.data.id}`);
   }
 
   if (!cart.groups.length)
@@ -299,8 +302,31 @@ export function CartView({ initial, addresses }: { initial: CartContent; address
               </p>
             ) : (
               <>
+                <fieldset className="payment-method">
+                  <legend>Phương thức thanh toán</legend>
+                  <label>
+                    <input
+                      type="radio"
+                      name="payment-method"
+                      checked={method === "COD"}
+                      onChange={() => setMethod("COD")}
+                    />{" "}
+                    Thanh toán khi nhận hàng (COD)
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="payment-method"
+                      checked={method === "PSP"}
+                      onChange={() => setMethod("PSP")}
+                    />{" "}
+                    Thanh toán trực tuyến (VNPay)
+                  </label>
+                </fieldset>
                 <p className="form-note">
-                  Thanh toán khi nhận hàng (COD). Đặt hàng sẽ giữ và trừ tồn kho ngay.
+                  {method === "COD"
+                    ? "Đặt hàng sẽ giữ và trừ tồn kho ngay."
+                    : "Hàng được giữ trong thời gian thanh toán; quá hạn mà chưa thanh toán đơn sẽ tự hủy."}
                 </p>
                 <Button
                   size="3"
@@ -308,7 +334,7 @@ export function CartView({ initial, addresses }: { initial: CartContent; address
                   loading={busy === "order"}
                   disabled={busy !== null || quoteStale || !quote.content.canCheckout}
                 >
-                  Đặt hàng (COD)
+                  {method === "COD" ? "Đặt hàng (COD)" : "Đặt hàng và thanh toán"}
                 </Button>
               </>
             )}

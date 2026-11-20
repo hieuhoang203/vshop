@@ -30,6 +30,7 @@ public final class OrderMapper {
                 g.currency(),
                 g.totalAmount(),
                 g.createdAt(),
+                detail.paymentUrl(),
                 detail.orders().stream().map(OrderMapper::toResponse).toList());
     }
 

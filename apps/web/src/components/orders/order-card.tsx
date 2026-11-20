@@ -57,7 +57,7 @@ export function OrderCard({ order, link }: { order: Order; link?: boolean }) {
           <dd>{formatMoney(order.shippingAmount)}</dd>
         </div>
         <div className="cart-total">
-          <dt>Thanh toán khi nhận hàng</dt>
+          <dt>{order.status === "PENDING_PAYMENT" ? "Cần thanh toán" : "Tổng thanh toán"}</dt>
           <dd>{formatMoney(order.payableAmount)}</dd>
         </div>
       </dl>

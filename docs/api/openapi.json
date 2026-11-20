@@ -216,12 +216,15 @@
             "enum" : [ "COD", "PSP" ],
             "type" : "string"
           },
+          "paymentUrl" : {
+            "type" : [ "string", "null" ]
+          },
           "totalAmount" : {
             "format" : "int64",
             "type" : "integer"
           }
         },
-        "required" : [ "createdAt", "currency", "id", "orders", "paymentMethod", "totalAmount" ],
+        "required" : [ "createdAt", "currency", "id", "orders", "paymentMethod", "paymentUrl", "totalAmount" ],
         "type" : "object"
       },
       "CreatePolicyRequest" : {
@@ -3002,6 +3005,52 @@
         "x-vshop-access" : {
           "anyOfRoles" : [ "BUYER", "SELLER" ],
           "public" : false
+        }
+      }
+    },
+    "/api/v1/payments/vnpay/ipn" : {
+      "get" : {
+        "operationId" : "paymentCallbackIpn",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "parameters",
+          "required" : true,
+          "schema" : {
+            "additionalProperties" : {
+              "type" : "string"
+            },
+            "type" : "object"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "additionalProperties" : {
+                    "type" : "string"
+                  },
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "payment-callback-controller" ],
+        "x-vshop-access" : {
+          "public" : true
         }
       }
     },

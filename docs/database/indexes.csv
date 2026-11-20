@@ -137,23 +137,25 @@ merchant,shop_member,uq_shop_member_owner,CREATE UNIQUE INDEX uq_shop_member_own
 merchant,shop_review,ix_shop_review_reviewer,CREATE INDEX ix_shop_review_reviewer ON merchant.shop_review USING btree (reviewer_account_id)
 merchant,shop_review,ix_shop_review_shop_created,"CREATE INDEX ix_shop_review_shop_created ON merchant.shop_review USING btree (shop_id, created_at DESC)"
 merchant,shop_review,shop_review_pkey,CREATE UNIQUE INDEX shop_review_pkey ON merchant.shop_review USING btree (id)
-payment,allocation,allocation_charge_id_seller_order_id_key,"CREATE UNIQUE INDEX allocation_charge_id_seller_order_id_key ON payment.allocation USING btree (charge_id, seller_order_id)"
-payment,allocation,allocation_id_charge_id_key,"CREATE UNIQUE INDEX allocation_id_charge_id_key ON payment.allocation USING btree (id, charge_id)"
 payment,allocation,allocation_pkey,CREATE UNIQUE INDEX allocation_pkey ON payment.allocation USING btree (id)
 payment,allocation,ix_payment_allocation_order,CREATE INDEX ix_payment_allocation_order ON payment.allocation USING btree (seller_order_id)
-payment,attempt,attempt_id_checkout_group_id_key,"CREATE UNIQUE INDEX attempt_id_checkout_group_id_key ON payment.attempt USING btree (id, checkout_group_id)"
+payment,allocation,uq_allocation_charge_order,"CREATE UNIQUE INDEX uq_allocation_charge_order ON payment.allocation USING btree (charge_id, seller_order_id)"
+payment,allocation,uq_allocation_id_charge,"CREATE UNIQUE INDEX uq_allocation_id_charge ON payment.allocation USING btree (id, charge_id)"
 payment,attempt,attempt_merchant_attempt_reference_key,CREATE UNIQUE INDEX attempt_merchant_attempt_reference_key ON payment.attempt USING btree (merchant_attempt_reference)
 payment,attempt,attempt_pkey,CREATE UNIQUE INDEX attempt_pkey ON payment.attempt USING btree (id)
-payment,attempt,attempt_provider_provider_reference_key,"CREATE UNIQUE INDEX attempt_provider_provider_reference_key ON payment.attempt USING btree (provider, provider_reference)"
 payment,attempt,ix_payment_attempt_intent,"CREATE INDEX ix_payment_attempt_intent ON payment.attempt USING btree (intent_id, created_at DESC)"
-payment,charge,charge_id_checkout_group_id_key,"CREATE UNIQUE INDEX charge_id_checkout_group_id_key ON payment.charge USING btree (id, checkout_group_id)"
+payment,attempt,uq_attempt_id_group,"CREATE UNIQUE INDEX uq_attempt_id_group ON payment.attempt USING btree (id, checkout_group_id)"
+payment,attempt,uq_attempt_provider_ref,"CREATE UNIQUE INDEX uq_attempt_provider_ref ON payment.attempt USING btree (provider, provider_reference)"
 payment,charge,charge_pkey,CREATE UNIQUE INDEX charge_pkey ON payment.charge USING btree (id)
-payment,charge,charge_provider_provider_charge_reference_key,"CREATE UNIQUE INDEX charge_provider_provider_charge_reference_key ON payment.charge USING btree (provider, provider_charge_reference)"
 payment,charge,ix_payment_charge_attempt,CREATE INDEX ix_payment_charge_attempt ON payment.charge USING btree (attempt_id)
-payment,intent,intent_id_checkout_group_id_key,"CREATE UNIQUE INDEX intent_id_checkout_group_id_key ON payment.intent USING btree (id, checkout_group_id)"
+payment,charge,uq_charge_id_group,"CREATE UNIQUE INDEX uq_charge_id_group ON payment.charge USING btree (id, checkout_group_id)"
+payment,charge,uq_charge_provider_ref,"CREATE UNIQUE INDEX uq_charge_provider_ref ON payment.charge USING btree (provider, provider_charge_reference)"
 payment,intent,intent_merchant_reference_key,CREATE UNIQUE INDEX intent_merchant_reference_key ON payment.intent USING btree (merchant_reference)
 payment,intent,intent_pkey,CREATE UNIQUE INDEX intent_pkey ON payment.intent USING btree (id)
-payment,intent,ix_payment_intent_checkout,CREATE INDEX ix_payment_intent_checkout ON payment.intent USING btree (checkout_group_id)
+payment,intent,uq_intent_group,CREATE UNIQUE INDEX uq_intent_group ON payment.intent USING btree (checkout_group_id)
+payment,intent,uq_intent_id_group,"CREATE UNIQUE INDEX uq_intent_id_group ON payment.intent USING btree (id, checkout_group_id)"
+payment,provider_event,provider_event_pkey,CREATE UNIQUE INDEX provider_event_pkey ON payment.provider_event USING btree (id)
+payment,provider_event,uq_provider_event,"CREATE UNIQUE INDEX uq_provider_event ON payment.provider_event USING btree (provider, event_key)"
 payment,refund,ix_payment_refund_case,CREATE INDEX ix_payment_refund_case ON payment.refund USING btree (return_case_id)
 payment,refund,refund_charge_id_provider_refund_reference_key,"CREATE UNIQUE INDEX refund_charge_id_provider_refund_reference_key ON payment.refund USING btree (charge_id, provider_refund_reference)"
 payment,refund,refund_id_charge_id_key,"CREATE UNIQUE INDEX refund_id_charge_id_key ON payment.refund USING btree (id, charge_id)"
@@ -161,6 +163,10 @@ payment,refund,refund_idempotency_key_key,CREATE UNIQUE INDEX refund_idempotency
 payment,refund,refund_pkey,CREATE UNIQUE INDEX refund_pkey ON payment.refund USING btree (id)
 payment,refund_allocation,ix_refund_allocation_charge,"CREATE INDEX ix_refund_allocation_charge ON payment.refund_allocation USING btree (allocation_id, charge_id)"
 payment,refund_allocation,refund_allocation_pkey,"CREATE UNIQUE INDEX refund_allocation_pkey ON payment.refund_allocation USING btree (refund_id, allocation_id)"
+payment,review_case,ix_review_group,CREATE INDEX ix_review_group ON payment.review_case USING btree (checkout_group_id)
+payment,review_case,ix_review_open,CREATE INDEX ix_review_open ON payment.review_case USING btree (created_at) WHERE ((status)::text = 'OPEN'::text)
+payment,review_case,review_case_pkey,CREATE UNIQUE INDEX review_case_pkey ON payment.review_case USING btree (id)
+payment,review_case,uq_review_charge_reason,"CREATE UNIQUE INDEX uq_review_charge_reason ON payment.review_case USING btree (charge_id, reason)"
 platform,audit_event,audit_event_pkey,CREATE UNIQUE INDEX audit_event_pkey ON platform.audit_event USING btree (id)
 platform,audit_event,ix_audit_actor_created,"CREATE INDEX ix_audit_actor_created ON platform.audit_event USING btree (actor_subject, created_at DESC)"
 platform,audit_event,ix_audit_resource_created,"CREATE INDEX ix_audit_resource_created ON platform.audit_event USING btree (resource_id, created_at DESC)"

@@ -229,7 +229,8 @@ public class OpenApiConfiguration {
         operation.getResponses().addApiResponse("default", failure);
 
         Map<String, Object> access = new LinkedHashMap<>();
-        if (path.startsWith("/api/v1/catalog/") && "GET".equals(method)) {
+        if ((path.startsWith("/api/v1/catalog/") || path.equals("/api/v1/payments/vnpay/ipn"))
+                && "GET".equals(method)) {
             operation.setSecurity(List.of());
             access.put("public", true);
         } else {

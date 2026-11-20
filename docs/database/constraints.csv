@@ -500,60 +500,72 @@ merchant,shop_review,shop_review_shop_id_fkey,f,FOREIGN KEY (shop_id) REFERENCES
 merchant,shop_review,shop_review_shop_id_not_null,n,NOT NULL shop_id
 payment,allocation,allocation_amount_check,c,CHECK ((amount > 0))
 payment,allocation,allocation_amount_not_null,n,NOT NULL amount
-payment,allocation,allocation_charge_id_checkout_group_id_fkey,f,"FOREIGN KEY (charge_id, checkout_group_id) REFERENCES payment.charge(id, checkout_group_id)"
 payment,allocation,allocation_charge_id_fkey,f,FOREIGN KEY (charge_id) REFERENCES payment.charge(id)
 payment,allocation,allocation_charge_id_not_null,n,NOT NULL charge_id
-payment,allocation,allocation_charge_id_seller_order_id_key,u,"UNIQUE (charge_id, seller_order_id)"
 payment,allocation,allocation_checkout_group_id_not_null,n,NOT NULL checkout_group_id
-payment,allocation,allocation_id_charge_id_key,u,"UNIQUE (id, charge_id)"
 payment,allocation,allocation_id_not_null,n,NOT NULL id
 payment,allocation,allocation_pkey,p,PRIMARY KEY (id)
-payment,allocation,allocation_seller_order_id_checkout_group_id_fkey,f,"FOREIGN KEY (seller_order_id, checkout_group_id) REFERENCES sales.seller_order(id, checkout_group_id)"
 payment,allocation,allocation_seller_order_id_fkey,f,FOREIGN KEY (seller_order_id) REFERENCES sales.seller_order(id)
 payment,allocation,allocation_seller_order_id_not_null,n,NOT NULL seller_order_id
+payment,allocation,fk_allocation_charge_group,f,"FOREIGN KEY (charge_id, checkout_group_id) REFERENCES payment.charge(id, checkout_group_id)"
+payment,allocation,fk_allocation_order_group,f,"FOREIGN KEY (seller_order_id, checkout_group_id) REFERENCES sales.seller_order(id, checkout_group_id)"
+payment,allocation,uq_allocation_charge_order,u,"UNIQUE (charge_id, seller_order_id)"
+payment,allocation,uq_allocation_id_charge,u,"UNIQUE (id, charge_id)"
 payment,attempt,attempt_checkout_group_id_not_null,n,NOT NULL checkout_group_id
+payment,attempt,attempt_client_ip_not_null,n,NOT NULL client_ip
 payment,attempt,attempt_created_at_not_null,n,NOT NULL created_at
-payment,attempt,attempt_id_checkout_group_id_key,u,"UNIQUE (id, checkout_group_id)"
+payment,attempt,attempt_expires_at_not_null,n,NOT NULL expires_at
 payment,attempt,attempt_id_not_null,n,NOT NULL id
-payment,attempt,attempt_intent_id_checkout_group_id_fkey,f,"FOREIGN KEY (intent_id, checkout_group_id) REFERENCES payment.intent(id, checkout_group_id)"
 payment,attempt,attempt_intent_id_fkey,f,FOREIGN KEY (intent_id) REFERENCES payment.intent(id)
 payment,attempt,attempt_intent_id_not_null,n,NOT NULL intent_id
 payment,attempt,attempt_merchant_attempt_reference_key,u,UNIQUE (merchant_attempt_reference)
 payment,attempt,attempt_merchant_attempt_reference_not_null,n,NOT NULL merchant_attempt_reference
 payment,attempt,attempt_pkey,p,PRIMARY KEY (id)
 payment,attempt,attempt_provider_not_null,n,NOT NULL provider
-payment,attempt,attempt_provider_provider_reference_key,u,"UNIQUE (provider, provider_reference)"
 payment,attempt,attempt_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['CREATED'::character varying, 'PENDING'::character varying, 'SUCCEEDED'::character varying, 'FAILED'::character varying, 'EXPIRED'::character varying, 'UNKNOWN'::character varying])::text[])))"
 payment,attempt,attempt_status_not_null,n,NOT NULL status
+payment,attempt,fk_attempt_intent_group,f,"FOREIGN KEY (intent_id, checkout_group_id) REFERENCES payment.intent(id, checkout_group_id)"
+payment,attempt,uq_attempt_id_group,u,"UNIQUE (id, checkout_group_id)"
+payment,attempt,uq_attempt_provider_ref,u,"UNIQUE (provider, provider_reference)"
 payment,charge,charge_amount_check,c,CHECK ((amount > 0))
 payment,charge,charge_amount_not_null,n,NOT NULL amount
-payment,charge,charge_attempt_id_checkout_group_id_fkey,f,"FOREIGN KEY (attempt_id, checkout_group_id) REFERENCES payment.attempt(id, checkout_group_id)"
 payment,charge,charge_attempt_id_fkey,f,FOREIGN KEY (attempt_id) REFERENCES payment.attempt(id)
 payment,charge,charge_attempt_id_not_null,n,NOT NULL attempt_id
 payment,charge,charge_captured_at_not_null,n,NOT NULL captured_at
 payment,charge,charge_checkout_group_id_not_null,n,NOT NULL checkout_group_id
 payment,charge,charge_currency_check,c,CHECK ((currency = 'VND'::bpchar))
 payment,charge,charge_currency_not_null,n,NOT NULL currency
-payment,charge,charge_id_checkout_group_id_key,u,"UNIQUE (id, checkout_group_id)"
 payment,charge,charge_id_not_null,n,NOT NULL id
 payment,charge,charge_pkey,p,PRIMARY KEY (id)
 payment,charge,charge_provider_charge_reference_not_null,n,NOT NULL provider_charge_reference
 payment,charge,charge_provider_not_null,n,NOT NULL provider
-payment,charge,charge_provider_provider_charge_reference_key,u,"UNIQUE (provider, provider_charge_reference)"
+payment,charge,fk_charge_attempt_group,f,"FOREIGN KEY (attempt_id, checkout_group_id) REFERENCES payment.attempt(id, checkout_group_id)"
+payment,charge,uq_charge_id_group,u,"UNIQUE (id, checkout_group_id)"
+payment,charge,uq_charge_provider_ref,u,"UNIQUE (provider, provider_charge_reference)"
 payment,intent,intent_checkout_group_id_fkey,f,FOREIGN KEY (checkout_group_id) REFERENCES sales.checkout_group(id)
 payment,intent,intent_checkout_group_id_not_null,n,NOT NULL checkout_group_id
 payment,intent,intent_created_at_not_null,n,NOT NULL created_at
 payment,intent,intent_currency_check,c,CHECK ((currency = 'VND'::bpchar))
 payment,intent,intent_currency_not_null,n,NOT NULL currency
-payment,intent,intent_id_checkout_group_id_key,u,"UNIQUE (id, checkout_group_id)"
 payment,intent,intent_id_not_null,n,NOT NULL id
 payment,intent,intent_merchant_reference_key,u,UNIQUE (merchant_reference)
 payment,intent,intent_merchant_reference_not_null,n,NOT NULL merchant_reference
+payment,intent,intent_payment_deadline_not_null,n,NOT NULL payment_deadline
 payment,intent,intent_pkey,p,PRIMARY KEY (id)
 payment,intent,intent_requested_amount_check,c,CHECK ((requested_amount > 0))
 payment,intent,intent_requested_amount_not_null,n,NOT NULL requested_amount
 payment,intent,intent_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['CREATED'::character varying, 'PENDING'::character varying, 'PAID'::character varying, 'FAILED'::character varying, 'UNKNOWN'::character varying, 'CANCELED'::character varying])::text[])))"
 payment,intent,intent_status_not_null,n,NOT NULL status
+payment,intent,intent_updated_at_not_null,n,NOT NULL updated_at
+payment,intent,uq_intent_group,u,UNIQUE (checkout_group_id)
+payment,intent,uq_intent_id_group,u,"UNIQUE (id, checkout_group_id)"
+payment,provider_event,provider_event_event_key_not_null,n,NOT NULL event_key
+payment,provider_event,provider_event_id_not_null,n,NOT NULL id
+payment,provider_event,provider_event_outcome_not_null,n,NOT NULL outcome
+payment,provider_event,provider_event_pkey,p,PRIMARY KEY (id)
+payment,provider_event,provider_event_provider_not_null,n,NOT NULL provider
+payment,provider_event,provider_event_received_at_not_null,n,NOT NULL received_at
+payment,provider_event,uq_provider_event,u,"UNIQUE (provider, event_key)"
 payment,refund,refund_amount_check,c,CHECK ((amount > 0))
 payment,refund,refund_amount_not_null,n,NOT NULL amount
 payment,refund,refund_charge_id_fkey,f,FOREIGN KEY (charge_id) REFERENCES payment.charge(id)
@@ -576,6 +588,18 @@ payment,refund_allocation,refund_allocation_charge_id_not_null,n,NOT NULL charge
 payment,refund_allocation,refund_allocation_pkey,p,"PRIMARY KEY (refund_id, allocation_id)"
 payment,refund_allocation,refund_allocation_refund_id_charge_id_fkey,f,"FOREIGN KEY (refund_id, charge_id) REFERENCES payment.refund(id, charge_id)"
 payment,refund_allocation,refund_allocation_refund_id_not_null,n,NOT NULL refund_id
+payment,review_case,review_case_charge_id_fkey,f,FOREIGN KEY (charge_id) REFERENCES payment.charge(id)
+payment,review_case,review_case_charge_id_not_null,n,NOT NULL charge_id
+payment,review_case,review_case_checkout_group_id_fkey,f,FOREIGN KEY (checkout_group_id) REFERENCES sales.checkout_group(id)
+payment,review_case,review_case_checkout_group_id_not_null,n,NOT NULL checkout_group_id
+payment,review_case,review_case_created_at_not_null,n,NOT NULL created_at
+payment,review_case,review_case_id_not_null,n,NOT NULL id
+payment,review_case,review_case_pkey,p,PRIMARY KEY (id)
+payment,review_case,review_case_reason_check,c,"CHECK (((reason)::text = ANY ((ARRAY['PAID_AFTER_EXPIRY'::character varying, 'AMOUNT_MISMATCH'::character varying, 'DUPLICATE_CHARGE'::character varying])::text[])))"
+payment,review_case,review_case_reason_not_null,n,NOT NULL reason
+payment,review_case,review_case_status_check,c,"CHECK (((status)::text = ANY ((ARRAY['OPEN'::character varying, 'RESOLVED'::character varying])::text[])))"
+payment,review_case,review_case_status_not_null,n,NOT NULL status
+payment,review_case,uq_review_charge_reason,u,"UNIQUE (charge_id, reason)"
 platform,audit_event,audit_event_action_not_null,n,NOT NULL action
 platform,audit_event,audit_event_actor_subject_not_null,n,NOT NULL actor_subject
 platform,audit_event,audit_event_created_at_not_null,n,NOT NULL created_at

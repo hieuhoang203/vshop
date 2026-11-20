@@ -160,6 +160,11 @@ public class ReservationService {
         return reservation;
     }
 
+    /** True while the reservation still holds the stock (not committed, released or expired). */
+    public boolean isHeld(UUID reservationId) {
+        return existing(reservationId).status() == ReservationStatus.HELD;
+    }
+
     /** Expires HELD reservations past their deadline. Safe to run concurrently and repeatedly. */
     public int expireDue(int limit) {
         List<StockReservation> due = inventory.lockExpiredReservations(limit);

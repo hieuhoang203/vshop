@@ -3,6 +3,7 @@ package vn.vshop.modules.order.dto.response;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 import vn.vshop.modules.order.entity.PaymentMethod;
 
 /** Result of one checkout: the orders created for each shop and what the buyer owes in total. */
@@ -12,4 +13,5 @@ public record CheckoutGroupResponse(
         String currency,
         long totalAmount,
         OffsetDateTime createdAt,
+        @Nullable String paymentUrl,
         List<OrderResponse> orders) {}

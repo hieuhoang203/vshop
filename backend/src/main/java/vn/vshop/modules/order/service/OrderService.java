@@ -7,6 +7,7 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -68,6 +69,7 @@ public class OrderService {
     private final AccountService accounts;
     private final ShopService shops;
     private final OutboxService outbox;
+    private final PaymentService payments;
     private final PiiCipher cipher;
     private final ObjectMapper json;
     private final Clock clock;
@@ -81,6 +83,7 @@ public class OrderService {
             AccountService accounts,
             ShopService shops,
             OutboxService outbox,
+            PaymentService payments,
             PiiCipher cipher,
             ObjectMapper json,
             Clock clock) {
@@ -92,6 +95,7 @@ public class OrderService {
         this.accounts = accounts;
         this.shops = shops;
         this.outbox = outbox;
+        this.payments = payments;
         this.cipher = cipher;
         this.json = json;
         this.clock = clock;
@@ -99,7 +103,11 @@ public class OrderService {
 
     @Transactional
     public GroupDetail place(
-            String subject, UUID quoteId, PaymentMethod method, String idempotencyKey) {
+            String subject,
+            UUID quoteId,
+            PaymentMethod method,
+            String idempotencyKey,
+            String clientIp) {
         // 1. Lock the cart: serialises this buyer's checkouts and cart edits.
         UUID buyer = quotes.lockCart(subject);
 
@@ -118,10 +126,11 @@ public class OrderService {
             throw new BusinessException(
                     ErrorCode.QUOTE_STALE, "Báo giá này đã được dùng để đặt hàng.");
         }
-        if (method != PaymentMethod.COD) {
+        boolean psp = method == PaymentMethod.PSP;
+        if (psp && !payments.available()) {
             throw new BusinessException(
                     ErrorCode.INVALID_CART_INPUT,
-                    "Hiện chỉ hỗ trợ thanh toán khi nhận hàng (COD).");
+                    "Thanh toán trực tuyến chưa được cấu hình. Vui lòng chọn thanh toán khi nhận hàng.");
         }
 
         // 3. Policy gate: no approved policy, no checkout.
@@ -147,7 +156,7 @@ public class OrderService {
                     "Bạn không thể mua sản phẩm của gian hàng mà bạn là thành viên.");
         }
         var cod = approved.cod();
-        for (PricedCart.ShopGroup g : cart.groups()) {
+        for (PricedCart.ShopGroup g : psp ? List.<PricedCart.ShopGroup>of() : cart.groups()) {
             if (g.payable() > cod.maxOrderAmount()) {
                 throw new BusinessException(
                         ErrorCode.COD_LIMIT_EXCEEDED,
@@ -158,8 +167,8 @@ public class OrderService {
                                 + "đ).");
             }
         }
-        long open = orders.countOpenOrders(buyer, PaymentMethod.COD.name());
-        if (open + cart.groups().size() > cod.maxOpenOrders()) {
+        long open = psp ? 0 : orders.countOpenOrders(buyer, PaymentMethod.COD.name());
+        if (!psp && open + cart.groups().size() > cod.maxOpenOrders()) {
             throw new BusinessException(
                     ErrorCode.COD_LIMIT_EXCEEDED,
                     "Bạn đang có quá nhiều đơn COD chưa hoàn tất (tối đa "
@@ -170,6 +179,10 @@ public class OrderService {
         // 6. Write group, orders and lines from the server-side pricing.
         Recipient recipient = addresses.recipient(subject, basis.addressId());
         UUID groupId = UUID.randomUUID();
+        OffsetDateTime deadline =
+                psp
+                        ? OffsetDateTime.now(clock).plusMinutes(approved.payment().paymentMinutes())
+                        : null;
         orders.insertGroup(
                 new CheckoutGroup(
                         groupId,
@@ -194,7 +207,7 @@ public class OrderService {
                             groupId,
                             g.shopId(),
                             orderNumber(),
-                            OrderStatus.AWAITING_SELLER,
+                            psp ? OrderStatus.PENDING_PAYMENT : OrderStatus.AWAITING_SELLER,
                             0,
                             g.subtotal(),
                             0,
@@ -205,7 +218,7 @@ public class OrderService {
                             recipient.province(),
                             recipient.ward(),
                             approved.returns().policyId(),
-                            null,
+                            deadline,
                             null,
                             null,
                             null,
@@ -244,10 +257,12 @@ public class OrderService {
                             UUID.randomUUID(),
                             orderId,
                             null,
-                            OrderStatus.AWAITING_SELLER,
+                            psp ? OrderStatus.PENDING_PAYMENT : OrderStatus.AWAITING_SELLER,
                             "BUYER",
                             subject,
-                            "Đặt hàng, thanh toán khi nhận hàng",
+                            psp
+                                    ? "Đặt hàng, chờ thanh toán trực tuyến"
+                                    : "Đặt hàng, thanh toán khi nhận hàng",
                             null));
         }
 
@@ -262,7 +277,9 @@ public class OrderService {
             StockReservation held =
                     reservations.reserve(
                             r.skuId(), r.quantity(), r.lineId(), "order:" + r.lineId(), ttl);
-            reservations.commit(held.id());
+            if (!psp) {
+                reservations.commit(held.id());
+            }
             orders.linkReservation(r.lineId(), held.id());
         }
 
@@ -279,6 +296,9 @@ public class OrderService {
                     "order", "OrderPlaced", orderIds.get(i), json.writeValueAsString(payload));
         }
         quotes.clearCart(basis.cartId());
+        if (psp) {
+            payments.startIntent(groupId, cart.payableTotal(), deadline, clientIp);
+        }
         return detail(buyer, orders.findGroup(buyer, groupId).orElseThrow(), false);
     }
 
@@ -323,7 +343,8 @@ public class OrderService {
         return new GroupDetail(
                 group,
                 orders.findOrdersOfGroup(group.id()).stream().map(this::open).toList(),
-                replayed);
+                replayed,
+                payments.paymentUrl(group).orElse(null));
     }
 
     public OrderDetail open(SellerOrder order) {

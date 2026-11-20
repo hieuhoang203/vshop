@@ -49,15 +49,25 @@ public class OrderController {
             @RequestHeader("Idempotency-Key") @Pattern(regexp = "[A-Za-z0-9._:-]{8,100}")
                     String idempotencyKey,
             @AuthenticationPrincipal Jwt jwt,
+            jakarta.servlet.http.HttpServletRequest http,
             @Valid @RequestBody PlaceOrderRequest request) {
         var result =
                 service.place(
                         jwt.getSubject(),
                         request.quoteId(),
                         request.paymentMethod(),
-                        idempotencyKey);
+                        idempotencyKey,
+                        clientIp(http));
         return ResponseEntity.status(result.replayed() ? HttpStatus.OK : HttpStatus.CREATED)
                 .body(OrderMapper.toResponse(result));
+    }
+
+    /** First address of X-Forwarded-For when a proxy set it, else the socket peer. */
+    private static String clientIp(jakarta.servlet.http.HttpServletRequest http) {
+        String forwarded = http.getHeader("X-Forwarded-For");
+        return forwarded == null || forwarded.isBlank()
+                ? http.getRemoteAddr()
+                : forwarded.split(",")[0].trim();
     }
 
     @GetMapping("/checkout/groups/{id}")

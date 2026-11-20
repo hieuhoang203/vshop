@@ -45,6 +45,15 @@ vshop:
   security:
     # ADMIN tokens must carry amr=otp (Keycloak OTP form). Disable only in isolated tests.
     admin-mfa-required: true
+  payment:
+    # Public address of the web app: where VNPay sends the customer back after paying.
+    return-base-url: ${WEB_BASE_URL:http://localhost:3100}
+    vnpay:
+      # Sandbox merchant credentials from VNPay. Empty means online payment is unavailable and
+      # orders can only be placed as COD. Never commit real values.
+      tmn-code: ${VNPAY_TMN_CODE:}
+      hash-secret: ${VNPAY_HASH_SECRET:}
+      pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
   pii:
     # Application-level encryption of personal data (phone, street). One id per key; new values use
     # active-key and old ids stay readable, so keys can be rotated. Provide the 32-byte base64 key

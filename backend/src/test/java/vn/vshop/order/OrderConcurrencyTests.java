@@ -185,7 +185,14 @@ class OrderConcurrencyTests {
 
         List<Callable<GroupDetail>> tries = new ArrayList<>();
         for (int i = 0; i < 8; i++) {
-            tries.add(() -> orders.place(buyer, quote, PaymentMethod.COD, "parallel-key-" + run));
+            tries.add(
+                    () ->
+                            orders.place(
+                                    buyer,
+                                    quote,
+                                    PaymentMethod.COD,
+                                    "parallel-key-" + run,
+                                    "127.0.0.1"));
         }
         List<GroupDetail> results = race(tries);
 
@@ -214,8 +221,20 @@ class OrderConcurrencyTests {
 
         List<Callable<GroupDetail>> tries =
                 List.of(
-                        () -> orders.place(first, quoteA, PaymentMethod.COD, "last-a-" + run),
-                        () -> orders.place(second, quoteB, PaymentMethod.COD, "last-b-" + run));
+                        () ->
+                                orders.place(
+                                        first,
+                                        quoteA,
+                                        PaymentMethod.COD,
+                                        "last-a-" + run,
+                                        "127.0.0.1"),
+                        () ->
+                                orders.place(
+                                        second,
+                                        quoteB,
+                                        PaymentMethod.COD,
+                                        "last-b-" + run,
+                                        "127.0.0.1"));
         int ok = 0;
         List<String> failures = new ArrayList<>();
         for (Future<GroupDetail> f : submit(tries)) {
@@ -269,13 +288,15 @@ class OrderConcurrencyTests {
                                                     one,
                                                     quoteOne,
                                                     PaymentMethod.COD,
-                                                    "opp-one-" + r + "-" + run),
+                                                    "opp-one-" + r + "-" + run,
+                                                    "127.0.0.1"),
                                     () ->
                                             orders.place(
                                                     two,
                                                     quoteTwo,
                                                     PaymentMethod.COD,
-                                                    "opp-two-" + r + "-" + run)));
+                                                    "opp-two-" + r + "-" + run,
+                                                    "127.0.0.1")));
             assertThat(results).hasSize(2);
         }
         assertThat(onHand(x)).isEqualTo(100 - 12);
@@ -295,7 +316,12 @@ class OrderConcurrencyTests {
             carts.addLine(buyer, sku, 1);
             UUID quote = quotes.create(buyer, address).id();
             UUID orderId =
-                    orders.place(buyer, quote, PaymentMethod.COD, "race-" + round + "-" + run)
+                    orders.place(
+                                    buyer,
+                                    quote,
+                                    PaymentMethod.COD,
+                                    "race-" + round + "-" + run,
+                                    "127.0.0.1")
                             .orders()
                             .get(0)
                             .order()

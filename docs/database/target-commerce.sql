@@ -6,10 +6,9 @@ BEGIN;
 -- sales, platform.policy_version, sales.checkout_group, seller_order, order_line and the order
 -- tables are implemented by Flyway V1006 and V1007. The two keys below are what the reference
 -- tables that follow reference.
-ALTER TABLE sales.seller_order ADD CONSTRAINT uq_order_id_group UNIQUE (id, checkout_group_id);
 ALTER TABLE sales.order_line ADD CONSTRAINT uq_order_line_id_order UNIQUE (id, seller_order_id);
 CREATE SCHEMA promotion;
-CREATE SCHEMA payment;
+-- payment.intent, attempt, charge, allocation, provider_event and review_case: Flyway V1010.
 CREATE SCHEMA fulfillment;
 CREATE SCHEMA aftersales;
 CREATE SCHEMA finance;
@@ -196,57 +195,6 @@ CREATE TABLE aftersales.case_evidence (
 CREATE INDEX ix_evidence_asset ON aftersales.case_evidence(asset_id);
 CREATE INDEX ix_evidence_submitter ON aftersales.case_evidence(submitted_by);
 
-CREATE TABLE payment.intent (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    checkout_group_id UUID NOT NULL REFERENCES sales.checkout_group(id),
-    merchant_reference VARCHAR(100) NOT NULL UNIQUE,
-    requested_amount BIGINT NOT NULL CHECK (requested_amount > 0),
-    currency CHAR(3) NOT NULL DEFAULT 'VND' CHECK (currency = 'VND'),
-    status VARCHAR(20) NOT NULL CHECK (status IN ('CREATED', 'PENDING', 'PAID', 'FAILED', 'UNKNOWN', 'CANCELED')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (id, checkout_group_id)
-);
-CREATE INDEX ix_payment_intent_checkout ON payment.intent(checkout_group_id);
-CREATE TABLE payment.attempt (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    intent_id UUID NOT NULL REFERENCES payment.intent(id),
-    checkout_group_id UUID NOT NULL,
-    provider VARCHAR(50) NOT NULL,
-    merchant_attempt_reference VARCHAR(100) NOT NULL UNIQUE,
-    provider_reference VARCHAR(150),
-    status VARCHAR(20) NOT NULL CHECK (status IN ('CREATED', 'PENDING', 'SUCCEEDED', 'FAILED', 'EXPIRED', 'UNKNOWN')),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (provider, provider_reference),
-    UNIQUE (id, checkout_group_id),
-    FOREIGN KEY (intent_id, checkout_group_id) REFERENCES payment.intent(id, checkout_group_id)
-);
-CREATE INDEX ix_payment_attempt_intent ON payment.attempt(intent_id, created_at DESC);
-CREATE TABLE payment.charge (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    attempt_id UUID NOT NULL REFERENCES payment.attempt(id),
-    checkout_group_id UUID NOT NULL,
-    provider VARCHAR(50) NOT NULL,
-    provider_charge_reference VARCHAR(150) NOT NULL,
-    amount BIGINT NOT NULL CHECK (amount > 0),
-    currency CHAR(3) NOT NULL DEFAULT 'VND' CHECK (currency = 'VND'),
-    captured_at TIMESTAMPTZ NOT NULL,
-    UNIQUE (provider, provider_charge_reference),
-    UNIQUE (id, checkout_group_id),
-    FOREIGN KEY (attempt_id, checkout_group_id) REFERENCES payment.attempt(id, checkout_group_id)
-);
-CREATE INDEX ix_payment_charge_attempt ON payment.charge(attempt_id);
-CREATE TABLE payment.allocation (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    charge_id UUID NOT NULL REFERENCES payment.charge(id),
-    seller_order_id UUID NOT NULL REFERENCES sales.seller_order(id),
-    checkout_group_id UUID NOT NULL,
-    amount BIGINT NOT NULL CHECK (amount > 0),
-    UNIQUE (charge_id, seller_order_id),
-    UNIQUE (id, charge_id),
-    FOREIGN KEY (charge_id, checkout_group_id) REFERENCES payment.charge(id, checkout_group_id),
-    FOREIGN KEY (seller_order_id, checkout_group_id) REFERENCES sales.seller_order(id, checkout_group_id)
-);
-CREATE INDEX ix_payment_allocation_order ON payment.allocation(seller_order_id);
 CREATE TABLE payment.refund (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     charge_id UUID NOT NULL REFERENCES payment.charge(id),
