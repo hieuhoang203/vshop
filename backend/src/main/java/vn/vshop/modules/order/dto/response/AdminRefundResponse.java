@@ -18,4 +18,6 @@ public record AdminRefundResponse(
         @Nullable String payoutReference,
         @Nullable String note,
         OffsetDateTime createdAt,
-        @Nullable OffsetDateTime paidAt) {}
+        @Nullable OffsetDateTime paidAt,
+        boolean canPayAutomatically,
+        @Nullable String payoutFailure) {}

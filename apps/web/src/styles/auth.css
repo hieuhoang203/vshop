@@ -244,3 +244,10 @@
 .auth-captcha {
   min-height: 65px;
 }
+.auth-select {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0 10px;
+  background: #fff;
+}

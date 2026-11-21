@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 
 /** Where to send a refund. Wire limits only; the service validates and normalises. */
 public record RefundAccountRequest(
-        @NotBlank @Size(max = 150) String bankName,
+        @Size(max = 150) String bankName,
+        @Size(max = 10) String bankCode,
         @NotBlank @Size(max = 40) String accountNumber,
         @NotBlank @Size(max = 150) String accountName) {}

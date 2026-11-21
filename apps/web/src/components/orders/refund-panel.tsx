@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Refund, RefundAccountInput } from "@vshop/contracts";
 import { Button, TextField } from "@radix-ui/themes";
@@ -11,6 +11,8 @@ const REASON: Record<string, string> = {
   SELLER_REJECTED: "Người bán không thể giao đơn này",
   PAID_AFTER_EXPIRY: "Thanh toán đến sau khi đơn đã hết hạn",
   ADMIN_GOODWILL: "Hoàn tiền theo quyết định của VShop",
+  RETURN_APPROVED: "Yêu cầu trả hàng của bạn đã được chấp nhận",
+  SHIPMENT_FAILED: "Đơn không giao được",
 };
 
 /** Shows where a refund stands and, while we need it, collects the bank account to send it to. */
@@ -23,13 +25,24 @@ export function RefundPanel({ orderId, refund }: { orderId: string; refund: Refu
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [banks, setBanks] = useState<{ code: string; name: string }[]>([]);
+  const [bankCode, setBankCode] = useState("");
+
+  useEffect(() => {
+    void bff<{ code: string; name: string }[]>("GET", "orders/banks").then((r) => {
+      if (r.ok) setBanks(r.data);
+    });
+  }, []);
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
     if (busy) return;
     setBusy(true);
     setError("");
-    const result = await bff("PUT", `orders/${orderId}/refund-account`, values);
+    const result = await bff("PUT", `orders/${orderId}/refund-account`, {
+      ...values,
+      ...(bankCode ? { bankCode } : {}),
+    });
     setBusy(false);
     if (!result.ok) return setError(result.message);
     router.refresh();
@@ -45,6 +58,24 @@ export function RefundPanel({ orderId, refund }: { orderId: string; refund: Refu
             Để hoàn tiền, vui lòng cho biết tài khoản ngân hàng nhận tiền. Tiền được chuyển khoản
             cho đúng tài khoản này.
           </p>
+          {banks.length > 0 && (
+            <>
+              <label htmlFor="refund-bank-list">Chọn ngân hàng trong danh sách</label>
+              <select
+                id="refund-bank-list"
+                className="auth-select"
+                value={bankCode}
+                onChange={(e) => setBankCode(e.target.value)}
+              >
+                <option value="">Ngân hàng khác (nhập bên dưới)</option>
+                {banks.map((b) => (
+                  <option key={b.code} value={b.code}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
           <label htmlFor="refund-bank">Ngân hàng</label>
           <TextField.Root
             id="refund-bank"

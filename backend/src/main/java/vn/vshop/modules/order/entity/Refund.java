@@ -23,4 +23,6 @@ public record Refund(
         String payoutReference,
         String note,
         OffsetDateTime paidAt,
-        OffsetDateTime createdAt) {}
+        OffsetDateTime createdAt,
+        String bankBin,
+        String payoutFailure) {}

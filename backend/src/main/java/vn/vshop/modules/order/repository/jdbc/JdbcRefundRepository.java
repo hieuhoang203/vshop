@@ -15,7 +15,8 @@ public class JdbcRefundRepository implements RefundRepository {
             """
             SELECT r.id, r.charge_id, r.checkout_group_id, r.seller_order_id, o.order_number,
                    r.reason, r.status, r.amount, r.bank_name, r.account_number_ciphertext,
-                   r.account_name_ciphertext, r.payout_reference, r.note, r.paid_at, r.created_at
+                   r.account_name_ciphertext, r.payout_reference, r.note, r.paid_at, r.created_at,
+                   r.bank_bin, r.payout_failure
             FROM payment.refund r JOIN sales.seller_order o ON o.id = r.seller_order_id
             """;
 
@@ -146,13 +147,19 @@ public class JdbcRefundRepository implements RefundRepository {
 
     @Override
     public boolean setAccount(
-            UUID id, String bankName, String numberCiphertext, String nameCiphertext) {
+            UUID id,
+            String bankName,
+            String bankBin,
+            String numberCiphertext,
+            String nameCiphertext) {
         return jdbc.sql(
                                 "UPDATE payment.refund SET status = 'APPROVED', bank_name = :bank,"
+                                        + " bank_bin = :bin,"
                                         + " account_number_ciphertext = :number,"
                                         + " account_name_ciphertext = :name, note = NULL, updated_at = now()"
                                         + " WHERE id = :id AND status IN ('AWAITING_ACCOUNT', 'APPROVED')")
                         .param("bank", bankName)
+                        .param("bin", bankBin, Types.VARCHAR)
                         .param("number", numberCiphertext)
                         .param("name", nameCiphertext)
                         .param("id", id)
@@ -172,6 +179,71 @@ public class JdbcRefundRepository implements RefundRepository {
                         .param("id", id)
                         .update()
                 == 1;
+    }
+
+    @Override
+    public boolean claimPayout(UUID id, String provider, String providerReference) {
+        return jdbc.sql(
+                                "UPDATE payment.refund SET status = 'SUBMITTED', payout_provider = :p,"
+                                        + " payout_provider_ref = :ref, payout_submitted_at = now(),"
+                                        + " payout_failure = NULL, updated_at = now()"
+                                        + " WHERE id = :id AND status = 'APPROVED' AND bank_bin IS NOT NULL")
+                        .param("p", provider)
+                        .param("ref", providerReference)
+                        .param("id", id)
+                        .update()
+                == 1;
+    }
+
+    @Override
+    public Optional<PayoutTarget> payoutTarget(UUID id) {
+        return jdbc.sql(
+                        "SELECT amount, bank_bin, account_number_ciphertext, account_name_ciphertext,"
+                                + " payout_provider_ref AS provider_reference FROM payment.refund"
+                                + " WHERE id = :id AND status = 'SUBMITTED'")
+                .param("id", id)
+                .query(PayoutTarget.class)
+                .optional();
+    }
+
+    @Override
+    public boolean payoutSucceeded(UUID id, String reference, String subject) {
+        return jdbc.sql(
+                                "UPDATE payment.refund SET status = 'SUCCEEDED', payout_reference = :ref,"
+                                        + " paid_by_subject = :subject, paid_at = now(), updated_at = now()"
+                                        + " WHERE id = :id AND status = 'SUBMITTED'")
+                        .param("ref", reference)
+                        .param("subject", subject)
+                        .param("id", id)
+                        .update()
+                == 1;
+    }
+
+    @Override
+    public boolean payoutFailed(UUID id, String reason) {
+        return jdbc.sql(
+                                "UPDATE payment.refund SET status = 'APPROVED', payout_failure = :reason,"
+                                        + " updated_at = now() WHERE id = :id AND status = 'SUBMITTED'")
+                        .param(
+                                "reason",
+                                reason == null
+                                        ? ""
+                                        : reason.substring(0, Math.min(500, reason.length())))
+                        .param("id", id)
+                        .update()
+                == 1;
+    }
+
+    @Override
+    public List<UUID> staleSubmitted(int seconds, int limit) {
+        return jdbc.sql(
+                        "SELECT id FROM payment.refund WHERE status = 'SUBMITTED'"
+                                + " AND payout_submitted_at < now() - make_interval(secs => :s)"
+                                + " ORDER BY payout_submitted_at LIMIT :n")
+                .param("s", seconds)
+                .param("n", limit)
+                .query(UUID.class)
+                .list();
     }
 
     @Override

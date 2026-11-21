@@ -16,6 +16,7 @@ import vn.vshop.modules.order.dto.request.ReasonRequest;
 import vn.vshop.modules.order.dto.request.RefundPaidRequest;
 import vn.vshop.modules.order.dto.response.AdminRefundResponse;
 import vn.vshop.modules.order.mapper.OrderMapper;
+import vn.vshop.modules.order.service.RefundPayoutService;
 import vn.vshop.modules.order.service.RefundService;
 
 /** Queue of refunds to pay out (administrators with a second factor only, enforced by the path). */
@@ -23,9 +24,24 @@ import vn.vshop.modules.order.service.RefundService;
 @RequestMapping("/api/v1/admin/refunds")
 public class AdminRefundController {
     private final RefundService service;
+    private final RefundPayoutService payouts;
 
-    public AdminRefundController(RefundService service) {
+    public AdminRefundController(RefundService service, RefundPayoutService payouts) {
         this.service = service;
+        this.payouts = payouts;
+    }
+
+    /** Sends the refund to the buyer account through the payment provider (once, idempotent). */
+    @PostMapping("/{id}/payout")
+    public AdminRefundResponse payout(@PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        return OrderMapper.toResponse(payouts.submit(jwt.getSubject(), id));
+    }
+
+    /** Asks the provider whether a submitted payout finished. */
+    @PostMapping("/{id}/payout/check")
+    public AdminRefundResponse checkPayout(
+            @PathVariable UUID id, @AuthenticationPrincipal Jwt jwt) {
+        return OrderMapper.toResponse(payouts.check(jwt.getSubject(), id));
     }
 
     /** {@code status} is optional: AWAITING_ACCOUNT, APPROVED (ready to pay), SUCCEEDED. */

@@ -65,6 +65,7 @@ class RefundIntegrationTests {
     @Autowired PolicyService policies;
     @Autowired RefundService refundService;
     @MockitoBean JwtDecoder jwtDecoder;
+    @MockitoBean vn.vshop.modules.order.gateway.PayoutGateway payouts;
 
     private UUID shop;
     private UUID sku;
@@ -267,6 +268,156 @@ class RefundIntegrationTests {
 
     private static final String ACCOUNT =
             "{\"bankName\":\"MB Bank\",\"accountNumber\":\"123 456 789\",\"accountName\":\"Nguyễn Văn A\"}";
+
+    // ------------------------------------------------------------------ automatic payout (R3)
+
+    private static final String LISTED_BANK =
+            "{\"bankCode\":\"VCB\",\"accountNumber\":\"0123 456 789\",\"accountName\":\"Nguyễn Văn A\"}";
+
+    private String approvedRefund(String subject, String key, String accountBody) throws Exception {
+        String order = paidOrder(subject, 1, key);
+        cancel(subject, order).andExpect(status().isOk());
+        account(subject, order, accountBody).andExpect(status().isOk());
+        return jdbc.sql("SELECT id::text FROM payment.refund WHERE seller_order_id = :o::uuid")
+                .param("o", order)
+                .query(String.class)
+                .single();
+    }
+
+    private ResultActions payout(String refund, String step) throws Exception {
+        return mvc.perform(
+                post("/api/v1/admin/refunds/" + refund + "/payout" + step).with(admin()));
+    }
+
+    private String refundStatus(String refund) {
+        return jdbc.sql("SELECT status FROM payment.refund WHERE id = :id::uuid")
+                .param("id", refund)
+                .query(String.class)
+                .single();
+    }
+
+    @Test
+    void aPayoutIsSentOnceAndAnUnclearAnswerIsResolvedByAskingNotByResending() throws Exception {
+        String refund = approvedRefund("buyer-1", "ref-key-0301", LISTED_BANK);
+        org.mockito.Mockito.when(payouts.provider()).thenReturn("PAYOS");
+        // Switched off: the hand-made transfer stays the only way.
+        org.mockito.Mockito.when(payouts.enabled()).thenReturn(false);
+        payout(refund, "")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("PAYOUT_NOT_AVAILABLE"));
+        org.mockito.Mockito.when(payouts.enabled()).thenReturn(true);
+        mvc.perform(get("/api/v1/admin/refunds?status=APPROVED").with(admin()))
+                .andExpect(jsonPath("$[0].canPayAutomatically").value(true));
+
+        // The provider does not answer: the refund waits at SUBMITTED, nothing is paid.
+        org.mockito.Mockito.when(payouts.submit(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(
+                        new vn.vshop.modules.order.gateway.PayoutGateway.Result(
+                                vn.vshop.modules.order.gateway.PayoutGateway.Outcome.UNKNOWN,
+                                null,
+                                "timeout"));
+        payout(refund, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUBMITTED"));
+        org.mockito.ArgumentCaptor<vn.vshop.modules.order.gateway.PayoutGateway.Request> sent =
+                org.mockito.ArgumentCaptor.forClass(
+                        vn.vshop.modules.order.gateway.PayoutGateway.Request.class);
+        org.mockito.Mockito.verify(payouts).submit(sent.capture());
+        assertThat(sent.getValue().referenceId()).isEqualTo(refund);
+        assertThat(sent.getValue().bankBin()).isEqualTo("970436");
+        assertThat(sent.getValue().accountNumber()).isEqualTo("0123456789");
+        assertThat(sent.getValue().amountVnd()).isEqualTo(125_000);
+
+        // Pressing again asks the provider about the same reference; it never sends again.
+        org.mockito.Mockito.when(payouts.query(refund))
+                .thenReturn(
+                        new vn.vshop.modules.order.gateway.PayoutGateway.Result(
+                                vn.vshop.modules.order.gateway.PayoutGateway.Outcome.PROCESSING,
+                                "P-1",
+                                ""));
+        payout(refund, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUBMITTED"));
+        org.mockito.Mockito.verify(payouts, org.mockito.Mockito.times(1))
+                .submit(org.mockito.ArgumentMatchers.any());
+        // Nobody can also record it by hand while the provider has it.
+        mvc.perform(
+                        post("/api/v1/admin/refunds/" + refund + "/paid")
+                                .with(admin())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"payoutReference\":\"HAND-1\"}"))
+                .andExpect(status().isConflict());
+
+        org.mockito.Mockito.when(payouts.query(refund))
+                .thenReturn(
+                        new vn.vshop.modules.order.gateway.PayoutGateway.Result(
+                                vn.vshop.modules.order.gateway.PayoutGateway.Outcome.SUCCEEDED,
+                                "TXN-9",
+                                ""));
+        payout(refund, "/check")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCEEDED"))
+                .andExpect(jsonPath("$.payoutReference").value("TXN-9"));
+        assertThat(count("platform.outbox_event WHERE event_type = 'RefundSucceeded'"))
+                .isEqualTo(1);
+        // Once paid, neither button does anything more.
+        payout(refund, "").andExpect(status().isConflict());
+        org.mockito.Mockito.verify(payouts, org.mockito.Mockito.times(1))
+                .submit(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void aRefusedPayoutGoesBackToApprovedAndCanStillBePaidByHand() throws Exception {
+        String refund = approvedRefund("buyer-1", "ref-key-0302", LISTED_BANK);
+        org.mockito.Mockito.when(payouts.provider()).thenReturn("PAYOS");
+        org.mockito.Mockito.when(payouts.enabled()).thenReturn(true);
+        org.mockito.Mockito.when(payouts.submit(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(
+                        new vn.vshop.modules.order.gateway.PayoutGateway.Result(
+                                vn.vshop.modules.order.gateway.PayoutGateway.Outcome.FAILED,
+                                null,
+                                "Sai số tài khoản"));
+        payout(refund, "")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APPROVED"))
+                .andExpect(jsonPath("$.payoutFailure").value("Sai số tài khoản"))
+                .andExpect(jsonPath("$.canPayAutomatically").value(true));
+        mvc.perform(
+                        post("/api/v1/admin/refunds/" + refund + "/paid")
+                                .with(admin())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"payoutReference\":\"HAND-2\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCEEDED"));
+    }
+
+    @Test
+    void anAccountTypedByHandHasNoBankNumberSoItCannotBePaidAutomatically() throws Exception {
+        String refund =
+                approvedRefund(
+                        "buyer-1",
+                        "ref-key-0303",
+                        "{\"bankName\":\"Ngân hàng X\",\"accountNumber\":\"123456789\",\"accountName\":\"Nguyen Van A\"}");
+        org.mockito.Mockito.when(payouts.provider()).thenReturn("PAYOS");
+        org.mockito.Mockito.when(payouts.enabled()).thenReturn(true);
+        payout(refund, "").andExpect(status().isConflict());
+        org.mockito.Mockito.verify(payouts, org.mockito.Mockito.never())
+                .submit(org.mockito.ArgumentMatchers.any());
+        assertThat(refundStatus(refund)).isEqualTo("APPROVED");
+        // An unlisted bank code is refused for the buyer.
+        String order =
+                jdbc.sql("SELECT seller_order_id::text FROM payment.refund WHERE id = :id::uuid")
+                        .param("id", refund)
+                        .query(String.class)
+                        .single();
+        account(
+                        "buyer-1",
+                        order,
+                        "{\"bankCode\":\"XXX\",\"accountNumber\":\"123456789\",\"accountName\":\"Nguyen\"}")
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/orders/banks").with(buyer("buyer-1")))
+                .andExpect(jsonPath("$[0].code").value("VCB"));
+    }
 
     private ResultActions cancel(String subject, String order) throws Exception {
         return mvc.perform(

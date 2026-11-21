@@ -124,7 +124,9 @@ public final class OrderMapper {
                 r.payoutReference(),
                 r.note(),
                 r.createdAt(),
-                r.paidAt());
+                r.paidAt(),
+                r.canPayAutomatically(),
+                r.payoutFailure());
     }
 
     public static SellerOrderResponse toResponse(SellerOrderDetail d) {

@@ -98,6 +98,9 @@
           "bankName" : {
             "type" : [ "string", "null" ]
           },
+          "canPayAutomatically" : {
+            "type" : "boolean"
+          },
           "createdAt" : {
             "format" : "date-time",
             "type" : "string"
@@ -120,6 +123,9 @@
             "format" : "date-time",
             "type" : [ "string", "null" ]
           },
+          "payoutFailure" : {
+            "type" : [ "string", "null" ]
+          },
           "payoutReference" : {
             "type" : [ "string", "null" ]
           },
@@ -130,7 +136,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "accountName", "accountNumber", "amount", "bankName", "createdAt", "id", "note", "orderId", "orderNumber", "paidAt", "payoutReference", "reason", "status" ],
+        "required" : [ "accountName", "accountNumber", "amount", "bankName", "canPayAutomatically", "createdAt", "id", "note", "orderId", "orderNumber", "paidAt", "payoutFailure", "payoutReference", "reason", "status" ],
         "type" : "object"
       },
       "ApiErrorResponse" : {
@@ -146,6 +152,18 @@
           }
         },
         "required" : [ "code", "correlationId", "message" ],
+        "type" : "object"
+      },
+      "BankResponse" : {
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "name" ],
         "type" : "object"
       },
       "CartLineRequest" : {
@@ -1303,13 +1321,18 @@
             "minLength" : 0,
             "type" : "string"
           },
+          "bankCode" : {
+            "maxLength" : 10,
+            "minLength" : 0,
+            "type" : "string"
+          },
           "bankName" : {
             "maxLength" : 150,
             "minLength" : 0,
             "type" : "string"
           }
         },
-        "required" : [ "accountName", "accountNumber", "bankName" ],
+        "required" : [ "accountName", "accountNumber" ],
         "type" : "object"
       },
       "RefundPaidRequest" : {
@@ -2552,6 +2575,96 @@
           },
           "required" : true
         },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminRefundResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "admin-refund-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "ADMIN" ],
+          "public" : false,
+          "requiresSecondFactor" : true
+        }
+      }
+    },
+    "/api/v1/admin/refunds/{id}/payout" : {
+      "post" : {
+        "operationId" : "adminRefundPayout",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdminRefundResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "admin-refund-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "ADMIN" ],
+          "public" : false,
+          "requiresSecondFactor" : true
+        }
+      }
+    },
+    "/api/v1/admin/refunds/{id}/payout/check" : {
+      "post" : {
+        "operationId" : "adminRefundCheckPayout",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "content" : {
@@ -4024,6 +4137,44 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PageResponseOrderSummaryResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "order-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/orders/banks" : {
+      "get" : {
+        "operationId" : "orderBanks",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/BankResponse"
+                  },
+                  "type" : "array"
                 }
               }
             },

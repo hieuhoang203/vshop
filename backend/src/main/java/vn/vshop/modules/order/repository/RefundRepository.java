@@ -43,8 +43,35 @@ public interface RefundRepository {
 
     List<Refund> list(String status, int limit);
 
+    /** What a payout needs, for a refund that is SUBMITTED. */
+    record PayoutTarget(
+            long amount,
+            String bankBin,
+            String accountNumberCiphertext,
+            String accountNameCiphertext,
+            String providerReference) {}
+
+    /** APPROVED to SUBMITTED, once; needs a bank BIN. False when it is not in that state. */
+    boolean claimPayout(UUID id, String provider, String providerReference);
+
+    Optional<PayoutTarget> payoutTarget(UUID id);
+
+    /** SUBMITTED to SUCCEEDED, once. */
+    boolean payoutSucceeded(UUID id, String reference, String subject);
+
+    /** SUBMITTED back to APPROVED with the reason; the account is kept for another try. */
+    boolean payoutFailed(UUID id, String reason);
+
+    /** Refunds submitted to the provider and not resolved for at least {@code seconds}. */
+    List<UUID> staleSubmitted(int seconds, int limit);
+
     /** AWAITING_ACCOUNT or APPROVED to APPROVED with the given destination. */
-    boolean setAccount(UUID id, String bankName, String numberCiphertext, String nameCiphertext);
+    boolean setAccount(
+            UUID id,
+            String bankName,
+            String bankBin,
+            String numberCiphertext,
+            String nameCiphertext);
 
     /** APPROVED to SUCCEEDED, once. */
     boolean markPaid(UUID id, String payoutReference, String note, String subject);

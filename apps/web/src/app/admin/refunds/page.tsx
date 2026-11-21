@@ -12,6 +12,7 @@ export const metadata = { title: "Hoàn tiền" };
 
 const STATUS: Record<string, string> = {
   AWAITING_ACCOUNT: "Chờ người mua nhập tài khoản",
+  SUBMITTED: "Đã gửi lệnh chi, chờ kết quả",
   APPROVED: "Sẵn sàng chuyển khoản",
   SUCCEEDED: "Đã chuyển khoản",
   FAILED: "Thất bại",

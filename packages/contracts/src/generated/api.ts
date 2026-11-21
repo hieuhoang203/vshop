@@ -148,6 +148,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/refunds/{id}/payout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["adminRefundPayout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/refunds/{id}/payout/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["adminRefundCheckPayout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/return-cases": {
         parameters: {
             query?: never;
@@ -588,6 +620,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["orderList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/banks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["orderBanks"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1288,6 +1336,7 @@ export interface components {
             /** Format: int64 */
             amount: number;
             bankName: string | null;
+            canPayAutomatically: boolean;
             /** Format: date-time */
             createdAt: string;
             /** Format: uuid */
@@ -1298,6 +1347,7 @@ export interface components {
             orderNumber: string;
             /** Format: date-time */
             paidAt: string | null;
+            payoutFailure: string | null;
             payoutReference: string | null;
             reason: string;
             status: string;
@@ -1306,6 +1356,10 @@ export interface components {
             code: string;
             correlationId: string;
             message: string;
+        };
+        BankResponse: {
+            code: string;
+            name: string;
         };
         CartLineRequest: {
             /** Format: int32 */
@@ -1725,7 +1779,8 @@ export interface components {
         RefundAccountRequest: {
             accountName: string;
             accountNumber: string;
-            bankName: string;
+            bankCode?: string;
+            bankName?: string;
         };
         RefundPaidRequest: {
             note?: string;
@@ -2316,6 +2371,68 @@ export interface operations {
                 "application/json": components["schemas"]["RefundPaidRequest"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRefundResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    adminRefundPayout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRefundResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    adminRefundCheckPayout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -3358,6 +3475,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PageResponseOrderSummaryResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    orderBanks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankResponse"][];
                 };
             };
             /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */

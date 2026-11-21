@@ -43,10 +43,11 @@ const routes: { method: string; path: RegExp; maxBytes: number }[] = [
   { method: "POST", path: new RegExp(`^return-cases/${uuid}/return-shipment$`), maxBytes: 256 },
   { method: "POST", path: new RegExp(`^${shop}/orders/${uuid}/shipment/cancel$`), maxBytes: 64 },
   // Refunds: the buyer's account, and the administrator's payout records
+  { method: "GET", path: /^orders\/banks$/, maxBytes: 0 },
   { method: "PUT", path: new RegExp(`^orders/${uuid}/refund-account$`), maxBytes: 1_024 },
   {
     method: "POST",
-    path: new RegExp(`^admin/refunds/${uuid}/(paid|bad-account)$`),
+    path: new RegExp(`^admin/refunds/${uuid}/(paid|bad-account|payout|payout/check)$`),
     maxBytes: 1_024,
   },
   // Return cases: buyer, shop and administrator

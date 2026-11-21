@@ -23,6 +23,7 @@ import vn.vshop.common.web.dto.PageResponse;
 import vn.vshop.modules.order.dto.request.PlaceOrderRequest;
 import vn.vshop.modules.order.dto.request.ReasonRequest;
 import vn.vshop.modules.order.dto.request.RefundAccountRequest;
+import vn.vshop.modules.order.dto.response.BankResponse;
 import vn.vshop.modules.order.dto.response.CheckoutGroupResponse;
 import vn.vshop.modules.order.dto.response.OrderResponse;
 import vn.vshop.modules.order.dto.response.OrderSummaryResponse;
@@ -135,8 +136,19 @@ public class OrderController {
                         id,
                         new RefundService.Account(
                                 request.bankName(),
+                                request.bankCode(),
                                 request.accountNumber(),
                                 request.accountName())));
+    }
+
+    /**
+     * Banks a refund can be sent to by an automatic payout (with a bank code the form sends back).
+     */
+    @GetMapping("/orders/banks")
+    public java.util.List<BankResponse> banks() {
+        return vn.vshop.modules.order.model.VietnamBanks.all().stream()
+                .map(b -> new BankResponse(b.code(), b.name()))
+                .toList();
     }
 
     @GetMapping("/orders/{id}")

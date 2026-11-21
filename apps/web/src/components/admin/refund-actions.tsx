@@ -23,9 +23,39 @@ export function RefundActions({ refund }: { refund: AdminRefund }) {
     router.refresh();
   }
 
+  if (refund.status === "SUBMITTED") {
+    return (
+      <div className="order-actions">
+        <p className="form-note">
+          Lệnh chi đã gửi tới đơn vị thanh toán, đang chờ kết quả. Không chuyển khoản tay lúc này.
+        </p>
+        <Button disabled={busy} onClick={() => act("payout/check", {})}>
+          Kiểm tra trạng thái chi
+        </Button>
+        {error && (
+          <p role="alert" className="error-message">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
   if (refund.status !== "APPROVED") return null;
   return (
     <div className="order-actions">
+      {refund.canPayAutomatically && (
+        <>
+          <Button disabled={busy} onClick={() => act("payout", {})}>
+            Chi tự động qua payOS
+          </Button>
+          {refund.payoutFailure && (
+            <p role="alert" className="error-message">
+              Lần chi trước không thành công: {refund.payoutFailure}
+            </p>
+          )}
+          <p className="form-note">Hoặc chuyển khoản tay rồi ghi nhận mã giao dịch:</p>
+        </>
+      )}
       <label htmlFor={`ref-${refund.id}`}>Mã giao dịch ngân hàng sau khi chuyển khoản</label>
       <TextField.Root
         id={`ref-${refund.id}`}

@@ -43,6 +43,8 @@ public class RefundService {
     private final OutboxService outbox;
     private final ObjectMapper json;
 
+    private final vn.vshop.modules.order.gateway.PayoutGateway payouts;
+
     RefundService(
             RefundRepository refunds,
             OrderRepository orders,
@@ -50,7 +52,9 @@ public class RefundService {
             PiiCipher cipher,
             AuditEventService audit,
             OutboxService outbox,
-            ObjectMapper json) {
+            ObjectMapper json,
+            vn.vshop.modules.order.gateway.PayoutGateway payouts) {
+        this.payouts = payouts;
         this.refunds = refunds;
         this.orders = orders;
         this.accounts = accounts;
@@ -61,7 +65,8 @@ public class RefundService {
     }
 
     /** What the buyer enters; the service validates and normalises it. */
-    public record Account(String bankName, String accountNumber, String accountName) {}
+    public record Account(
+            String bankName, String bankCode, String accountNumber, String accountName) {}
 
     /**
      * Creates the refund for everything still refundable on the order. No-op when nothing was
@@ -173,7 +178,17 @@ public class RefundService {
                         () ->
                                 new BusinessException(
                                         ErrorCode.ORDER_NOT_FOUND, "Không tìm thấy đơn hàng."));
-        String bank = collapse(in.bankName());
+        // A listed bank gives the bank identification number an automatic payout needs; a free
+        // text bank still works for a payout made by hand.
+        var listed =
+                in.bankCode() == null || in.bankCode().isBlank()
+                        ? java.util.Optional.<vn.vshop.modules.order.model.VietnamBanks.Bank>empty()
+                        : vn.vshop.modules.order.model.VietnamBanks.byCode(in.bankCode());
+        if (in.bankCode() != null && !in.bankCode().isBlank() && listed.isEmpty()) {
+            throw invalid("Ngân hàng không có trong danh sách.");
+        }
+        String bank = listed.map(b -> b.name()).orElseGet(() -> collapse(in.bankName()));
+        String bin = listed.map(b -> b.bin()).orElse(null);
         String number =
                 in.accountNumber() == null ? "" : in.accountNumber().replaceAll("[\\s.\\-]", "");
         String name = unaccent(in.accountName());
@@ -201,6 +216,7 @@ public class RefundService {
             refunds.setAccount(
                     r.id(),
                     bank,
+                    bin,
                     cipher.encrypt(number, context("account_number", r.id())),
                     cipher.encrypt(name, context("account_name", r.id())));
         }
@@ -255,6 +271,12 @@ public class RefundService {
 
     // ------------------------------------------------------------------ helpers
 
+    /** One refund for the administrator view. */
+    @Transactional
+    public AdminRefund adminGet(UUID id) {
+        return adminView(require(id));
+    }
+
     private Refund require(UUID id) {
         return refunds.find(id)
                 .orElseThrow(
@@ -304,7 +326,9 @@ public class RefundService {
                 r.payoutReference(),
                 r.note(),
                 r.createdAt(),
-                r.paidAt());
+                r.paidAt(),
+                payouts.enabled() && r.status().equals("APPROVED") && r.bankBin() != null,
+                r.payoutFailure());
     }
 
     private static String context(String column, UUID id) {

@@ -17,4 +17,6 @@ public record AdminRefund(
         String payoutReference,
         String note,
         OffsetDateTime createdAt,
-        OffsetDateTime paidAt) {}
+        OffsetDateTime paidAt,
+        boolean canPayAutomatically,
+        String payoutFailure) {}
