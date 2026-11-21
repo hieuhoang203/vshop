@@ -14,6 +14,15 @@ export function CaseSummary({ c }: { c: ReturnCase }) {
         {c.approvedAmount ? ` · duyệt hoàn ${formatMoney(c.approvedAmount)}` : ""}
       </p>
       <p className="form-note">{c.description}</p>
+      {c.items.length > 0 && (
+        <ul className="form-note" aria-label="Sản phẩm trả">
+          {c.items.map((i) => (
+            <li key={i.orderLineId}>
+              {i.productName} × {i.quantity} · {formatMoney(i.amount)}
+            </li>
+          ))}
+        </ul>
+      )}
       {c.status === "REQUESTED" && (
         <p className="form-note">
           Hạn người bán phản hồi: {dateTime.format(new Date(c.sellerDeadlineAt))}

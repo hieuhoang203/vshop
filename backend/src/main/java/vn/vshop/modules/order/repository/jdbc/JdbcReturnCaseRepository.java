@@ -62,6 +62,44 @@ public class JdbcReturnCaseRepository implements ReturnCaseRepository {
     }
 
     @Override
+    public void insertItem(UUID caseId, UUID orderLineId, int quantity) {
+        jdbc.sql(
+                        "INSERT INTO aftersales.return_case_item (return_case_id, order_line_id,"
+                                + " quantity) VALUES (:c, :l, :q)")
+                .param("c", caseId)
+                .param("l", orderLineId)
+                .param("q", quantity)
+                .update();
+    }
+
+    @Override
+    public List<vn.vshop.modules.order.entity.ReturnCaseItem> items(UUID caseId) {
+        return jdbc.sql(
+                        "SELECT i.order_line_id, l.product_name_snapshot AS product_name,"
+                                + " i.quantity, (l.net_amount * i.quantity / l.quantity) AS amount"
+                                + " FROM aftersales.return_case_item i"
+                                + " JOIN sales.order_line l ON l.id = i.order_line_id"
+                                + " WHERE i.return_case_id = :c ORDER BY l.id")
+                .param("c", caseId)
+                .query(vn.vshop.modules.order.entity.ReturnCaseItem.class)
+                .list();
+    }
+
+    @Override
+    public boolean isPartial(UUID caseId) {
+        return jdbc.sql(
+                        "SELECT EXISTS (SELECT 1 FROM aftersales.return_case_item WHERE return_case_id = :c)"
+                                + " AND EXISTS (SELECT 1 FROM aftersales.return_case rc"
+                                + " JOIN sales.order_line l ON l.seller_order_id = rc.seller_order_id"
+                                + " WHERE rc.id = :c AND COALESCE((SELECT i.quantity"
+                                + " FROM aftersales.return_case_item i WHERE i.return_case_id = rc.id"
+                                + " AND i.order_line_id = l.id), 0) < l.quantity)")
+                .param("c", caseId)
+                .query(Boolean.class)
+                .single();
+    }
+
+    @Override
     public Optional<ReturnCase> find(UUID id) {
         return jdbc.sql(SELECT + " WHERE c.id = :id")
                 .param("id", id)

@@ -2,6 +2,8 @@ package vn.vshop.modules.order.service;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,7 @@ import vn.vshop.common.exception.ErrorCode;
 import vn.vshop.modules.identity.service.AccountService;
 import vn.vshop.modules.inventory.service.ReservationService;
 import vn.vshop.modules.merchant.service.ShopService;
+import vn.vshop.modules.order.entity.OrderLine;
 import vn.vshop.modules.order.entity.OrderStatus;
 import vn.vshop.modules.order.entity.ReturnCase;
 import vn.vshop.modules.order.entity.SellerOrder;
@@ -90,7 +93,12 @@ public class ReturnCaseService {
 
     @Transactional
     public ReturnCaseDetail open(
-            String subject, UUID orderId, String reason, String preferred, String description) {
+            String subject,
+            UUID orderId,
+            String reason,
+            String preferred,
+            String description,
+            List<ItemInput> items) {
         UUID buyer = accounts.requireActiveAccount(subject);
         SellerOrder order =
                 orders.findOrder(buyer, orderId)
@@ -136,6 +144,30 @@ public class ReturnCaseService {
                 reason.equals("CHANGED_MIND")
                         ? order.payableAmount() - order.shippingAmount()
                         : order.payableAmount();
+        // Naming items refunds their share of what was paid for them; the shipping fee follows only
+        // when the whole order goes back and the reason allows it.
+        List<ItemInput> chosen = items == null ? List.of() : items;
+        List<OrderLine> lines = chosen.isEmpty() ? List.of() : orders.findLines(orderId);
+        if (!chosen.isEmpty()) {
+            Map<UUID, OrderLine> byId = new HashMap<>();
+            lines.forEach(l -> byId.put(l.id(), l));
+            Set<UUID> seen = new HashSet<>();
+            long picked = 0;
+            boolean whole = chosen.size() == lines.size();
+            for (ItemInput item : chosen) {
+                OrderLine line = byId.get(item.orderLineId());
+                if (line == null || !seen.add(item.orderLineId())) {
+                    throw invalid("Sản phẩm trả không thuộc đơn hàng hoặc bị trùng.");
+                }
+                if (item.quantity() < 1 || item.quantity() > line.quantity()) {
+                    throw invalid(
+                            "Số lượng trả của " + line.productNameSnapshot() + " không hợp lệ.");
+                }
+                picked += line.netAmount() * item.quantity() / line.quantity();
+                whole = whole && item.quantity() == line.quantity();
+            }
+            amount = whole ? amount : picked;
+        }
         if (amount <= 0) {
             throw invalid("Đơn này không có số tiền nào có thể hoàn.");
         }
@@ -155,6 +187,9 @@ public class ReturnCaseService {
         } catch (DuplicateKeyException e) {
             throw new BusinessException(
                     ErrorCode.RETURN_NOT_ALLOWED, "Đơn này đã có yêu cầu trả hàng.");
+        }
+        for (ItemInput item : chosen) {
+            cases.insertItem(id, item.orderLineId(), item.quantity());
         }
         cases.insertEvent(id, null, "REQUESTED", "BUYER", subject, text);
         publish("ReturnRequested", id, order);
@@ -211,6 +246,9 @@ public class ReturnCaseService {
                 clean(note, "Người mua nhờ quản trị viên xem xét"));
         return detail(caseId);
     }
+
+    /** An order line and the quantity the buyer returns. */
+    public record ItemInput(UUID orderLineId, int quantity) {}
 
     /** What the return parcel needs from a case: only the buyer, only while goods are awaited. */
     public record ShippingContext(UUID orderId, UUID shopId, String status) {}
@@ -362,7 +400,10 @@ public class ReturnCaseService {
                 "REFUND_APPROVED",
                 new Change(null, c.requestedAmount(), null, clean(note, null), null, null));
         refunds.createForReturn(c.sellerOrderId(), c.id(), c.requestedAmount());
-        if (restock) {
+        // Goods go back on sale automatically only when the whole order came back; a partial
+        // return is put back by the shop through a stock adjustment (it knows what is resellable).
+        boolean partial = cases.isPartial(c.id());
+        if (restock && !partial) {
             for (UUID reservationId : orders.findReservationIds(c.sellerOrderId())) {
                 reservations.returnCommitted(reservationId);
             }
@@ -373,7 +414,9 @@ public class ReturnCaseService {
                 "REFUND_APPROVED",
                 "SELLER",
                 subject,
-                "Đã nhận hàng trả" + (restock ? ", nhập kho lại" : ""));
+                "Đã nhận hàng trả"
+                        + (restock && !partial ? ", nhập kho lại" : "")
+                        + (partial ? " (trả một phần: nhập kho bằng điều chỉnh tồn kho)" : ""));
         publish("ReturnRefundApproved", c.id(), orders.findById(c.sellerOrderId()));
         return detail(caseId);
     }
@@ -457,7 +500,7 @@ public class ReturnCaseService {
 
     private ReturnCaseDetail detail(UUID id) {
         ReturnCase c = cases.find(id).orElseThrow();
-        return new ReturnCaseDetail(c, cases.events(id));
+        return new ReturnCaseDetail(c, cases.events(id), cases.items(id));
     }
 
     private ReturnCase buyerCase(String subject, UUID caseId) {

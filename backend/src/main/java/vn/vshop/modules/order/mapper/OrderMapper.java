@@ -93,6 +93,15 @@ public final class OrderMapper {
                                                 e.actorType(),
                                                 e.note(),
                                                 e.createdAt()))
+                        .toList(),
+                d.items().stream()
+                        .map(
+                                i ->
+                                        new ReturnCaseResponse.ReturnCaseItemResponse(
+                                                i.orderLineId(),
+                                                i.productName(),
+                                                i.quantity(),
+                                                i.amount()))
                         .toList());
     }
 
@@ -183,6 +192,7 @@ public final class OrderMapper {
     private static OrderResponse.OrderLineResponse toResponse(OrderLine l) {
         Map<String, String> variant = JSON.readValue(l.variantSnapshot(), STRINGS);
         return new OrderResponse.OrderLineResponse(
+                l.id(),
                 l.skuId(),
                 l.productId(),
                 l.productSlug(),

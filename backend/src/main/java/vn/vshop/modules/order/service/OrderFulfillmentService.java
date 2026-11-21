@@ -55,6 +55,7 @@ public class OrderFulfillmentService {
     private final RefundService refunds;
     private final java.time.Clock clock;
     private final vn.vshop.modules.order.repository.ShipmentRepository shipments;
+    private final CodLedgerService codLedger;
 
     OrderFulfillmentService(
             OrderRepository orders,
@@ -67,7 +68,9 @@ public class OrderFulfillmentService {
             ObjectMapper json,
             RefundService refunds,
             java.time.Clock clock,
-            vn.vshop.modules.order.repository.ShipmentRepository shipments) {
+            vn.vshop.modules.order.repository.ShipmentRepository shipments,
+            CodLedgerService codLedger) {
+        this.codLedger = codLedger;
         this.shipments = shipments;
         this.orders = orders;
         this.orderService = orderService;
@@ -191,6 +194,7 @@ public class OrderFulfillmentService {
                 "SELLER",
                 subject,
                 "Người bán xác nhận đã giao (chưa có xác nhận từ đơn vị vận chuyển)");
+        codLedger.recordDelivered(order, false);
         publish("OrderDelivered", order);
         return view(find(shopId, orderId));
     }

@@ -31,6 +31,7 @@ public record OrderResponse(
             String name, String phone, String street, String ward, String province) {}
 
     public record OrderLineResponse(
+            UUID id,
             UUID skuId,
             UUID productId,
             String productSlug,

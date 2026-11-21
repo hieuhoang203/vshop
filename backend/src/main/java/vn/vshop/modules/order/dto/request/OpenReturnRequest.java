@@ -7,4 +7,5 @@ import jakarta.validation.constraints.Size;
 public record OpenReturnRequest(
         @NotBlank @Size(max = 30) String reasonCode,
         @NotBlank @Size(max = 20) String preferredResolution,
-        @NotBlank @Size(max = 1100) String description) {}
+        @NotBlank @Size(max = 1100) String description,
+        @Size(max = 50) java.util.List<@jakarta.validation.Valid ReturnItemRequest> items) {}

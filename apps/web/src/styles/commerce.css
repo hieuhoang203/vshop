@@ -214,3 +214,18 @@
 .cart-line.unread {
   border-left: 4px solid var(--purple);
 }
+
+.return-items {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 0;
+}
+.return-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}

@@ -39,5 +39,5 @@ Chưa cấu hình thì tạo vận đơn bị từ chối (409 `CARRIER_NOT_CONF
 3. **Xác thực webhook chỉ là bí mật trên URL** (GHTK không mô tả chữ ký). Dùng HTTPS và giá trị ngẫu nhiên dài; không ghi URL vào log.
 4. **Tài liệu GHTK có chỗ mâu thuẫn** (lệnh hủy ghi POST nhưng mẫu mã dùng GET; mức phí trong ví dụ webhook), cần xác nhận bằng một lần gọi staging.
 5. **Chưa đọc** trang in nhãn, danh sách địa chỉ lấy hàng và các API B2C của GHTK; chưa có in nhãn.
-6. Trạng thái trả hàng/hoàn của GHTK (20/21/11) mới chỉ được ghi và phát sự kiện `ShipmentProblem`; chưa có luồng xử lý hàng hoàn và tồn kho (phase E).
+6. Trạng thái trả hàng/hoàn của GHTK (20/21/11) mới chỉ được ghi và phát sự kiện `ShipmentProblem`; hàng hoàn về shop nay được xử lý ở docs/24 mục 12 (shop xác nhận, hủy đơn, nhập kho, hoàn tiền).
 7. Chưa có tác vụ đối chiếu định kỳ trạng thái với GHTK khi webhook bị mất.

@@ -34,6 +34,15 @@ public interface ReturnCaseRepository {
             UUID policyId,
             OffsetDateTime sellerDeadline);
 
+    void insertItem(UUID caseId, UUID orderLineId, int quantity);
+
+    List<vn.vshop.modules.order.entity.ReturnCaseItem> items(UUID caseId);
+
+    /**
+     * True when the case names items and they are not the whole order (every unit of every line).
+     */
+    boolean isPartial(UUID caseId);
+
     Optional<ReturnCase> find(UUID id);
 
     Optional<ReturnCase> findLiveByOrder(UUID orderId);

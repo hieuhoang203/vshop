@@ -23,7 +23,11 @@ public record ReturnCaseResponse(
         @Nullable String adminNote,
         @Nullable String returnTrackingCode,
         OffsetDateTime createdAt,
-        List<ReturnCaseEventResponse> events) {
+        List<ReturnCaseEventResponse> events,
+        List<ReturnCaseItemResponse> items) {
+
+    public record ReturnCaseItemResponse(
+            UUID orderLineId, String productName, int quantity, long amount) {}
 
     public record ReturnCaseEventResponse(
             @Nullable String fromStatus,

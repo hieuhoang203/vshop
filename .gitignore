@@ -17,3 +17,5 @@ playwright-report/
 /apps/mobile/android/
 /apps/mobile/ios/
 .DS_Store
+deploy/.env
+deploy/.generated/

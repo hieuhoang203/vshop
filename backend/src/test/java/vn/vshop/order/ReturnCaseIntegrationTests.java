@@ -401,6 +401,99 @@ class ReturnCaseIntegrationTests {
                 .andExpect(status().isCreated());
     }
 
+    @Test
+    void namingItemsRefundsOnlyTheirShareAndAPartialReturnIsNotRestockedAutomatically()
+            throws Exception {
+        approveReturnHandling();
+        String order = deliveredCod("buyer-1", 2, "ret-key-0201"); // 2 x 100.000 + 25.000 shipping
+        String line =
+                jdbc.sql("SELECT id::text FROM sales.order_line WHERE seller_order_id = :o::uuid")
+                        .param("o", order)
+                        .query(String.class)
+                        .single();
+        // Lines that are not on the order, repeated lines and too many units are refused.
+        for (String items :
+                new String[] {
+                    "[{\"orderLineId\":\"" + UUID.randomUUID() + "\",\"quantity\":1}]",
+                    "[{\"orderLineId\":\"" + line + "\",\"quantity\":3}]",
+                    "[{\"orderLineId\":\""
+                            + line
+                            + "\",\"quantity\":1},{\"orderLineId\":\""
+                            + line
+                            + "\",\"quantity\":1}]"
+                }) {
+            mvc.perform(
+                            post("/api/v1/orders/" + order + "/return-case")
+                                    .with(buyer("buyer-1"))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(
+                                            "{\"reasonCode\":\"DAMAGED\",\"preferredResolution\":\"RETURN_AND_REFUND\",\"description\":\"Một sản phẩm bị vỡ khi nhận\",\"items\":"
+                                                    + items
+                                                    + "}"))
+                    .andExpect(status().isBadRequest());
+        }
+        // One of the two units: 100.000, no shipping fee.
+        String id =
+                caseId(
+                        mvc.perform(
+                                        post("/api/v1/orders/" + order + "/return-case")
+                                                .with(buyer("buyer-1"))
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content(
+                                                        "{\"reasonCode\":\"DAMAGED\",\"preferredResolution\":\"RETURN_AND_REFUND\",\"description\":\"Một sản phẩm bị vỡ khi nhận\",\"items\":[{\"orderLineId\":\""
+                                                                + line
+                                                                + "\",\"quantity\":1}]}"))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.requestedAmount").value(100_000))
+                                .andExpect(jsonPath("$.items[0].quantity").value(1))
+                                .andExpect(jsonPath("$.items[0].amount").value(100_000)));
+        mvc.perform(
+                        post("/api/v1/seller/shops/"
+                                        + shop
+                                        + "/return-cases/"
+                                        + id
+                                        + "/approve-return")
+                                .with(seller())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"note\":\"Gửi lại giúp shop\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(
+                        post("/api/v1/return-cases/" + id + "/ship")
+                                .with(buyer("buyer-1"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"trackingCode\":\"RET-PART-1\"}"))
+                .andExpect(status().isOk());
+        assertThat(onHand()).isEqualTo(18);
+        confirmReceived(id, true)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.approvedAmount").value(100_000));
+        // A partial return is not put back on sale by itself.
+        assertThat(onHand()).isEqualTo(18);
+        assertThat(jdbc.sql("SELECT amount FROM payment.refund").query(Long.class).single())
+                .isEqualTo(100_000L);
+    }
+
+    @Test
+    void namingEveryUnitIsTheWholeOrderIncludingShippingForAShopFault() throws Exception {
+        approveReturnHandling();
+        String order = deliveredCod("buyer-1", 2, "ret-key-0202");
+        String line =
+                jdbc.sql("SELECT id::text FROM sales.order_line WHERE seller_order_id = :o::uuid")
+                        .param("o", order)
+                        .query(String.class)
+                        .single();
+        mvc.perform(
+                        post("/api/v1/orders/" + order + "/return-case")
+                                .with(buyer("buyer-1"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"reasonCode\":\"DAMAGED\",\"preferredResolution\":\"REFUND_ONLY\",\"description\":\"Cả hai sản phẩm đều bị vỡ\",\"items\":[{\"orderLineId\":\""
+                                                + line
+                                                + "\",\"quantity\":2}]}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.requestedAmount").value(225_000));
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private ResultActions openCase(

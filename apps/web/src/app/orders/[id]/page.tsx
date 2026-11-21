@@ -22,7 +22,9 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
       <OrderCard order={order} />
       {order.status === "AWAITING_SELLER" && <CancelOrder orderId={order.id} />}
       {returnCase && <BuyerReturnPanel c={returnCase} />}
-      {!returnCase && order.status === "DELIVERED" && <ReturnRequestForm orderId={order.id} />}
+      {!returnCase && order.status === "DELIVERED" && (
+        <ReturnRequestForm orderId={order.id} lines={order.lines} />
+      )}
       {order.refund && <RefundPanel orderId={order.id} refund={order.refund} />}
       <section className="panel" aria-label="Lịch sử trạng thái">
         <h2>Lịch sử</h2>

@@ -1,0 +1,37 @@
+{
+	email {$ACME_EMAIL}
+}
+
+# The storefront. Provider callbacks (payOS, VNPay, GHTK) reach the API through the same host, so
+# their URLs are https://<SHOP_DOMAIN>/api/v1/...; everything else is the web app.
+{$SHOP_DOMAIN} {
+	encode zstd gzip
+	@callbacks path /api/v1/payments/* /api/v1/shipping/*
+	handle @callbacks {
+		reverse_proxy api:8081
+	}
+	handle {
+		reverse_proxy web:3100
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}
+
+# Sign-in pages and the token endpoint (Keycloak). The admin console stays closed to the internet.
+{$AUTH_DOMAIN} {
+	encode zstd gzip
+	@admin path /admin /admin/* /realms/master /realms/master/*
+	respond @admin 404
+	reverse_proxy keycloak:8080
+}
+
+# The public API for the mobile app. The Actuator endpoints other than health are not exposed.
+{$API_DOMAIN} {
+	encode zstd gzip
+	@internal path /actuator/*
+	respond @internal 404
+	reverse_proxy api:8081
+}

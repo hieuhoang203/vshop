@@ -1,0 +1,162 @@
+# Production stack for one Docker host. Nothing here is started by the local development setup.
+#   1. Copy deploy/.env.production.example to deploy/.env and fill every value (see docs/27).
+#   2. node scripts/prepare-prod-realm.mjs   (writes deploy/.generated/vshop-realm.json)
+#   3. docker compose --env-file deploy/.env -f deploy/compose.prod.yaml up -d --build
+# Only the reverse proxy publishes ports. Databases, Redis and the workers stay on the private network.
+name: vshop-prod
+
+x-api-env: &api-env
+  DB_URL: jdbc:postgresql://postgres:5432/vshop
+  DB_USER: vshop
+  DB_PASSWORD: ${DB_PASSWORD:?}
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  REDIS_PASSWORD: ${REDIS_PASSWORD:?}
+  RATE_LIMIT_REDIS: "true"
+  KEYCLOAK_ISSUER: https://${AUTH_DOMAIN:?}/realms/vshop
+  KEYCLOAK_BASE_URL: http://keycloak:8080
+  KEYCLOAK_PROVISIONER_SECRET: ${KEYCLOAK_PROVISIONER_SECRET:?}
+  WEB_BASE_URL: https://${SHOP_DOMAIN:?}
+  PII_KEY_LOCAL_1: ${PII_KEY_LOCAL_1:?}
+  PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-payos}
+  PAY_OS_CLIENT_ID: ${PAY_OS_CLIENT_ID:-}
+  PAY_OS_API_KEY: ${PAY_OS_API_KEY:-}
+  PAY_OS_CHECKSUM_KEY: ${PAY_OS_CHECKSUM_KEY:-}
+  PAYOS_PAYOUT_ENABLED: ${PAYOS_PAYOUT_ENABLED:-false}
+  PAYOS_PAYOUT_CLIENT_ID: ${PAYOS_PAYOUT_CLIENT_ID:-}
+  PAYOS_PAYOUT_API_KEY: ${PAYOS_PAYOUT_API_KEY:-}
+  PAYOS_PAYOUT_CHECKSUM_KEY: ${PAYOS_PAYOUT_CHECKSUM_KEY:-}
+  GHTK_BASE_URL: ${GHTK_BASE_URL:-https://services.giaohangtietkiem.vn}
+  GHTK_TOKEN: ${GHTK_TOKEN:-}
+  GHTK_PARTNER_CODE: ${GHTK_PARTNER_CODE:-}
+  GHTK_WEBHOOK_TOKEN: ${GHTK_WEBHOOK_TOKEN:-}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USERNAME: ${SMTP_USERNAME:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+  EMAIL_FROM: ${EMAIL_FROM:-}
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vshop
+      POSTGRES_USER: vshop
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?}
+    volumes: ["postgres-data:/var/lib/postgresql"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vshop -d vshop"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  keycloak-db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?}
+    volumes: ["keycloak-data:/var/lib/postgresql"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.7
+    restart: unless-stopped
+    # Production mode: HTTPS terminates at the proxy, so Keycloak trusts its forwarded headers.
+    command: ["start", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:?}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?}
+      KC_HOSTNAME: https://${AUTH_DOMAIN:?}
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./.generated/vshop-realm.json:/opt/keycloak/data/import/vshop-realm.json:ro
+      - ../infra/keycloak/themes:/opt/keycloak/themes:ro
+    depends_on:
+      keycloak-db: { condition: service_healthy }
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?}"]
+    volumes: ["redis-data:/data"]
+
+  api:
+    build: { context: ../backend }
+    restart: unless-stopped
+    environment:
+      <<: *api-env
+      SPRING_PROFILES_ACTIVE: ""
+      JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=70
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health | grep -q UP || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # Background jobs (outbox, order expiry, e-mail, payout reconciliation). One is enough to start;
+  # the jobs claim rows with SKIP LOCKED, so more copies are safe.
+  worker:
+    build: { context: ../backend }
+    restart: unless-stopped
+    environment:
+      <<: *api-env
+      SPRING_PROFILES_ACTIVE: worker
+    depends_on:
+      api: { condition: service_healthy }
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    environment:
+      API_BASE_URL: http://api:8081
+      KEYCLOAK_ISSUER: https://${AUTH_DOMAIN:?}/realms/vshop
+      WEB_BASE_URL: https://${SHOP_DOMAIN:?}
+      SESSION_SECRET: ${SESSION_SECRET:?}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      KEYCLOAK_WEB_DIRECT_SECRET: ${KEYCLOAK_WEB_DIRECT_SECRET:?}
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+    depends_on:
+      api: { condition: service_healthy }
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SHOP_DOMAIN: ${SHOP_DOMAIN:?}
+      AUTH_DOMAIN: ${AUTH_DOMAIN:?}
+      API_DOMAIN: ${API_DOMAIN:?}
+      ACME_EMAIL: ${ACME_EMAIL:?}
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [web, api, keycloak]
+
+volumes:
+  postgres-data:
+  keycloak-data:
+  redis-data:
+  caddy-data:
+  caddy-config:

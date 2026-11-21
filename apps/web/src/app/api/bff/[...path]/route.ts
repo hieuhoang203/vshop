@@ -51,7 +51,7 @@ const routes: { method: string; path: RegExp; maxBytes: number }[] = [
     maxBytes: 1_024,
   },
   // Return cases: buyer, shop and administrator
-  { method: "POST", path: new RegExp(`^orders/${uuid}/return-case$`), maxBytes: 2_048 },
+  { method: "POST", path: new RegExp(`^orders/${uuid}/return-case$`), maxBytes: 4_096 },
   {
     method: "POST",
     path: new RegExp(`^return-cases/${uuid}/(accept-offer|decline-offer|escalate|ship|cancel)$`),
@@ -65,6 +65,7 @@ const routes: { method: string; path: RegExp; maxBytes: number }[] = [
     maxBytes: 1_024,
   },
   { method: "POST", path: new RegExp(`^admin/return-cases/${uuid}/decide$`), maxBytes: 1_024 },
+  { method: "POST", path: new RegExp(`^admin/cod-receivables/${uuid}/settled$`), maxBytes: 256 },
   // Notifications of the signed-in person
   { method: "GET", path: /^me\/notifications\/unread-count$/, maxBytes: 0 },
   { method: "POST", path: new RegExp(`^me/notifications/${uuid}/read$`), maxBytes: 64 },

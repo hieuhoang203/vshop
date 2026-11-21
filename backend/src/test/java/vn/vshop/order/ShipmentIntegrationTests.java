@@ -495,6 +495,76 @@ class ShipmentIntegrationTests {
         assertThat(onHand()).isEqualTo(10);
     }
 
+    @Test
+    void cashOnDeliveryMoneyIsTrackedUntilTheCarrierRemitsIt() throws Exception {
+        String order = readyOrder();
+        savePickup();
+        doReturn(true).when(carrier).configured();
+        doReturn(created("S940.COD")).when(carrier).createShipment(any());
+        createShipment(order, 700).andExpect(status().isOk());
+        assertThat(count("payment.cod_receivable")).isZero();
+        webhook("test-hook-secret", "S940.COD", 5, "2026-11-21T10:00:00+07:00")
+                .andExpect(status().isOk());
+        // Repeated reports add nothing.
+        webhook("test-hook-secret", "S940.COD", 6, "2026-11-22T10:00:00+07:00")
+                .andExpect(status().isOk());
+        assertThat(count("payment.cod_receivable")).isEqualTo(1);
+
+        mvc.perform(get("/api/v1/admin/cod-receivables?status=WITH_CARRIER").with(admin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].amount").value(225_000))
+                .andExpect(jsonPath("$[0].dueAmount").value(225_000))
+                .andExpect(jsonPath("$[0].collectedBy").value("CARRIER"));
+        String id =
+                jdbc.sql("SELECT id::text FROM payment.cod_receivable")
+                        .query(String.class)
+                        .single();
+        mvc.perform(
+                        post("/api/v1/admin/cod-receivables/" + id + "/settled")
+                                .with(admin())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"reference\":\"GHTK-DOISOAT-01\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SETTLED"));
+        mvc.perform(
+                        post("/api/v1/admin/cod-receivables/" + id + "/settled")
+                                .with(admin())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"reference\":\"GHTK-DOISOAT-02\"}"))
+                .andExpect(status().isConflict());
+        // Buyers and shops cannot see or settle it.
+        mvc.perform(get("/api/v1/admin/cod-receivables").with(seller()))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/admin/cod-receivables")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void aShopThatDeliversItselfKeepsTheCashSoNothingIsOwedByACarrier() throws Exception {
+        String order = readyOrder();
+        mvc.perform(
+                        post(BASE + shop + "/orders/" + order + "/ship")
+                                .with(seller())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"trackingCode\":\"SELF-0001\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(post(BASE + shop + "/orders/" + order + "/delivered").with(seller()))
+                .andExpect(status().isOk());
+        assertThat(
+                        jdbc.sql("SELECT collected_by || ':' || status FROM payment.cod_receivable")
+                                .query(String.class)
+                                .single())
+                .isEqualTo("SHOP:SETTLED");
+    }
+
+    private static JwtRequestPostProcessor admin() {
+        return jwt().jwt(
+                        j -> {
+                            j.subject("ship-admin-2");
+                            j.claim("amr", java.util.List.of("pwd", "otp"));
+                        })
+                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));
+    }
+
     private long onHand() {
         return jdbc.sql("SELECT sum(on_hand) FROM inventory.stock_balance")
                 .query(Long.class)

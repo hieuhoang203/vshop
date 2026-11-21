@@ -58,7 +58,15 @@ public class BuyerReturnController {
                         orderId,
                         request.reasonCode(),
                         request.preferredResolution(),
-                        request.description()));
+                        request.description(),
+                        request.items() == null
+                                ? null
+                                : request.items().stream()
+                                        .map(
+                                                i ->
+                                                        new ReturnCaseService.ItemInput(
+                                                                i.orderLineId(), i.quantity()))
+                                        .toList()));
     }
 
     @GetMapping("/orders/{orderId}/return-case")

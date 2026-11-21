@@ -20,6 +20,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/cod-receivables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["adminCodList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/cod-receivables/{id}/settled": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["adminCodSettled"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/orders/overdue": {
         parameters: {
             query?: never;
@@ -1410,6 +1442,29 @@ export interface components {
             /** Format: int64 */
             totalAmount: number;
         };
+        CodReceivableResponse: {
+            /** Format: int64 */
+            amount: number;
+            collectedBy: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int64 */
+            dueAmount: number;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            orderId: string;
+            orderNumber: string;
+            /** Format: int64 */
+            refundedAmount: number;
+            /** Format: date-time */
+            settledAt: string | null;
+            settledReference: string | null;
+            status: string;
+        };
+        CodSettledRequest: {
+            reference: string;
+        };
         ConfirmReceivedRequest: {
             note?: string;
             restock?: boolean;
@@ -1500,6 +1555,7 @@ export interface components {
         };
         OpenReturnRequest: {
             description: string;
+            items?: components["schemas"]["ReturnItemRequest"][];
             preferredResolution: string;
             reasonCode: string;
         };
@@ -1518,6 +1574,8 @@ export interface components {
             discountAmount: number;
             /** Format: int64 */
             grossAmount: number;
+            /** Format: uuid */
+            id: string;
             imageKey: string | null;
             /** Format: int64 */
             netAmount: number;
@@ -1816,6 +1874,15 @@ export interface components {
             note: string | null;
             toStatus: string;
         };
+        ReturnCaseItemResponse: {
+            /** Format: int64 */
+            amount: number;
+            /** Format: uuid */
+            orderLineId: string;
+            productName: string;
+            /** Format: int32 */
+            quantity: number;
+        };
         ReturnCaseResponse: {
             adminNote: string | null;
             /** Format: int64 */
@@ -1826,6 +1893,7 @@ export interface components {
             events: components["schemas"]["ReturnCaseEventResponse"][];
             /** Format: uuid */
             id: string;
+            items: components["schemas"]["ReturnCaseItemResponse"][];
             /** Format: int64 */
             offeredAmount: number | null;
             /** Format: uuid */
@@ -1841,6 +1909,12 @@ export interface components {
             sellerDeadlineAt: string;
             sellerNote: string | null;
             status: string;
+        };
+        ReturnItemRequest: {
+            /** Format: uuid */
+            orderLineId: string;
+            /** Format: int32 */
+            quantity?: number;
         };
         ReviewProductRequest: {
             /** @enum {string} */
@@ -2089,6 +2163,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ShopActivityResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    adminCodList: {
+        parameters: {
+            query?: {
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodReceivableResponse"][];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    adminCodSettled: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CodSettledRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodReceivableResponse"];
                 };
             };
             /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */

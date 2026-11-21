@@ -295,6 +295,63 @@
         "required" : [ "createdAt", "currency", "id", "orders", "paymentMethod", "paymentUrl", "totalAmount" ],
         "type" : "object"
       },
+      "CodReceivableResponse" : {
+        "properties" : {
+          "amount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "collectedBy" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "dueAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "orderId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "orderNumber" : {
+            "type" : "string"
+          },
+          "refundedAmount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "settledAt" : {
+            "format" : "date-time",
+            "type" : [ "string", "null" ]
+          },
+          "settledReference" : {
+            "type" : [ "string", "null" ]
+          },
+          "status" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "collectedBy", "createdAt", "dueAmount", "id", "orderId", "orderNumber", "refundedAmount", "settledAt", "settledReference", "status" ],
+        "type" : "object"
+      },
+      "CodSettledRequest" : {
+        "properties" : {
+          "reference" : {
+            "maxLength" : 100,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "reference" ],
+        "type" : "object"
+      },
       "ConfirmReceivedRequest" : {
         "properties" : {
           "note" : {
@@ -564,6 +621,14 @@
             "minLength" : 0,
             "type" : "string"
           },
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ReturnItemRequest"
+            },
+            "maxItems" : 50,
+            "minItems" : 0,
+            "type" : "array"
+          },
           "preferredResolution" : {
             "maxLength" : 20,
             "minLength" : 0,
@@ -630,6 +695,10 @@
             "format" : "int64",
             "type" : "integer"
           },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
           "imageKey" : {
             "type" : [ "string", "null" ]
           },
@@ -666,7 +735,7 @@
             "type" : [ "string", "null" ]
           }
         },
-        "required" : [ "discountAmount", "grossAmount", "imageKey", "netAmount", "productId", "productName", "productSlug", "quantity", "sellerSku", "skuId", "unitPrice", "variantLabel" ],
+        "required" : [ "discountAmount", "grossAmount", "id", "imageKey", "netAmount", "productId", "productName", "productSlug", "quantity", "sellerSku", "skuId", "unitPrice", "variantLabel" ],
         "type" : "object"
       },
       "OrderRecipientResponse" : {
@@ -1437,6 +1506,27 @@
         "required" : [ "actorType", "createdAt", "fromStatus", "note", "toStatus" ],
         "type" : "object"
       },
+      "ReturnCaseItemResponse" : {
+        "properties" : {
+          "amount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "orderLineId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "quantity" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "required" : [ "amount", "orderLineId", "productName", "quantity" ],
+        "type" : "object"
+      },
       "ReturnCaseResponse" : {
         "properties" : {
           "adminNote" : {
@@ -1462,6 +1552,12 @@
           "id" : {
             "format" : "uuid",
             "type" : "string"
+          },
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ReturnCaseItemResponse"
+            },
+            "type" : "array"
           },
           "offeredAmount" : {
             "format" : "int64",
@@ -1501,7 +1597,23 @@
             "type" : "string"
           }
         },
-        "required" : [ "adminNote", "approvedAmount", "createdAt", "description", "events", "id", "offeredAmount", "orderId", "orderNumber", "preferredResolution", "reasonCode", "requestedAmount", "resolution", "returnTrackingCode", "sellerDeadlineAt", "sellerNote", "status" ],
+        "required" : [ "adminNote", "approvedAmount", "createdAt", "description", "events", "id", "items", "offeredAmount", "orderId", "orderNumber", "preferredResolution", "reasonCode", "requestedAmount", "resolution", "returnTrackingCode", "sellerDeadlineAt", "sellerNote", "status" ],
+        "type" : "object"
+      },
+      "ReturnItemRequest" : {
+        "properties" : {
+          "orderLineId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "quantity" : {
+            "format" : "int32",
+            "maximum" : 1000,
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        },
+        "required" : [ "orderLineId" ],
         "type" : "object"
       },
       "ReviewProductRequest" : {
@@ -2165,6 +2277,109 @@
           "bearerAuth" : [ ]
         } ],
         "tags" : [ "admin-merchant-analytics-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "ADMIN" ],
+          "public" : false,
+          "requiresSecondFactor" : true
+        }
+      }
+    },
+    "/api/v1/admin/cod-receivables" : {
+      "get" : {
+        "operationId" : "adminCodList",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "pattern" : "WITH_CARRIER|SETTLED",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "items" : {
+                    "$ref" : "#/components/schemas/CodReceivableResponse"
+                  },
+                  "type" : "array"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "admin-cod-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "ADMIN" ],
+          "public" : false,
+          "requiresSecondFactor" : true
+        }
+      }
+    },
+    "/api/v1/admin/cod-receivables/{id}/settled" : {
+      "post" : {
+        "operationId" : "adminCodSettled",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CodSettledRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CodReceivableResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "admin-cod-controller" ],
         "x-vshop-access" : {
           "anyOfRoles" : [ "ADMIN" ],
           "public" : false,

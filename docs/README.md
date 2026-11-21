@@ -42,6 +42,7 @@ Web người mua, cổng người bán, cổng admin dùng Next.js/TypeScript. A
 | [24-ke-hoach-hoan-tien.md](24-ke-hoach-hoan-tien.md)                           | Kế hoạch hoàn tiền và trả hàng: cách Shopee làm, các tình huống, quyết định cần chốt, lộ trình R0–R4         |
 | [25-thong-bao.md](25-thong-bao.md)                                             | Thông báo trong ứng dụng từ sự kiện outbox: ai nhận gì, chống trùng, giới hạn                                |
 | [26-dang-ky-tai-khoan.md](26-dang-ky-tai-khoan.md) | Đăng ký ngay trong site (không chuyển sang Keycloak), theme đăng nhập, giao diện mới, giới hạn |
+| [27-trien-khai.md](27-trien-khai.md) | Cấu hình triển khai production (Docker, Caddy, Keycloak), runbook, sao lưu, bảo mật, phần chưa kiểm chứng |
 | [architecture/README.md](architecture/README.md)                               | Quy ước từng tầng, entity/DTO/repository, format và ArchUnit                                                 |
 | [database/README.md](database/README.md)                                       | ERD, bảng/quan hệ, từ điển cột, DDL và invariant giao dịch                                                   |
 

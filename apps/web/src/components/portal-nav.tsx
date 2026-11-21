@@ -13,6 +13,7 @@ const LINKS = {
     { href: "/admin/policies", label: "Chính sách" },
     { href: "/admin/orders", label: "Đơn quá hạn" },
     { href: "/admin/refunds", label: "Hoàn tiền" },
+    { href: "/admin/cod", label: "Thu hộ COD" },
     { href: "/admin/returns", label: "Trả hàng" },
   ],
 } as const;

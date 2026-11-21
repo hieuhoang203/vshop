@@ -66,12 +66,22 @@ vshop:
       client-id: ${PAY_OS_CLIENT_ID:}
       api-key: ${PAY_OS_API_KEY:}
       checksum-key: ${PAY_OS_CHECKSUM_KEY:}
+      payout:
+        # Automatic refund payouts need a separate, verified payOS payout channel. Off until that
+        # channel exists and one small transfer was checked by hand (docs/24, R3).
+        enabled: ${PAYOS_PAYOUT_ENABLED:false}
+        client-id: ${PAYOS_PAYOUT_CLIENT_ID:}
+        api-key: ${PAYOS_PAYOUT_API_KEY:}
+        checksum-key: ${PAYOS_PAYOUT_CHECKSUM_KEY:}
     vnpay:
       # Sandbox merchant credentials from VNPay. Empty means online payment is unavailable and
       # orders can only be placed as COD. Never commit real values.
       tmn-code: ${VNPAY_TMN_CODE:}
       hash-secret: ${VNPAY_HASH_SECRET:}
       pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+  ratelimit:
+    # Share sign-up and e-mail limits between API instances through Redis (set true in production).
+    redis: ${RATE_LIMIT_REDIS:false}
   identity:
     keycloak:
       # Admin API access for self-service sign-up. The secret exists only in the environment.
@@ -106,7 +116,7 @@ vshop:
     # Application-level encryption of personal data (phone, street). One id per key; new values use
     # active-key and old ids stay readable, so keys can be rotated. Provide the 32-byte base64 key
     # through the environment (scripts/init-local.ps1 generates one locally).
-    active-key: local-1
+    active-key: ${PII_ACTIVE_KEY:local-1}
     keys:
       local-1: ${PII_KEY_LOCAL_1:}
 springdoc:

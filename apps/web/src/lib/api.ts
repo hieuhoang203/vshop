@@ -13,6 +13,7 @@ import type {
   ReturnCase,
   ReturnCasePage,
   AdminRefund,
+  CodReceivable,
   PickupAddress,
   SellerOrder,
   SellerOrderPage,
@@ -91,6 +92,8 @@ export const getAdminRefunds = (status = "") =>
     `/admin/refunds${status ? `?status=${encodeURIComponent(status)}` : ""}`,
     true,
   );
+
+export const getAdminCod = () => api<CodReceivable[]>("/admin/cod-receivables", true);
 
 /** Null while the order has no return case (the API answers 404). */
 export const getReturnCase = (orderId: string) =>

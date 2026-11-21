@@ -24,12 +24,26 @@ function useAction() {
 }
 
 /** Opens a return case for a delivered order. The server checks the window and the reason. */
-export function ReturnRequestForm({ orderId }: { orderId: string }) {
+export function ReturnRequestForm({
+  orderId,
+  lines,
+}: {
+  orderId: string;
+  lines: { id: string; productName: string; quantity: number }[];
+}) {
   const { busy, error, run } = useAction();
   const [reason, setReason] = useState("DAMAGED");
   const [resolution, setResolution] = useState<"REFUND_ONLY" | "RETURN_AND_REFUND">("REFUND_ONLY");
   const [description, setDescription] = useState("");
   const mustReturn = reason === "CHANGED_MIND";
+  // How many units of each line come back; all of them by default (the whole order).
+  const [units, setUnits] = useState<Record<string, number>>(
+    Object.fromEntries(lines.map((l) => [l.id, l.quantity])),
+  );
+  const chosen = lines
+    .filter((l) => (units[l.id] ?? 0) > 0)
+    .map((l) => ({ orderLineId: l.id, quantity: units[l.id] }));
+  const whole = lines.every((l) => units[l.id] === l.quantity);
 
   return (
     <form
@@ -41,6 +55,8 @@ export function ReturnRequestForm({ orderId }: { orderId: string }) {
           reasonCode: reason,
           preferredResolution: mustReturn ? "RETURN_AND_REFUND" : resolution,
           description,
+          // Naming every unit is the whole order, which the server treats the same way.
+          ...(whole || chosen.length === 0 ? {} : { items: chosen }),
         } satisfies OpenReturnInput);
       }}
       noValidate
@@ -50,6 +66,28 @@ export function ReturnRequestForm({ orderId }: { orderId: string }) {
         Bạn có thể gửi yêu cầu trong thời hạn đổi trả kể từ khi đơn được giao. Đổi ý chỉ áp dụng khi
         hàng còn nguyên và không hoàn phí vận chuyển.
       </p>
+      {lines.length > 0 && (
+        <fieldset className="return-items">
+          <legend>Sản phẩm muốn trả</legend>
+          {lines.map((l) => (
+            <label key={l.id} htmlFor={`units-${l.id}`} className="return-item">
+              <span>{l.productName}</span>
+              <select
+                id={`units-${l.id}`}
+                aria-label={`Số lượng trả của ${l.productName}`}
+                value={units[l.id] ?? 0}
+                onChange={(e) => setUnits({ ...units, [l.id]: Number(e.target.value) })}
+              >
+                {Array.from({ length: l.quantity + 1 }, (_, n) => (
+                  <option key={n} value={n}>
+                    {n === 0 ? "Không trả" : `${n} / ${l.quantity}`}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </fieldset>
+      )}
       <label htmlFor="return-reason">Lý do</label>
       <select id="return-reason" value={reason} onChange={(e) => setReason(e.target.value)}>
         {Object.entries(REASONS).map(([code, label]) => (

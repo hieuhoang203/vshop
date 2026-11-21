@@ -50,6 +50,7 @@ public class ShipmentService {
     private final ShippingCarrier carrier;
     private final PolicyService policies;
     private final OutboxService outbox;
+    private final CodLedgerService codLedger;
     private final PiiCipher cipher;
     private final ObjectMapper json;
     private final TransactionTemplate tx;
@@ -63,6 +64,7 @@ public class ShipmentService {
             ShippingCarrier carrier,
             PolicyService policies,
             OutboxService outbox,
+            CodLedgerService codLedger,
             PiiCipher cipher,
             ObjectMapper json,
             PlatformTransactionManager transactions) {
@@ -74,6 +76,7 @@ public class ShipmentService {
         this.carrier = carrier;
         this.policies = policies;
         this.outbox = outbox;
+        this.codLedger = codLedger;
         this.cipher = cipher;
         this.json = json;
         this.tx = new TransactionTemplate(transactions);
@@ -404,6 +407,7 @@ public class ShipmentService {
                     OrderStatus.IN_FULFILLMENT,
                     OrderStatus.DELIVERED,
                     "Đơn vị vận chuyển xác nhận đã giao");
+            codLedger.recordDelivered(order, true);
             publish("OrderDelivered", order);
         } else if (normalized.equals("DELIVERY_FAILED")
                 || normalized.equals("RETURNING")
