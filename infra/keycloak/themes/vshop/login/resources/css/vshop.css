@@ -1,0 +1,110 @@
+/* VShop sign-in page: light, same palette and font as the storefront. Targets the stock
+   keycloak.v2 (PatternFly 5) markup, so it keeps working when fields are added by Keycloak. */
+@font-face {
+  font-family: "Manrope";
+  src: url("../fonts/manrope.ttf") format("truetype");
+  font-weight: 200 800;
+  font-display: swap;
+}
+:root,
+.pf-v5-c-login,
+.login-pf body {
+  --pf-v5-global--FontFamily--text: "Manrope", system-ui, sans-serif;
+  --pf-v5-global--FontFamily--heading: "Manrope", system-ui, sans-serif;
+  --pf-v5-global--primary-color--100: #713af4;
+  --pf-v5-global--primary-color--200: #5423c1;
+  --pf-v5-global--link--Color: #5423c1;
+  --pf-v5-global--link--Color--hover: #713af4;
+  --pf-v5-global--active-color--100: #713af4;
+}
+html.login-pf,
+.login-pf body {
+  background: linear-gradient(160deg, #f4efff 0%, #ffffff 55%, #f7ffe0 100%) fixed;
+  font-family: "Manrope", system-ui, sans-serif;
+  color: #20202a;
+}
+.pf-v5-c-login {
+  background: transparent;
+}
+.pf-v5-c-login__container {
+  grid-template-columns: minmax(0, 480px);
+  justify-content: center;
+  padding-top: 48px;
+}
+#kc-header-wrapper {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  text-transform: none;
+  color: #713af4;
+  text-align: center;
+  padding-bottom: 8px;
+}
+.pf-v5-c-login__main {
+  border-radius: 24px;
+  border: 1px solid #eceaf0;
+  box-shadow: 0 18px 50px rgb(84 35 193 / 10%);
+  overflow: hidden;
+  background: #fff;
+}
+.pf-v5-c-login__main-header {
+  border: 0;
+}
+.pf-v5-c-title.pf-m-3xl,
+#kc-page-title {
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #20202a;
+}
+.pf-v5-c-form-control {
+  --pf-v5-c-form-control--BorderRadius: 12px;
+  border-radius: 12px;
+}
+.pf-v5-c-form-control:focus-within,
+.pf-v5-c-form-control:hover {
+  --pf-v5-c-form-control--after--BorderColor: #713af4;
+}
+.pf-v5-c-button.pf-m-primary {
+  --pf-v5-c-button--m-primary--BackgroundColor: #713af4;
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: #5423c1;
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: #5423c1;
+  --pf-v5-c-button--m-primary--active--BackgroundColor: #5423c1;
+  --pf-v5-c-button--BorderRadius: 12px;
+  font-weight: 800;
+  min-height: 48px;
+}
+.pf-v5-c-login__main-footer {
+  border-top: 1px solid #eceaf0;
+  background: #faf9fd;
+}
+#kc-registration {
+  text-align: center;
+  font-size: 0.95rem;
+}
+#kc-registration a {
+  color: #5423c1;
+  font-weight: 800;
+  text-decoration: underline;
+}
+.pf-v5-c-login__header,
+.pf-v5-c-login__header .pf-v5-c-brand {
+  color: #713af4 !important;
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  text-align: center;
+}
+.pf-v5-c-login__main-header {
+  display: block;
+}
+.pf-v5-c-login__main-footer {
+  padding: 18px 24px;
+}
+.pf-v5-c-login__main-footer-band {
+  background: transparent;
+  padding: 0;
+}
+/* The stock rule is an ID selector with !important; match it with equal weight, placed later. */
+html body #kc-header-wrapper.pf-v5-c-brand {
+  color: #713af4 !important;
+}

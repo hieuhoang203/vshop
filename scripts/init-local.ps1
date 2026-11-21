@@ -11,10 +11,12 @@ $kcDb = New-LocalSecret
 $kcAdmin = New-LocalSecret
 $redis = New-LocalSecret
 $storage = New-LocalSecret
+$provisioner = New-LocalSecret
 $session = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
-$lines = @("DB_PASSWORD=$db", "KEYCLOAK_DB_PASSWORD=$kcDb", "KEYCLOAK_ADMIN_PASSWORD=$kcAdmin", "REDIS_PASSWORD=$redis", "STORAGE_PASSWORD=$storage", "PII_KEY_LOCAL_1=$([Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)))")
+$lines = @("DB_PASSWORD=$db", "KEYCLOAK_DB_PASSWORD=$kcDb", "KEYCLOAK_ADMIN_PASSWORD=$kcAdmin", "REDIS_PASSWORD=$redis", "STORAGE_PASSWORD=$storage", "KEYCLOAK_PROVISIONER_SECRET=$provisioner", "PII_KEY_LOCAL_1=$([Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)))")
 New-Item -ItemType Directory -Path (Join-Path $root '.local/keycloak') -Force | Out-Null
 $realm = Get-Content -LiteralPath (Join-Path $root 'infra/keycloak/realm-template.json') -Raw | ConvertFrom-Json
+($realm.clients | Where-Object clientId -eq 'vshop-provisioner') | Add-Member -NotePropertyName secret -NotePropertyValue $provisioner -Force
 $accounts = @()
 foreach ($role in @('buyer', 'seller', 'admin')) {
   $password = New-LocalSecret

@@ -46,6 +46,10 @@
   align-items: center;
   flex-wrap: wrap;
   margin: 25px 0 26px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #ebe6f5;
+  border-radius: 16px;
 }
 .filter-row {
   display: flex;
@@ -60,8 +64,9 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 9px 14px;
-  border-radius: 10px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: #fff;
   font-size: 0.8125rem;
   font-weight: 600;
   border: 1px solid var(--line);
@@ -79,9 +84,10 @@
   border-radius: 5px;
 }
 .filter.active {
-  background: #26212e;
+  background: linear-gradient(120deg, #7340f5, #5423c1);
   color: #fff;
-  border-color: #26212e;
+  border-color: transparent;
+  box-shadow: 0 6px 14px rgb(84 35 193 / 28%);
 }
 .filter:hover {
   border-color: #a485d6;
@@ -195,9 +201,10 @@
 .product-card {
   min-width: 0;
   background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 18px;
+  border: 1px solid #ebe6f5;
+  border-radius: 20px;
   overflow: hidden;
+  box-shadow: 0 2px 12px rgb(57 35 96 / 5%);
   transition:
     transform 0.2s,
     box-shadow 0.2s,
@@ -207,11 +214,12 @@
 }
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 14px 30px #3923600c;
-  border-color: #cfc2e5;
+  box-shadow: 0 18px 38px rgb(84 35 193 / 16%);
+  border-color: #b79df5;
 }
 .product-art {
   position: relative;
+  background-image: radial-gradient(circle at 50% 38%, rgb(255 255 255 / 70%), transparent 62%);
   height: 275px;
   isolation: isolate;
   overflow: hidden;
@@ -319,8 +327,11 @@
   padding: 20px 21px 21px;
 }
 .shop-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-size: 0.75rem;
-  color: #96909e;
+  color: #8b8496;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -346,10 +357,10 @@
   font-size: 0.75rem;
 }
 .product-price {
-  font-size: 1.125rem;
+  font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.4px;
-  color: #2d2437;
+  color: var(--purple-dark);
 }
 .product-bottom .rt-IconButton {
   width: 36px;
@@ -559,4 +570,52 @@
   border: 1px solid #372b42;
   padding: 6px 10px;
   z-index: 3;
+}
+
+/* Service strip: what the platform actually does for buyers (shown after the products). */
+.service-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 56px;
+}
+.service-strip > div {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #ebe6f5;
+  border-radius: 18px;
+}
+.service-strip > div > span {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #efe8ff, #e0f6a8);
+  color: var(--purple-dark);
+}
+.service-strip h3 {
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+.service-strip p {
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+@media (max-width: 1000px) {
+  .service-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .service-strip {
+    grid-template-columns: 1fr;
+    margin-top: 36px;
+  }
 }

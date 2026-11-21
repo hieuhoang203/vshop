@@ -1,11 +1,16 @@
 {
   "realm": "vshop",
   "enabled": true,
-  "displayName": "VShop",
+  "displayName": "vshop",
+  "loginTheme": "vshop",
+  "internationalizationEnabled": true,
+  "supportedLocales": ["vi"],
+  "defaultLocale": "vi",
   "registrationAllowed": false,
   "resetPasswordAllowed": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
+  "passwordPolicy": "length(8) and digits and lowerCase and notUsername",
   "bruteForceProtected": true,
   "accessTokenLifespan": 600,
   "roles": {
@@ -23,8 +28,22 @@
   },
   "clients": [
     {
+      "clientId": "vshop-provisioner",
+      "name": "VShop account provisioning (server only)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "redirectUris": [],
+      "webOrigins": []
+    },
+    {
       "clientId": "vshop-web",
       "name": "VShop",
+      "baseUrl": "http://localhost:3100",
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,
@@ -97,7 +116,14 @@
       ]
     }
   ],
-  "users": [],
+  "users": [
+    {
+      "username": "service-account-vshop-provisioner",
+      "enabled": true,
+      "serviceAccountClientId": "vshop-provisioner",
+      "clientRoles": { "realm-management": ["manage-users", "view-users", "view-realm"] }
+    }
+  ],
   "ssoSessionIdleTimeout": 1800,
   "ssoSessionMaxLifespan": 28800,
   "revokeRefreshToken": false,

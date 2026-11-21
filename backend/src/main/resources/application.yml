@@ -62,6 +62,13 @@ vshop:
       tmn-code: ${VNPAY_TMN_CODE:}
       hash-secret: ${VNPAY_HASH_SECRET:}
       pay-url: ${VNPAY_PAY_URL:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}
+  identity:
+    keycloak:
+      # Admin API access for self-service sign-up. The secret exists only in the environment.
+      base-url: ${KEYCLOAK_BASE_URL:http://localhost:8180}
+      realm: ${KEYCLOAK_REALM:vshop}
+      client-id: vshop-provisioner
+      client-secret: ${KEYCLOAK_PROVISIONER_SECRET:}
   web:
     # Public address of the web app, used for links inside emails.
     base-url: ${WEB_BASE_URL:http://localhost:3100}

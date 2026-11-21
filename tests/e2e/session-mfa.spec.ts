@@ -106,7 +106,7 @@ test("admins must enrol and use a second factor before the admin area opens", as
 
     // An ADMIN without an authenticator is forced to enrol one: no way past this page.
     await expect(page.locator("#totp")).toBeVisible();
-    await page.getByRole("link", { name: /unable to scan/i }).click();
+    await page.getByRole("link", { name: /unable to scan|không quét được/i }).click();
     const secret = (await page.locator("#kc-totp-secret-key").innerText()).replace(/\s/g, "");
     await page.locator("#totp").fill(await nextCode(admin.username, secret));
     await page.locator("#saveTOTPBtn").click();

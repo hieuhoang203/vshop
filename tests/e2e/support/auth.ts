@@ -118,7 +118,7 @@ export async function login(page: Page, who: Account, target = "/"): Promise<voi
       ),
   ]);
   if (outcome === "setup") {
-    await page.getByRole("link", { name: /unable to scan/i }).click();
+    await page.getByRole("link", { name: /unable to scan|không quét được/i }).click();
     const secret = (await page.locator("#kc-totp-secret-key").innerText()).replace(/\s/g, "");
     await page.locator("#totp").fill(await nextCode(who.username, secret));
     const label = page.locator("#userLabel");

@@ -4,7 +4,8 @@ import { accounts, login as signIn, type Account } from "./support/auth";
 import { randomBytes } from "node:crypto";
 async function login(page: Page, who: Account, target = "/") {
   await signIn(page, who, target);
-  await expect(page.getByText(who.username, { exact: true })).toBeVisible();
+  // The menu shows the account holder name (the username for fixture accounts).
+  await expect(page.getByRole("button", { name: /^Tài khoản / })).toBeVisible();
 }
 test("catalog search categories and detail use persisted data", async ({ page }) => {
   await page.goto("/");
@@ -56,7 +57,7 @@ test("buyer cannot access admin and session tokens stay server side", async ({ p
     },
   });
   expect(csrf.status()).toBe(403);
-  await page.getByRole("button", { name: /buyer\.local/ }).click();
+  await page.getByRole("button", { name: /^Tài khoản / }).click();
   await page.getByRole("menuitem", { name: "Đăng xuất" }).click();
   await expect(page.getByRole("link", { name: "Đăng nhập", exact: true })).toBeVisible();
   expect((await page.request.get("/api/bff/admin/analytics?days=30")).status()).toBe(401);

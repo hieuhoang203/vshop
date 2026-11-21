@@ -1346,6 +1346,30 @@
         "required" : [ "accountLast4", "amount", "bankName", "createdAt", "id", "needsAccount", "paidAt", "payoutReference", "reason", "status" ],
         "type" : "object"
       },
+      "RegisterRequest" : {
+        "properties" : {
+          "acceptTerms" : {
+            "type" : "boolean"
+          },
+          "email" : {
+            "maxLength" : 254,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "fullName" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "password" : {
+            "maxLength" : 200,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "email", "fullName", "password" ],
+        "type" : "object"
+      },
       "ReturnCaseEventResponse" : {
         "properties" : {
           "actorType" : {
@@ -2724,6 +2748,41 @@
           "anyOfRoles" : [ "ADMIN" ],
           "public" : false,
           "requiresSecondFactor" : true
+        }
+      }
+    },
+    "/api/v1/auth/register" : {
+      "post" : {
+        "operationId" : "registrationRegister",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "registration-controller" ],
+        "x-vshop-access" : {
+          "public" : true
         }
       }
     },

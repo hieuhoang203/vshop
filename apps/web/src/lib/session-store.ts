@@ -60,3 +60,14 @@ export async function releaseRefreshLock(sessionId: string, token: string) {
     token,
   );
 }
+
+/**
+ * Fixed-window counter for public endpoints. Returns false once {@code limit} calls were made in
+ * the current window. Callers must treat a Redis failure as "not allowed" for abuse-prone routes.
+ */
+export async function allowAttempt(key: string, limit: number, windowSeconds: number) {
+  const redisKey = `vshop:rate:${key}`;
+  const count = await client().incr(redisKey);
+  if (count === 1) await client().expire(redisKey, windowSeconds);
+  return count <= limit;
+}

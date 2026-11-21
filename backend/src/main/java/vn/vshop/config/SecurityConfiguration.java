@@ -145,6 +145,12 @@ public class SecurityConfiguration {
                                                 org.springframework.http.HttpMethod.POST,
                                                 "/api/v1/shipping/ghtk/webhook")
                                         .permitAll()
+                                        // Self-service sign-up. The web BFF rate-limits it; the
+                                        // service validates every field again.
+                                        .requestMatchers(
+                                                org.springframework.http.HttpMethod.POST,
+                                                "/api/v1/auth/register")
+                                        .permitAll()
                                         .requestMatchers("/api/v1/admin/**")
                                         .access(this::adminWithSecondFactor)
                                         .requestMatchers("/api/v1/seller/**")

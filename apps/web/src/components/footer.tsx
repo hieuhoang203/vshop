@@ -27,14 +27,17 @@ export function Footer() {
           <Link href="/?category=nha-cua#san-pham">Nhà cửa & đời sống</Link>
         </div>
         <div>
+          <strong>Tài khoản của bạn</strong>
+          <Link href="/orders">Đơn hàng của tôi</Link>
+          <Link href="/account/addresses">Sổ địa chỉ</Link>
+          <Link href="/notifications">Thông báo</Link>
+          <Link href="/register">Tạo tài khoản mới</Link>
+        </div>
+        <div>
           <strong>Cùng tạo nên VShop</strong>
           <Link href="/seller">Trở thành người bán</Link>
           <Link href="/admin">Quản trị hệ thống</Link>
-          <p className="footer-pilot">
-            VShop đang thử nghiệm.
-            <br />
-            Chưa tiếp nhận đơn hàng.
-          </p>
+          <p className="footer-pilot">VShop đang trong giai đoạn thử nghiệm.</p>
         </div>
       </div>
       <div className="container footer-bottom">

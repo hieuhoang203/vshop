@@ -226,12 +226,17 @@ export function HeaderActions({
           </DropdownMenu.Content>
         </DropdownMenu.Root>
       ) : (
-        <Button asChild color="iris" size="3" className="login-button">
-          <Link href="/api/auth/login">
-            <UserRound size={17} />
-            <span>Đăng nhập</span>
-          </Link>
-        </Button>
+        <>
+          <Button asChild color="iris" size="3" className="login-button">
+            <Link href="/api/auth/login">
+              <UserRound size={17} />
+              <span>Đăng nhập</span>
+            </Link>
+          </Button>
+          <Button asChild color="iris" size="3" className="register-button">
+            <Link href="/register">Đăng ký</Link>
+          </Button>
+        </>
       )}
     </div>
   );

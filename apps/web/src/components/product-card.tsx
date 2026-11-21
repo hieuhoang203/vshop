@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
-import { Heart, Eye, Plus } from "lucide-react";
+import { Heart, Eye, Plus, Store } from "lucide-react";
 import { IconButton, Tooltip } from "@radix-ui/themes";
 import type { Product } from "@vshop/contracts";
 import { formatMoney } from "@/lib/format";
@@ -54,7 +54,9 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         </button>
       </div>
       <div className="product-body">
-        <p className="shop-name">{product.shopName}</p>
+        <p className="shop-name">
+          <Store size={12} aria-hidden="true" /> {product.shopName}
+        </p>
         <h3>
           <Link href={`/products/${product.slug}`}>{product.name}</Link>
         </h3>

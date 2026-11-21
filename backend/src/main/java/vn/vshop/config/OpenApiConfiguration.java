@@ -232,7 +232,8 @@ public class OpenApiConfiguration {
         if (((path.startsWith("/api/v1/catalog/") || path.equals("/api/v1/payments/vnpay/ipn"))
                         && "GET".equals(method))
                 || ((path.equals("/api/v1/shipping/ghtk/webhook")
-                                || path.equals("/api/v1/payments/payos/webhook"))
+                                || path.equals("/api/v1/payments/payos/webhook")
+                                || path.equals("/api/v1/auth/register"))
                         && "POST".equals(method))) {
             operation.setSecurity(List.of());
             access.put("public", true);

@@ -1,6 +1,16 @@
 import Link from "next/link";
 import { Button, Badge } from "@radix-ui/themes";
-import { Store, Sparkles, Fingerprint, Heart, MousePointer2 } from "lucide-react";
+import {
+  Store,
+  Sparkles,
+  Fingerprint,
+  Heart,
+  MousePointer2,
+  Wallet,
+  PackageSearch,
+  Undo2,
+  BadgeCheck,
+} from "lucide-react";
 import { getCatalog, getCategories } from "@/lib/api";
 import { DiscoveryTools } from "@/components/discovery/discovery-tools";
 import { CatalogExplorer, type CatalogFilters } from "@/components/discovery/catalog-explorer";
@@ -62,6 +72,40 @@ export default async function Home({
         headingLevel={1}
       />
       {isLanding && <DiscoveryTools products={data.items} />}
+      <section className="service-strip" aria-label="Cam kết dịch vụ">
+        {[
+          {
+            icon: Wallet,
+            title: "Thanh toán linh hoạt",
+            text: "Trả khi nhận hàng hoặc thanh toán online an toàn.",
+          },
+          {
+            icon: PackageSearch,
+            title: "Theo dõi từng bước",
+            text: "Trạng thái đơn và thông báo cập nhật ngay khi có thay đổi.",
+          },
+          {
+            icon: Undo2,
+            title: "Hoàn tiền, trả hàng",
+            text: "Có quy trình rõ ràng khi hàng lỗi hoặc không như mô tả.",
+          },
+          {
+            icon: BadgeCheck,
+            title: "Người bán được duyệt",
+            text: "Gian hàng và sản phẩm được kiểm duyệt trước khi hiển thị.",
+          },
+        ].map(({ icon: Icon, title, text }) => (
+          <div key={title}>
+            <span>
+              <Icon size={22} />
+            </span>
+            <div>
+              <h3>{title}</h3>
+              <p>{text}</p>
+            </div>
+          </div>
+        ))}
+      </section>
       <section className="why-vshop">
         <div className="why-heading">
           <Fingerprint size={32} />

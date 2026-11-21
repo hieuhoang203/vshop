@@ -64,3 +64,28 @@ export async function deleteUser(request: APIRequestContext, id: string) {
   const headers = await adminHeaders(request);
   await request.delete(`${KEYCLOAK}/admin/realms/vshop/users/${id}`, { headers });
 }
+
+/** Removes a user created through self-service sign-up (found by its exact email). */
+export async function deleteUserByEmail(request: APIRequestContext, email: string) {
+  const headers = await adminHeaders(request);
+  const found = await request.get(
+    `${KEYCLOAK}/admin/realms/vshop/users?email=${encodeURIComponent(email)}&exact=true`,
+    { headers },
+  );
+  for (const user of (await found.json()) as { id: string }[]) await deleteUser(request, user.id);
+}
+
+/** The realm roles of a user (to prove sign-up never grants more than BUYER). */
+export async function realmRolesOf(request: APIRequestContext, email: string) {
+  const headers = await adminHeaders(request);
+  const found = await request.get(
+    `${KEYCLOAK}/admin/realms/vshop/users?email=${encodeURIComponent(email)}&exact=true`,
+    { headers },
+  );
+  const [user] = (await found.json()) as { id: string }[];
+  const roles = await request.get(
+    `${KEYCLOAK}/admin/realms/vshop/users/${user.id}/role-mappings/realm`,
+    { headers },
+  );
+  return ((await roles.json()) as { name: string }[]).map((r) => r.name);
+}

@@ -32,6 +32,7 @@ public class GlobalExceptionHandler {
                             HttpStatus.NOT_FOUND;
                     case ACCOUNT_SUSPENDED -> HttpStatus.FORBIDDEN;
                     case CARRIER_UNAVAILABLE -> HttpStatus.BAD_GATEWAY;
+                    case REGISTRATION_UNAVAILABLE -> HttpStatus.SERVICE_UNAVAILABLE;
                     case INVALID_CATALOG_FILTER,
                             INVALID_PRODUCT_INPUT,
                             INVALID_STOCK_INPUT,
@@ -41,7 +42,8 @@ public class GlobalExceptionHandler {
                             INVALID_ORDER_INPUT,
                             INVALID_PICKUP_INPUT,
                             INVALID_REFUND_INPUT,
-                            INVALID_RETURN_INPUT ->
+                            INVALID_RETURN_INPUT,
+                            INVALID_REGISTRATION_INPUT ->
                             HttpStatus.BAD_REQUEST;
                     case SHOP_ALREADY_EXISTS,
                             INVALID_SHOP_STATE,
@@ -59,6 +61,7 @@ public class GlobalExceptionHandler {
                             INVALID_REFUND_STATE,
                             INVALID_RETURN_STATE,
                             EMAIL_NOT_VERIFIED,
+                            EMAIL_ALREADY_REGISTERED,
                             RETURN_NOT_ALLOWED,
                             CARRIER_NOT_CONFIGURED,
                             CARRIER_REJECTED,

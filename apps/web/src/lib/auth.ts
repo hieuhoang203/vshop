@@ -118,7 +118,8 @@ export async function createSession(
     accessExp: Number(verified.token.exp),
     createdAt: nowSeconds(),
     subject: String(verified.token.sub),
-    name: String(verified.identity.preferred_username ?? "Tài khoản"),
+    // Real name when the account has one (sign-up collects it), else the username.
+    name: String(verified.identity.name || verified.identity.preferred_username || "Tài khoản"),
     roles: verified.roles,
     mfa: hasSecondFactor(verified.token),
   };
