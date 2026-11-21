@@ -140,6 +140,42 @@ public class OrderNotificationHandler implements OutboxEventHandler {
                                 + " giao chưa thành công. Chúng tôi sẽ cập nhật khi có thông tin mới.",
                         buyerLink);
             }
+            case "OrderDeliveryFailed" ->
+                    toBuyer(
+                            event,
+                            o,
+                            "Giao hàng không thành công",
+                            "Đơn "
+                                    + no
+                                    + " không giao được và đã hủy. Nếu bạn đã thanh toán, hãy nhập tài khoản nhận hoàn tiền trong trang đơn hàng.",
+                            buyerLink);
+            case "ReturnParcelDelivered" ->
+                    toShop(
+                            event,
+                            o,
+                            "Hàng trả đã tới",
+                            "Hàng người mua trả cho đơn "
+                                    + no
+                                    + " đã được giao tới. Hãy kiểm tra và xác nhận để hoàn tiền.",
+                            "/seller/returns");
+            case "ReturnShipmentProblem" -> {
+                toShop(
+                        event,
+                        o,
+                        "Vận đơn trả hàng có vấn đề",
+                        "Vận đơn trả hàng của đơn "
+                                + no
+                                + " giao thất bại, bị hủy hoặc đang hoàn về.",
+                        "/seller/returns");
+                toBuyer(
+                        event,
+                        o,
+                        "Vận đơn trả hàng gặp sự cố",
+                        "Vận đơn trả hàng của đơn "
+                                + no
+                                + " chưa thành công. Vui lòng liên hệ gian hàng hoặc tạo lại vận đơn.",
+                        buyerLink);
+            }
             case "RefundRequested" ->
                     toBuyer(
                             event,

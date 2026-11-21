@@ -54,6 +54,7 @@ public class OrderFulfillmentService {
     private final ObjectMapper json;
     private final RefundService refunds;
     private final java.time.Clock clock;
+    private final vn.vshop.modules.order.repository.ShipmentRepository shipments;
 
     OrderFulfillmentService(
             OrderRepository orders,
@@ -65,7 +66,9 @@ public class OrderFulfillmentService {
             OutboxService outbox,
             ObjectMapper json,
             RefundService refunds,
-            java.time.Clock clock) {
+            java.time.Clock clock,
+            vn.vshop.modules.order.repository.ShipmentRepository shipments) {
+        this.shipments = shipments;
         this.orders = orders;
         this.orderService = orderService;
         this.shops = shops;
@@ -193,6 +196,40 @@ public class OrderFulfillmentService {
     }
 
     // ------------------------------------------------------------------ buyer
+
+    /**
+     * The parcel could not be delivered and the goods are back with the shop (situation 6 of
+     * docs/24): the order is canceled, the stock can go back on sale and an online payment is
+     * refunded. Allowed only while the order is with the carrier and, when a carrier parcel exists,
+     * only once the carrier reports it returned.
+     */
+    @Transactional
+    public SellerOrderDetail confirmParcelReturned(
+            String subject, UUID shopId, UUID orderId, boolean restock) {
+        SellerOrder order = ownedOrder(subject, shopId, orderId);
+        shipments
+                .findLiveByOrder(orderId)
+                .filter(s -> !s.status().equals("RETURNED"))
+                .ifPresent(
+                        s -> {
+                            throw new BusinessException(
+                                    ErrorCode.INVALID_ORDER_STATE,
+                                    "Đơn vị vận chuyển chưa báo hàng đã hoàn về (trạng thái hiện tại: "
+                                            + s.status()
+                                            + ").");
+                        });
+        String reason = "Giao hàng không thành công, hàng đã hoàn về gian hàng";
+        if (!orders.markCanceled(orderId, OrderStatus.IN_FULFILLMENT, reason)) {
+            throw conflict(order);
+        }
+        if (restock) {
+            restock(order);
+        }
+        refunds.createForOrder(orderId, "SHIPMENT_FAILED");
+        record(order, OrderStatus.IN_FULFILLMENT, OrderStatus.CANCELED, "SELLER", subject, reason);
+        publish("OrderDeliveryFailed", order);
+        return view(find(shopId, orderId));
+    }
 
     /** The buyer may cancel only while the shop has not started on the order. */
     @Transactional

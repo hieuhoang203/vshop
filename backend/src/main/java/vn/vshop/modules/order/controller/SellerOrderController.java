@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import vn.vshop.common.web.dto.PageResponse;
+import vn.vshop.modules.order.dto.request.ConfirmReceivedRequest;
 import vn.vshop.modules.order.dto.request.ReasonRequest;
 import vn.vshop.modules.order.dto.request.ShipOrderRequest;
 import vn.vshop.modules.order.dto.response.SellerOrderResponse;
@@ -60,6 +61,18 @@ public class SellerOrderController {
             @PathVariable UUID orderId,
             @AuthenticationPrincipal Jwt jwt) {
         return OrderMapper.toResponse(service.confirm(jwt.getSubject(), shopId, orderId));
+    }
+
+    /** The carrier brought an undeliverable parcel back: cancel the order, refund, restock. */
+    @PostMapping("/{orderId}/parcel-returned")
+    public SellerOrderResponse parcelReturned(
+            @PathVariable UUID shopId,
+            @PathVariable UUID orderId,
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody ConfirmReceivedRequest request) {
+        return OrderMapper.toResponse(
+                service.confirmParcelReturned(
+                        jwt.getSubject(), shopId, orderId, request.restock()));
     }
 
     @PostMapping("/{orderId}/reject")

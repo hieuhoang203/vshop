@@ -108,6 +108,18 @@ export function OrderActions({ shopId, order }: { shopId: string; order: SellerO
           <Button color="red" variant="soft" disabled={busy} onClick={() => act("shipment/cancel")}>
             Hủy vận đơn GHTK
           </Button>
+          <p className="form-note">
+            Giao không thành công và hàng đã về tay bạn? Đơn sẽ bị hủy, tiền hàng đã thu online được
+            hoàn lại cho người mua.
+          </p>
+          <Button
+            color="orange"
+            variant="soft"
+            disabled={busy}
+            onClick={() => act("parcel-returned", { restock: true })}
+          >
+            Hàng giao thất bại đã hoàn về shop (nhập kho lại)
+          </Button>
         </>
       )}
       {error && (

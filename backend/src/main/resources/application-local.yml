@@ -2,6 +2,8 @@ spring:
   flyway:
     locations: classpath:db/migration,classpath:db/local
 vshop:
+  ratelimit:
+    redis: true
   worker:
     # One process is enough on a developer machine: the same API process also runs the outbox,
     # reservation and unpaid-order jobs. In production the worker is a separate process

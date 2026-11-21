@@ -379,6 +379,10 @@ public class ShipmentService {
         if (!first || normalized.equals("UNKNOWN")) {
             return true;
         }
+        if ("RETURN".equals(shipment.direction())) {
+            applyReturnEvent(shipment, normalized, event.statusId());
+            return true;
+        }
         if (normalized.equals("CANCELED")) {
             shipments.cancel(shipment.id());
             if (orders.reopenForShipping(shipment.sellerOrderId())) {
@@ -407,6 +411,27 @@ public class ShipmentService {
             publish("ShipmentProblem", order);
         }
         return true;
+    }
+
+    /**
+     * A return parcel never changes the order. The shop is told when it arrives (to inspect and
+     * confirm the goods) and both sides when it fails; the case itself moves only by people.
+     */
+    private void applyReturnEvent(Shipment shipment, String normalized, int statusId) {
+        SellerOrder order = orders.findById(shipment.sellerOrderId());
+        if (normalized.equals("CANCELED")) {
+            shipments.cancel(shipment.id());
+            publish("ReturnShipmentProblem", order);
+            return;
+        }
+        shipments.advance(shipment.id(), normalized, statusId);
+        if (normalized.equals("DELIVERED")) {
+            publish("ReturnParcelDelivered", order);
+        } else if (normalized.equals("DELIVERY_FAILED")
+                || normalized.equals("RETURNING")
+                || normalized.equals("RETURNED")) {
+            publish("ReturnShipmentProblem", order);
+        }
     }
 
     /** GHTK status_id to our normalized status; UNKNOWN means we only keep the raw event. */

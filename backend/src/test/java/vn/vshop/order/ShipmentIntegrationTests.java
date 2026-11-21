@@ -115,7 +115,8 @@ class ShipmentIntegrationTests {
                                                 "paymentMinutes",
                                                 15L,
                                                 "reservationBufferMinutes",
-                                                5L))
+                                                5L),
+                                PolicyType.RETURN_HANDLING, Map.of("sellerResponseHours", 48L))
                         .entrySet()) {
             policies.approve(
                     "ship-admin",
@@ -339,6 +340,167 @@ class ShipmentIntegrationTests {
         verify(carrier, never()).createShipment(any());
     }
 
+    @Test
+    void aReturnParcelIsCreatedOnceFollowsTheCarrierAndLeavesTheMoneyToTheShop() throws Exception {
+        String order = readyOrder();
+        savePickup();
+        doReturn(true).when(carrier).configured();
+        doReturn(created("S920.OUT")).when(carrier).createShipment(any());
+        createShipment(order, 800).andExpect(status().isOk());
+        webhook("test-hook-secret", "S920.OUT", 5, "2026-11-20T15:00:00+07:00")
+                .andExpect(status().isOk());
+        assertThat(orderStatus()).isEqualTo("DELIVERED");
+
+        String id =
+                body(mvc.perform(
+                                        post("/api/v1/orders/" + order + "/return-case")
+                                                .with(buyer())
+                                                .contentType(MediaType.APPLICATION_JSON)
+                                                .content(
+                                                        "{\"reasonCode\":\"CHANGED_MIND\",\"preferredResolution\":\"RETURN_AND_REFUND\",\"description\":\"Tôi đổi ý không muốn giữ nữa\"}"))
+                                .andExpect(status().isCreated()))
+                        .get("id")
+                        .asText();
+        String ret = "/api/v1/return-cases/" + id + "/return-shipment";
+        String district = "{\"district\":\"Quan 3\"}";
+        // Only once the shop agreed to take the goods back.
+        mvc.perform(
+                        post(ret)
+                                .with(buyer())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(district))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("INVALID_RETURN_STATE"));
+        mvc.perform(
+                        post(BASE + shop + "/return-cases/" + id + "/approve-return")
+                                .with(seller())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"note\":\"Gửi lại về kho\"}"))
+                .andExpect(status().isOk());
+
+        // The district is required; nobody else can create the parcel.
+        mvc.perform(
+                        post(ret)
+                                .with(buyer())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"district\":\" \"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(
+                        post(ret)
+                                .with(buyer("someone-else"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(district))
+                .andExpect(status().isNotFound());
+
+        doReturn(created("S920.BACK")).when(carrier).createShipment(any());
+        mvc.perform(
+                        post(ret)
+                                .with(buyer())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(district))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("IN_RETURN"))
+                .andExpect(jsonPath("$.returnTrackingCode").value("S920.BACK"));
+        ArgumentCaptor<ShippingCarrier.CreateRequest> sent =
+                ArgumentCaptor.forClass(ShippingCarrier.CreateRequest.class);
+        verify(carrier, times(2)).createShipment(sent.capture());
+        ShippingCarrier.CreateRequest back = sent.getAllValues().get(1);
+        // Collected from the buyer, delivered to the shop, nothing to collect in cash.
+        assertThat(back.partnerOrderId()).startsWith("R-");
+        assertThat(back.codAmount()).isZero();
+        assertThat(back.pickup().name()).isEqualTo("Nguyen Van A");
+        assertThat(back.pickup().district()).isEqualTo("Quan 3");
+        assertThat(back.recipient().name()).isEqualTo("Kho Ship Shop");
+        assertThat(back.note()).contains("Trả hàng");
+        // Repeating the request does not create a second parcel.
+        mvc.perform(
+                        post(ret)
+                                .with(buyer())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(district))
+                .andExpect(status().isOk());
+        verify(carrier, times(2)).createShipment(any());
+        assertThat(count("fulfillment.shipment WHERE direction = 'RETURN'")).isEqualTo(1);
+
+        // Carrier reports on the return parcel never touch the order; the shop is told on arrival.
+        webhook("test-hook-secret", "S920.BACK", 3, "2026-11-21T09:00:00+07:00")
+                .andExpect(status().isOk());
+        webhook("test-hook-secret", "S920.BACK", 5, "2026-11-22T09:00:00+07:00")
+                .andExpect(status().isOk());
+        assertThat(orderStatus()).isEqualTo("DELIVERED");
+        assertThat(
+                        jdbc.sql(
+                                        "SELECT status FROM fulfillment.shipment WHERE direction = 'RETURN'")
+                                .query(String.class)
+                                .single())
+                .isEqualTo("DELIVERED");
+        assertThat(count("platform.outbox_event WHERE event_type = 'ReturnParcelDelivered'"))
+                .isEqualTo(1);
+        // The refund still waits for the shop to inspect and confirm.
+        assertThat(count("payment.refund")).isZero();
+        mvc.perform(
+                        post(BASE + shop + "/return-cases/" + id + "/confirm-received")
+                                .with(seller())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"restock\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("REFUND_APPROVED"));
+        assertThat(count("payment.refund")).isEqualTo(1);
+    }
+
+    @Test
+    void anUndeliverableParcelBackAtTheShopCancelsTheOrderAndRestocks() throws Exception {
+        String order = readyOrder();
+        savePickup();
+        doReturn(true).when(carrier).configured();
+        doReturn(created("S930.X")).when(carrier).createShipment(any());
+        createShipment(order, 600).andExpect(status().isOk());
+        // Not yet reported back by the carrier: refused.
+        mvc.perform(
+                        post(BASE + shop + "/orders/" + order + "/parcel-returned")
+                                .with(seller())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"restock\":true}"))
+                .andExpect(status().isConflict());
+        webhook("test-hook-secret", "S930.X", 9, "2026-11-21T09:00:00+07:00")
+                .andExpect(status().isOk());
+        webhook("test-hook-secret", "S930.X", 21, "2026-11-23T09:00:00+07:00")
+                .andExpect(status().isOk());
+        assertThat(orderStatus()).isEqualTo("IN_FULFILLMENT");
+        assertThat(onHand()).isEqualTo(8);
+
+        mvc.perform(
+                        post(BASE + shop + "/orders/" + order + "/parcel-returned")
+                                .with(seller("someone-else"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"restock\":true}"))
+                .andExpect(status().isNotFound());
+        mvc.perform(
+                        post(BASE + shop + "/orders/" + order + "/parcel-returned")
+                                .with(seller())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"restock\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELED"));
+        assertThat(onHand()).isEqualTo(10);
+        assertThat(count("platform.outbox_event WHERE event_type = 'OrderDeliveryFailed'"))
+                .isEqualTo(1);
+        // A second confirmation changes nothing.
+        mvc.perform(
+                        post(BASE + shop + "/orders/" + order + "/parcel-returned")
+                                .with(seller())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"restock\":true}"))
+                .andExpect(status().isConflict());
+        assertThat(onHand()).isEqualTo(10);
+    }
+
+    private long onHand() {
+        return jdbc.sql("SELECT sum(on_hand) FROM inventory.stock_balance")
+                .query(Long.class)
+                .single();
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private static final String PICKUP =
@@ -462,6 +624,11 @@ class ShipmentIntegrationTests {
 
     private static JwtRequestPostProcessor buyer() {
         return jwt().jwt(j -> j.subject("ship-buyer"))
+                .authorities(new SimpleGrantedAuthority("ROLE_BUYER"));
+    }
+
+    private static JwtRequestPostProcessor buyer(String subject) {
+        return jwt().jwt(j -> j.subject(subject))
                 .authorities(new SimpleGrantedAuthority("ROLE_BUYER"));
     }
 

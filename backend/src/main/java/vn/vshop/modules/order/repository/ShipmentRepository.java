@@ -33,6 +33,21 @@ public interface ShipmentRepository {
             int weightGrams,
             long declaredValue);
 
+    /** The newest RETURN parcel of the order that is not FAILED or CANCELED. */
+    Optional<Shipment> findLiveReturnByOrder(UUID orderId);
+
+    /** The newest FAILED RETURN parcel, reused by a new request (same partner order id). */
+    Optional<Shipment> findFailedReturnByOrder(UUID orderId);
+
+    void insertCreatingReturn(
+            UUID id,
+            UUID orderId,
+            UUID shopId,
+            String carrier,
+            String partnerOrderId,
+            int weightGrams,
+            long declaredValue);
+
     void reopen(UUID id, long codAmount, int weightGrams, long declaredValue);
 
     void markCreated(UUID id, String trackingNumber, Long fee, Long insuranceFee);

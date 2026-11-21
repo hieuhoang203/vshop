@@ -90,6 +90,7 @@ export function ReturnRequestForm({ orderId }: { orderId: string }) {
 export function BuyerReturnPanel({ c }: { c: ReturnCase }) {
   const { busy, error, run } = useAction();
   const [tracking, setTracking] = useState("");
+  const [district, setDistrict] = useState("");
   return (
     <section className="panel" aria-label="Yêu cầu trả hàng" data-testid="return-panel">
       <h2>Yêu cầu trả hàng</h2>
@@ -125,6 +126,23 @@ export function BuyerReturnPanel({ c }: { c: ReturnCase }) {
               value={tracking}
               onChange={(e) => setTracking(e.target.value)}
             />
+            <p className="form-note">Hoặc để GHTK đến lấy hàng tại địa chỉ giao của đơn:</p>
+            <label htmlFor={`district-${c.id}`}>Quận/huyện nơi lấy hàng</label>
+            <TextField.Root
+              id={`district-${c.id}`}
+              value={district}
+              maxLength={100}
+              onChange={(e) => setDistrict(e.target.value)}
+            />
+            <Button
+              variant="soft"
+              disabled={busy || !district.trim()}
+              onClick={() =>
+                run("POST", `return-cases/${c.id}/return-shipment`, { district: district.trim() })
+              }
+            >
+              Tạo vận đơn trả hàng qua GHTK
+            </Button>
             <Button
               disabled={busy}
               onClick={() =>

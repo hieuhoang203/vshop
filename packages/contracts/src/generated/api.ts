@@ -692,6 +692,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/return-cases/{caseId}/return-shipment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["buyerReturnCreateReturnShipment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/return-cases/{id}/accept-offer": {
         parameters: {
             query?: never;
@@ -926,6 +942,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["sellerOrderPack"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/shops/{shopId}/orders/{orderId}/parcel-returned": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sellerOrderParcelReturned"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1347,6 +1379,9 @@ export interface components {
         CreateQuoteRequest: {
             /** Format: uuid */
             addressId?: string;
+        };
+        CreateReturnShipmentRequest: {
+            district: string;
         };
         CreateShipmentRequest: {
             /** Format: int32 */
@@ -3575,6 +3610,41 @@ export interface operations {
             };
         };
     };
+    buyerReturnCreateReturnShipment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                caseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReturnShipmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReturnCaseResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     buyerReturnAcceptOffer: {
         parameters: {
             query?: never;
@@ -4115,6 +4185,42 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerOrderResponse"];
+                };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    sellerOrderParcelReturned: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shopId: string;
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmReceivedRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

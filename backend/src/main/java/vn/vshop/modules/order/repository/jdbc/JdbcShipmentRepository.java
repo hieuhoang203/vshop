@@ -13,7 +13,7 @@ import vn.vshop.modules.order.repository.ShipmentRepository;
 @Repository
 public class JdbcShipmentRepository implements ShipmentRepository {
     private static final String COLUMNS =
-            "SELECT id, seller_order_id, shop_id, carrier_code, partner_order_id, tracking_number,"
+            "SELECT id, seller_order_id, shop_id, direction, carrier_code, partner_order_id, tracking_number,"
                     + " status, carrier_status_id, cod_amount, weight_grams, declared_value,"
                     + " carrier_fee, insurance_fee, failure_message, created_at, updated_at"
                     + " FROM fulfillment.shipment";
@@ -125,6 +125,53 @@ public class JdbcShipmentRepository implements ShipmentRepository {
                 .param("carrier", carrier)
                 .param("partner", partnerOrderId)
                 .param("cod", codAmount)
+                .param("weight", weightGrams)
+                .param("value", declaredValue)
+                .update();
+    }
+
+    @Override
+    public Optional<Shipment> findLiveReturnByOrder(UUID orderId) {
+        return jdbc.sql(
+                        COLUMNS
+                                + " WHERE seller_order_id = :o AND direction = 'RETURN'"
+                                + " AND status NOT IN ('FAILED', 'CANCELED')"
+                                + " ORDER BY created_at DESC LIMIT 1")
+                .param("o", orderId)
+                .query(Shipment.class)
+                .optional();
+    }
+
+    @Override
+    public Optional<Shipment> findFailedReturnByOrder(UUID orderId) {
+        return jdbc.sql(
+                        COLUMNS
+                                + " WHERE seller_order_id = :o AND direction = 'RETURN'"
+                                + " AND status = 'FAILED' ORDER BY created_at DESC LIMIT 1")
+                .param("o", orderId)
+                .query(Shipment.class)
+                .optional();
+    }
+
+    @Override
+    public void insertCreatingReturn(
+            UUID id,
+            UUID orderId,
+            UUID shopId,
+            String carrier,
+            String partnerOrderId,
+            int weightGrams,
+            long declaredValue) {
+        jdbc.sql(
+                        "INSERT INTO fulfillment.shipment (id, seller_order_id, shop_id, direction,"
+                                + " carrier_code, partner_order_id, status, cod_amount, weight_grams,"
+                                + " declared_value) VALUES (:id, :order, :shop, 'RETURN', :carrier,"
+                                + " :partner, 'CREATING', 0, :weight, :value)")
+                .param("id", id)
+                .param("order", orderId)
+                .param("shop", shopId)
+                .param("carrier", carrier)
+                .param("partner", partnerOrderId)
                 .param("weight", weightGrams)
                 .param("value", declaredValue)
                 .update();

@@ -4,14 +4,16 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
- * A parcel handed to a carrier for one seller order. {@code status}: CREATING (request sent, answer
- * not recorded), CREATED, FAILED, PICKED_UP, IN_TRANSIT, DELIVERED, DELIVERY_FAILED, RETURNING,
- * RETURNED, CANCELED.
+ * A parcel handed to a carrier for one seller order. {@code direction} is FORWARD (shop to buyer)
+ * or RETURN (buyer back to the shop). {@code status}: CREATING (request sent, answer not recorded),
+ * CREATED, FAILED, PICKED_UP, IN_TRANSIT, DELIVERED, DELIVERY_FAILED, RETURNING, RETURNED,
+ * CANCELED.
  */
 public record Shipment(
         UUID id,
         UUID sellerOrderId,
         UUID shopId,
+        String direction,
         String carrierCode,
         String partnerOrderId,
         String trackingNumber,

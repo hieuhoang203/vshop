@@ -212,6 +212,28 @@ public class ReturnCaseService {
         return detail(caseId);
     }
 
+    /** What the return parcel needs from a case: only the buyer, only while goods are awaited. */
+    public record ShippingContext(UUID orderId, UUID shopId, String status) {}
+
+    @Transactional
+    public ShippingContext shippingContext(String subject, UUID caseId) {
+        ReturnCase c = buyerCase(subject, caseId);
+        if (!c.status().equals("AWAITING_RETURN") && !c.status().equals("IN_RETURN")) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_RETURN_STATE,
+                    "Yêu cầu đang ở trạng thái "
+                            + c.status()
+                            + " nên không thể tạo vận đơn trả hàng.");
+        }
+        return new ShippingContext(c.sellerOrderId(), c.shopId(), c.status());
+    }
+
+    @Transactional
+    public ReturnCaseDetail detailForBuyer(String subject, UUID caseId) {
+        buyerCase(subject, caseId);
+        return detail(caseId);
+    }
+
     @Transactional
     public ReturnCaseDetail ship(String subject, UUID caseId, String trackingCode) {
         String code = trackingCode == null ? "" : trackingCode.trim();

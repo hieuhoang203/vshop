@@ -13,6 +13,12 @@ spring:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER:http://localhost:8180/realms/vshop}
           audiences: vshop-api
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6380}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2s
   jackson:
     time-zone: UTC
     deserialization:
@@ -24,6 +30,10 @@ server:
     include-message: never
     include-stacktrace: never
 management:
+  health:
+    redis:
+      # Redis only backs rate limits; the API must stay up (and report UP) without it.
+      enabled: false
   endpoints:
     web:
       exposure:
