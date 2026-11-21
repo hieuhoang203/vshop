@@ -1,7 +1,14 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { apiBase } from "@/lib/api";
-import { webBase } from "@/lib/auth";
+import {
+  SESSION_COOKIE,
+  SESSION_MAX_SECONDS,
+  cookieOptions,
+  directLogin,
+  webBase,
+} from "@/lib/auth";
+import { captchaEnabled, verifyCaptcha } from "@/lib/captcha";
 import { allowAttempt } from "@/lib/session-store";
 
 const noStore = { "Cache-Control": "no-store" };
@@ -17,8 +24,14 @@ export async function POST(request: NextRequest) {
   if (request.headers.get("origin") !== new URL(webBase()).origin)
     return fail(403, "Yêu cầu không hợp lệ.");
   const text = await request.text();
-  if (Buffer.byteLength(text, "utf8") > 2_048) return fail(413, "Thông tin vượt giới hạn.");
-  let body: { fullName?: unknown; email?: unknown; password?: unknown; acceptTerms?: unknown };
+  if (Buffer.byteLength(text, "utf8") > 6_144) return fail(413, "Thông tin vượt giới hạn.");
+  let body: {
+    fullName?: unknown;
+    email?: unknown;
+    password?: unknown;
+    acceptTerms?: unknown;
+    captchaToken?: unknown;
+  };
   try {
     body = JSON.parse(text);
   } catch {
@@ -48,6 +61,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (captchaEnabled() && !(await verifyCaptcha(body.captchaToken, ip)))
+    return fail(400, "Vui lòng xác nhận bạn không phải người máy.", "CAPTCHA_FAILED");
+
   try {
     const result = await fetch(`${apiBase()}/api/v1/auth/register`, {
       method: "POST",
@@ -61,8 +77,21 @@ export async function POST(request: NextRequest) {
       cache: "no-store",
       signal: AbortSignal.timeout(15_000),
     });
-    if (result.status === 201)
-      return NextResponse.json({ ok: true }, { status: 201, headers: noStore });
+    if (result.status === 201) {
+      // Sign the new buyer straight in with the password just chosen; if that does not work the
+      // form falls back to the sign-in page.
+      const login = await directLogin(body.email.trim().toLowerCase(), body.password);
+      const response = NextResponse.json(
+        { ok: true, signedIn: login.ok },
+        { status: 201, headers: noStore },
+      );
+      if (login.ok)
+        response.cookies.set(SESSION_COOKIE, login.sessionId, {
+          ...cookieOptions(),
+          maxAge: SESSION_MAX_SECONDS,
+        });
+      return response;
+    }
     const data = (await result.json().catch(() => ({}))) as { code?: string; message?: string };
     return fail(
       result.status >= 500 ? 503 : result.status,

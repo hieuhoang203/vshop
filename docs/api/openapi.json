@@ -413,6 +413,17 @@
         "required" : [ "available", "enabled", "maskedEmail" ],
         "type" : "object"
       },
+      "ForgotPasswordRequest" : {
+        "properties" : {
+          "email" : {
+            "maxLength" : 254,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "email" ],
+        "type" : "object"
+      },
       "LineResponse" : {
         "properties" : {
           "availableQuantity" : {
@@ -2751,6 +2762,41 @@
         }
       }
     },
+    "/api/v1/auth/forgot-password" : {
+      "post" : {
+        "operationId" : "accountRecoveryForgotPassword",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "202" : {
+            "description" : "Accepted"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ ],
+        "tags" : [ "account-recovery-controller" ],
+        "x-vshop-access" : {
+          "public" : true
+        }
+      }
+    },
     "/api/v1/auth/register" : {
       "post" : {
         "operationId" : "registrationRegister",
@@ -3721,6 +3767,34 @@
           "bearerAuth" : [ ]
         } ],
         "tags" : [ "email-notification-controller" ],
+        "x-vshop-access" : {
+          "anyOfRoles" : [ "BUYER", "SELLER" ],
+          "public" : false
+        }
+      }
+    },
+    "/api/v1/me/email-verification" : {
+      "post" : {
+        "operationId" : "accountRecoveryVerifyEmail",
+        "responses" : {
+          "202" : {
+            "description" : "Accepted"
+          },
+          "default" : {
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description" : "Error. The body is an ApiErrorResponse; the HTTP status says which kind."
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ ]
+        } ],
+        "tags" : [ "account-recovery-controller" ],
         "x-vshop-access" : {
           "anyOfRoles" : [ "BUYER", "SELLER" ],
           "public" : false

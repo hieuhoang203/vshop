@@ -203,6 +203,8 @@ test("return case: buyer opens, shop offers, buyer declines, admin decides, refu
     await buyer.goto("/account/addresses");
     await clearAddresses(buyer);
   } finally {
+    // Keep the shared catalog tidy: the seeded product must not stay on the storefront.
+    sql(`UPDATE catalog.product SET status = 'HIDDEN' WHERE slug LIKE 'e2e-return-%'`);
     await adminContext.close();
     await sellerContext.close();
     await buyerContext.close();

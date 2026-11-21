@@ -233,7 +233,8 @@ public class OpenApiConfiguration {
                         && "GET".equals(method))
                 || ((path.equals("/api/v1/shipping/ghtk/webhook")
                                 || path.equals("/api/v1/payments/payos/webhook")
-                                || path.equals("/api/v1/auth/register"))
+                                || path.equals("/api/v1/auth/register")
+                                || path.equals("/api/v1/auth/forgot-password"))
                         && "POST".equals(method))) {
             operation.setSecurity(List.of());
             access.put("public", true);

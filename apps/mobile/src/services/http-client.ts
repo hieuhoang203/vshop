@@ -34,7 +34,9 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
             : "Chưa thể tải dữ liệu. Vui lòng thử lại."),
       );
     }
-    return (await response.json()) as T;
+    // Some answers (for example 201 on sign-up) have no body.
+    const text = await response.text();
+    return (text ? JSON.parse(text) : undefined) as T;
   } catch (error) {
     if (error instanceof ApiFailure) throw error;
     throw new Error("Không thể kết nối VShop. Kiểm tra mạng và thử lại.");

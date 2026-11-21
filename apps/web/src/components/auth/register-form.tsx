@@ -1,7 +1,8 @@
 "use client";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Button, TextField } from "@radix-ui/themes";
+import { Captcha } from "@/components/auth/captcha";
 import { Check, CircleCheck, Eye, EyeOff, Lock, Mail, UserRound } from "lucide-react";
 import {
   passwordChecks,
@@ -23,7 +24,7 @@ const empty: RegisterFields = {
  * all rules, so this only saves a round trip. After success the person signs in with the same
  * email (pre-filled), the way the rest of the site authenticates.
  */
-export function RegisterForm() {
+export function RegisterForm({ captchaSiteKey }: { captchaSiteKey: string }) {
   const [fields, setFields] = useState<RegisterFields>(empty);
   const [touched, setTouched] = useState<Partial<Record<keyof RegisterFields, boolean>>>({});
   const [serverErrors, setServerErrors] = useState<RegisterErrors>({});
@@ -31,7 +32,17 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
   const [doneEmail, setDoneEmail] = useState("");
+  const [signedIn, setSignedIn] = useState(false);
+  const [captcha, setCaptcha] = useState("");
+  const [captchaReset, setCaptchaReset] = useState(0);
   const firstInvalid = useRef<HTMLFormElement>(null);
+
+  // Signed in by the server: go home after a moment so the header shows the account.
+  useEffect(() => {
+    if (!signedIn) return;
+    const timer = setTimeout(() => window.location.assign("/"), 3000);
+    return () => clearTimeout(timer);
+  }, [signedIn]);
 
   const errors = { ...validateRegister(fields), ...serverErrors };
   const visible = (key: keyof RegisterFields) =>
@@ -52,6 +63,10 @@ export function RegisterForm() {
       firstInvalid.current?.querySelector<HTMLElement>("[aria-invalid='true']")?.focus();
       return;
     }
+    if (captchaSiteKey && !captcha) {
+      setFormError("Vui lòng xác nhận bạn không phải người máy.");
+      return;
+    }
     setPending(true);
     try {
       const response = await fetch("/api/auth/register", {
@@ -62,9 +77,12 @@ export function RegisterForm() {
           email: fields.email.trim(),
           password: fields.password,
           acceptTerms: fields.acceptTerms,
+          captchaToken: captcha,
         }),
       });
       if (response.status === 201) {
+        const created = (await response.json().catch(() => ({}))) as { signedIn?: boolean };
+        setSignedIn(created.signedIn === true);
         setDoneEmail(fields.email.trim().toLowerCase());
         setFields(empty);
         return;
@@ -73,6 +91,7 @@ export function RegisterForm() {
       const message = body.message ?? "Không thể tạo tài khoản lúc này.";
       if (body.code === "EMAIL_ALREADY_REGISTERED") setServerErrors({ email: message });
       else setFormError(message);
+      setCaptchaReset((n) => n + 1);
     } catch {
       setFormError("Kết nối tạm gián đoạn. Vui lòng thử lại.");
     } finally {
@@ -88,12 +107,15 @@ export function RegisterForm() {
         </span>
         <h2>Tạo tài khoản thành công!</h2>
         <p>
-          Tài khoản <strong>{doneEmail}</strong> đã sẵn sàng. Đăng nhập để bắt đầu mua sắm.
+          Tài khoản <strong>{doneEmail}</strong> đã sẵn sàng.{" "}
+          {signedIn ? "Bạn đã được đăng nhập." : "Đăng nhập để bắt đầu mua sắm."}
         </p>
         <Button size="4" asChild>
-          <Link href={`/api/auth/login?login_hint=${encodeURIComponent(doneEmail)}`}>
-            Đăng nhập ngay
-          </Link>
+          {signedIn ? (
+            <a href="/">Bắt đầu mua sắm</a>
+          ) : (
+            <Link href={`/login?email=${encodeURIComponent(doneEmail)}`}>Đăng nhập ngay</Link>
+          )}
         </Button>
       </div>
     );
@@ -104,7 +126,7 @@ export function RegisterForm() {
     <form className="auth-card" onSubmit={submit} noValidate ref={firstInvalid}>
       <h2>Đăng ký tài khoản</h2>
       <p className="auth-sub">
-        Đã có tài khoản? <Link href="/api/auth/login">Đăng nhập</Link>
+        Đã có tài khoản? <Link href="/login">Đăng nhập</Link>
       </p>
 
       <div className="auth-field">
@@ -157,9 +179,7 @@ export function RegisterForm() {
             {serverErrors.email && (
               <>
                 {" "}
-                <Link
-                  href={`/api/auth/login?login_hint=${encodeURIComponent(fields.email.trim())}`}
-                >
+                <Link href={`/login?email=${encodeURIComponent(fields.email.trim())}`}>
                   Đăng nhập
                 </Link>
               </>
@@ -248,7 +268,17 @@ export function RegisterForm() {
             onChange={(e) => set("acceptTerms", e.target.checked)}
             onBlur={() => blur("acceptTerms")}
           />
-          <span>Tôi đã đọc và đồng ý với điều khoản sử dụng và chính sách bảo mật của VShop.</span>
+          <span>
+            Tôi đã đọc và đồng ý với{" "}
+            <Link href="/terms" target="_blank">
+              điều khoản sử dụng
+            </Link>{" "}
+            và{" "}
+            <Link href="/privacy" target="_blank">
+              chính sách bảo mật
+            </Link>{" "}
+            của VShop.
+          </span>
         </label>
         {visible("acceptTerms") && (
           <p className="auth-error" role="alert">
@@ -257,6 +287,7 @@ export function RegisterForm() {
         )}
       </div>
 
+      <Captcha siteKey={captchaSiteKey} onToken={setCaptcha} resetKey={captchaReset} />
       {formError && (
         <div role="alert" className="error-message">
           {formError}

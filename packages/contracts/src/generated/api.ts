@@ -212,6 +212,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["accountRecoveryForgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register": {
         parameters: {
             query?: never;
@@ -478,6 +494,22 @@ export interface paths {
         get: operations["emailNotificationGet"];
         put: operations["emailNotificationSet"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/email-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["accountRecoveryVerifyEmail"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1333,6 +1365,9 @@ export interface components {
             available: boolean;
             enabled: boolean;
             maskedEmail: string | null;
+        };
+        ForgotPasswordRequest: {
+            email: string;
         };
         LineResponse: {
             /** Format: int64 */
@@ -2395,6 +2430,37 @@ export interface operations {
             };
         };
     };
+    accountRecoveryForgotPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
     registrationRegister: {
         parameters: {
             query?: never;
@@ -3077,6 +3143,33 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EmailNotificationResponse"];
                 };
+            };
+            /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+        };
+    };
+    accountRecoveryVerifyEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Error. The body is an ApiErrorResponse; the HTTP status says which kind. */
             default: {

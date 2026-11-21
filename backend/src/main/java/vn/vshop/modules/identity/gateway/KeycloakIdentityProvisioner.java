@@ -31,6 +31,7 @@ public class KeycloakIdentityProvisioner implements IdentityProvisioner {
     private final String realm;
     private final String clientId;
     private final String clientSecret;
+    private final String webBase;
     private final ObjectMapper json;
     private final HttpClient http =
             HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
@@ -40,7 +41,9 @@ public class KeycloakIdentityProvisioner implements IdentityProvisioner {
             @Value("${vshop.identity.keycloak.realm:vshop}") String realm,
             @Value("${vshop.identity.keycloak.client-id:vshop-provisioner}") String clientId,
             @Value("${vshop.identity.keycloak.client-secret:}") String clientSecret,
+            @Value("${vshop.web.base-url:http://localhost:3100}") String webBase,
             ObjectMapper json) {
+        this.webBase = webBase.replaceAll("/+$", "");
         this.baseUrl = baseUrl.replaceAll("/+$", "");
         this.realm = realm;
         this.clientId = clientId;
@@ -109,6 +112,83 @@ public class KeycloakIdentityProvisioner implements IdentityProvisioner {
             Thread.currentThread().interrupt();
             return Outcome.UNAVAILABLE;
         }
+    }
+
+    @Override
+    public boolean sendVerificationEmail(String userId) {
+        try {
+            String token = adminToken();
+            return token != null && executeActions(token, userId, "VERIFY_EMAIL", 86_400);
+        } catch (java.io.IOException | RuntimeException e) {
+            LOG.warn("Keycloak verification e-mail failed: {}", e.toString());
+            return false;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean sendPasswordReset(String email) {
+        try {
+            String token = adminToken();
+            if (token == null) {
+                return false;
+            }
+            HttpResponse<String> found =
+                    send(
+                            "GET",
+                            "/admin/realms/"
+                                    + realm
+                                    + "/users?exact=true&email="
+                                    + URLEncoder.encode(email, StandardCharsets.UTF_8),
+                            token,
+                            null);
+            if (found.statusCode() != 200) {
+                return false;
+            }
+            JsonNode users = json.readTree(found.body());
+            if (!users.isArray() || users.isEmpty()) {
+                return true; // unknown address: behave exactly like a sent mail
+            }
+            JsonNode user = users.get(0);
+            if (!user.path("enabled").asBoolean(true)) {
+                return true;
+            }
+            return executeActions(token, user.path("id").asText(), "UPDATE_PASSWORD", 1_800);
+        } catch (java.io.IOException | RuntimeException e) {
+            LOG.warn("Keycloak password reset e-mail failed: {}", e.toString());
+            return false;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    /** The link in the mail returns to the sign-in page of the web app. */
+    private boolean executeActions(String token, String userId, String action, int lifespanSeconds)
+            throws java.io.IOException, InterruptedException {
+        String query =
+                "?client_id=vshop-web&redirect_uri="
+                        + URLEncoder.encode(webBase + "/login", StandardCharsets.UTF_8)
+                        + "&lifespan="
+                        + lifespanSeconds;
+        HttpResponse<String> response =
+                send(
+                        "PUT",
+                        "/admin/realms/"
+                                + realm
+                                + "/users/"
+                                + userId
+                                + "/execute-actions-email"
+                                + query,
+                        token,
+                        List.of(action));
+        if (response.statusCode() / 100 != 2) {
+            LOG.warn("Keycloak could not send the {} mail: HTTP {}", action, response.statusCode());
+            return false;
+        }
+        return true;
     }
 
     private boolean assignBuyer(String token, String userId)

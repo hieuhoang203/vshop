@@ -12,6 +12,8 @@ export function EmailPreference({ initial }: { initial: EmailNotification }) {
   const [state, setState] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
 
   async function toggle() {
     if (busy) return;
@@ -22,6 +24,20 @@ export function EmailPreference({ initial }: { initial: EmailNotification }) {
     });
     setBusy(false);
     if (result.ok) setState(result.data);
+    else {
+      setError(result.message);
+      // 409 on turning email on means the sign-in email is missing or not verified yet.
+      setNeedsVerification(!state.enabled && result.status === 409);
+    }
+  }
+
+  async function sendVerification() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    const result = await bff("POST", "me/email-verification", {});
+    setBusy(false);
+    if (result.ok) setVerificationSent(true);
     else setError(result.message);
   }
 
@@ -41,6 +57,19 @@ export function EmailPreference({ initial }: { initial: EmailNotification }) {
       {error && (
         <p role="alert" className="form-error">
           {error}
+        </p>
+      )}
+      {needsVerification && !verificationSent && (
+        <p className="row-sub">
+          <Button variant="soft" disabled={busy} onClick={sendVerification}>
+            Gửi email xác minh
+          </Button>
+        </p>
+      )}
+      {verificationSent && (
+        <p className="row-sub" role="status">
+          Đã gửi email xác minh. Mở email, bấm liên kết, rồi quay lại đây bật thông báo. Nếu chưa
+          được, hãy đăng xuất và đăng nhập lại.
         </p>
       )}
       <Button variant={state.enabled ? "soft" : "solid"} disabled={busy} onClick={toggle}>

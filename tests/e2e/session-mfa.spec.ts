@@ -99,7 +99,7 @@ test("admins must enrol and use a second factor before the admin area opens", as
   const context = await browser.newContext();
   try {
     const page = await context.newPage();
-    await page.goto("/api/auth/login?returnTo=%2Fadmin");
+    await page.goto("/api/auth/login?mode=sso&returnTo=%2Fadmin");
     await page.locator("#username").fill(admin.username);
     await page.locator("#password").fill(admin.password);
     await page.locator("#kc-login").click();
@@ -121,7 +121,7 @@ test("admins must enrol and use a second factor before the admin area opens", as
     await expect(page.getByRole("link", { name: "Đăng nhập", exact: true })).toBeVisible();
 
     // A wrong code is rejected and creates no session.
-    await page.goto("/api/auth/login?returnTo=%2Fadmin");
+    await page.goto("/api/auth/login?mode=sso&returnTo=%2Fadmin");
     await page.locator("#username").fill(admin.username);
     await page.locator("#password").fill(admin.password);
     await page.locator("#kc-login").click();

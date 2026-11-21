@@ -152,6 +152,8 @@ test("shop confirms, packs, ships and delivers a COD order that the buyer can fo
     await buyer.goto("/account/addresses");
     await clearAddresses(buyer);
   } finally {
+    // Keep the shared catalog tidy: the seeded product must not stay on the storefront.
+    sql(`UPDATE catalog.product SET status = 'HIDDEN' WHERE slug LIKE 'e2e-fulfil-%'`);
     await adminContext.close();
     await sellerContext.close();
     await buyerContext.close();

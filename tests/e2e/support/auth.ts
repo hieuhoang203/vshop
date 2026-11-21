@@ -76,7 +76,7 @@ async function logoutViaApi(page: Page) {
  * no amr=otp, so we sign out and in again to obtain a session the API accepts.
  */
 export async function login(page: Page, who: Account, target = "/"): Promise<void> {
-  await page.goto(`/api/auth/login?returnTo=${encodeURIComponent(target)}`);
+  await page.goto(`/api/auth/login?mode=sso&returnTo=${encodeURIComponent(target)}`);
   // A live Keycloak SSO session signs in without showing the form.
   const idle = new Promise<never>(() => {});
   const first = await Promise.race([

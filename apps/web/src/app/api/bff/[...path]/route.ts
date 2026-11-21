@@ -63,6 +63,7 @@ const routes: { method: string; path: RegExp; maxBytes: number }[] = [
   { method: "POST", path: new RegExp(`^me/notifications/${uuid}/read$`), maxBytes: 64 },
   { method: "POST", path: /^me\/notifications\/read-all$/, maxBytes: 64 },
   { method: "PUT", path: /^me\/email-notifications$/, maxBytes: 64 },
+  { method: "POST", path: /^me\/email-verification$/, maxBytes: 64 },
   // Policies (admin, second factor enforced by the API)
   { method: "POST", path: /^admin\/policies$/, maxBytes: 1_024 },
   { method: "POST", path: new RegExp(`^admin/policies/${uuid}/approve$`), maxBytes: 64 },

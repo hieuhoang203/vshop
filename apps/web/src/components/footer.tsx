@@ -37,6 +37,8 @@ export function Footer() {
           <strong>Cùng tạo nên VShop</strong>
           <Link href="/seller">Trở thành người bán</Link>
           <Link href="/admin">Quản trị hệ thống</Link>
+          <Link href="/terms">Điều khoản sử dụng</Link>
+          <Link href="/privacy">Chính sách bảo mật</Link>
           <p className="footer-pilot">VShop đang trong giai đoạn thử nghiệm.</p>
         </div>
       </div>

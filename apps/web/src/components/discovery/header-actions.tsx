@@ -228,7 +228,7 @@ export function HeaderActions({
       ) : (
         <>
           <Button asChild color="iris" size="3" className="login-button">
-            <Link href="/api/auth/login">
+            <Link href="/login">
               <UserRound size={17} />
               <span>Đăng nhập</span>
             </Link>

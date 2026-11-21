@@ -7,7 +7,7 @@
   "supportedLocales": ["vi"],
   "defaultLocale": "vi",
   "registrationAllowed": false,
-  "resetPasswordAllowed": false,
+  "resetPasswordAllowed": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "passwordPolicy": "length(8) and digits and lowerCase and notUsername",
@@ -41,6 +41,42 @@
       "webOrigins": []
     },
     {
+      "clientId": "vshop-web-direct",
+      "name": "VShop web sign-in form (server only)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [],
+      "webOrigins": [],
+      "protocolMappers": [
+        {
+          "name": "vshop-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "vshop-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "vshop-amr",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-amr-mapper",
+          "config": {
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true",
+            "claim.name": "amr"
+          }
+        }
+      ]
+    },
+    {
       "clientId": "vshop-web",
       "name": "VShop",
       "baseUrl": "http://localhost:3100",
@@ -48,7 +84,7 @@
       "publicClient": true,
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
-      "redirectUris": ["http://localhost:3100/api/auth/callback"],
+      "redirectUris": ["http://localhost:3100/api/auth/callback", "http://localhost:3100/login"],
       "webOrigins": ["http://localhost:3100"],
       "attributes": {
         "pkce.code.challenge.method": "S256",
@@ -121,7 +157,9 @@
       "username": "service-account-vshop-provisioner",
       "enabled": true,
       "serviceAccountClientId": "vshop-provisioner",
-      "clientRoles": { "realm-management": ["manage-users", "view-users", "view-realm"] }
+      "clientRoles": {
+        "realm-management": ["manage-users", "view-users", "view-realm"]
+      }
     }
   ],
   "ssoSessionIdleTimeout": 1800,
@@ -222,5 +260,15 @@
         }
       ]
     }
-  ]
+  ],
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "no-reply@vshop.local",
+    "fromDisplayName": "VShop",
+    "auth": "false",
+    "ssl": "false",
+    "starttls": "false"
+  },
+  "emailTheme": "vshop"
 }

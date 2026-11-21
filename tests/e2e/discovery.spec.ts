@@ -101,7 +101,13 @@ test("quick view and surprise choose real products and keep navigation available
 
 test("price filters sorting display density and keyboard search work", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Lọc giá", exact: true }).click();
+  // The page is server-rendered first; a click before hydration is lost, so retry until it opens.
+  await expect(async () => {
+    await page.getByRole("button", { name: "Lọc giá", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Đến 200k", exact: true })).toBeVisible({
+      timeout: 2000,
+    });
+  }).toPass({ timeout: 30_000 });
   await page.getByRole("button", { name: "Đến 200k", exact: true }).click();
   await page.getByRole("button", { name: "Áp dụng", exact: true }).click();
   await expect(page).toHaveURL(/maxPrice=200000/);

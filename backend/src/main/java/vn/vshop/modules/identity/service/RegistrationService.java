@@ -1,11 +1,13 @@
 package vn.vshop.modules.identity.service;
 
 import java.text.Normalizer;
+import java.time.Duration;
 import java.util.Locale;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 import vn.vshop.common.exception.BusinessException;
 import vn.vshop.common.exception.ErrorCode;
+import vn.vshop.common.security.AttemptLimiter;
 import vn.vshop.modules.identity.gateway.IdentityProvisioner;
 
 /**
@@ -22,9 +24,11 @@ public class RegistrationService {
     private static final int PASSWORD_MAX = 64;
 
     private final IdentityProvisioner identities;
+    private final AttemptLimiter limiter;
 
-    RegistrationService(IdentityProvisioner identities) {
+    RegistrationService(IdentityProvisioner identities, AttemptLimiter limiter) {
         this.identities = identities;
+        this.limiter = limiter;
     }
 
     /** Not transactional on purpose: it calls another system and writes no local data. */
@@ -49,6 +53,13 @@ public class RegistrationService {
         }
         if (!acceptedTerms) {
             throw invalid("Bạn cần đồng ý với điều khoản sử dụng để tạo tài khoản.");
+        }
+        // Second line of defence for callers that skip the web BFF (the mobile app).
+        if (!limiter.tryAcquire("register:" + address, 5, Duration.ofHours(1))
+                || !limiter.tryAcquire("register:all", 600, Duration.ofHours(1))) {
+            throw new BusinessException(
+                    ErrorCode.TOO_MANY_REQUESTS,
+                    "Bạn đã thử quá nhiều lần. Vui lòng thử lại sau ít phút.");
         }
         if (!identities.configured()) {
             throw new BusinessException(

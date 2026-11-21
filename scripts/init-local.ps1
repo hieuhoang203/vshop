@@ -12,11 +12,13 @@ $kcAdmin = New-LocalSecret
 $redis = New-LocalSecret
 $storage = New-LocalSecret
 $provisioner = New-LocalSecret
+$direct = New-LocalSecret
 $session = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
-$lines = @("DB_PASSWORD=$db", "KEYCLOAK_DB_PASSWORD=$kcDb", "KEYCLOAK_ADMIN_PASSWORD=$kcAdmin", "REDIS_PASSWORD=$redis", "STORAGE_PASSWORD=$storage", "KEYCLOAK_PROVISIONER_SECRET=$provisioner", "PII_KEY_LOCAL_1=$([Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)))")
+$lines = @("DB_PASSWORD=$db", "KEYCLOAK_DB_PASSWORD=$kcDb", "KEYCLOAK_ADMIN_PASSWORD=$kcAdmin", "REDIS_PASSWORD=$redis", "STORAGE_PASSWORD=$storage", "KEYCLOAK_PROVISIONER_SECRET=$provisioner", "KEYCLOAK_WEB_DIRECT_SECRET=$direct", "PII_KEY_LOCAL_1=$([Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)))")
 New-Item -ItemType Directory -Path (Join-Path $root '.local/keycloak') -Force | Out-Null
 $realm = Get-Content -LiteralPath (Join-Path $root 'infra/keycloak/realm-template.json') -Raw | ConvertFrom-Json
 ($realm.clients | Where-Object clientId -eq 'vshop-provisioner') | Add-Member -NotePropertyName secret -NotePropertyValue $provisioner -Force
+($realm.clients | Where-Object clientId -eq 'vshop-web-direct') | Add-Member -NotePropertyName secret -NotePropertyValue $direct -Force
 $accounts = @()
 foreach ($role in @('buyer', 'seller', 'admin')) {
   $password = New-LocalSecret
@@ -33,7 +35,7 @@ foreach ($role in @('buyer', 'seller', 'admin')) {
 }
 $realm | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath (Join-Path $root '.local/keycloak/vshop-realm.json') -Encoding utf8
 $accounts | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $root '.local/accounts.json') -Encoding utf8
-$webEnv = @('API_BASE_URL=http://localhost:8081', 'KEYCLOAK_ISSUER=http://localhost:8180/realms/vshop', 'WEB_BASE_URL=http://localhost:3100', "SESSION_SECRET=$session", "REDIS_URL=redis://:$redis@localhost:6380")
+$webEnv = @('API_BASE_URL=http://localhost:8081', 'KEYCLOAK_ISSUER=http://localhost:8180/realms/vshop', 'WEB_BASE_URL=http://localhost:3100', "SESSION_SECRET=$session", "REDIS_URL=redis://:$redis@localhost:6380", "KEYCLOAK_WEB_DIRECT_SECRET=$direct")
 $webEnv | Set-Content -LiteralPath (Join-Path $root 'apps/web/.env.local') -Encoding utf8
 $lines | Set-Content -LiteralPath $envFile -Encoding utf8
 Write-Host 'Local configuration generated. Credentials are in .local/accounts.json (ignored by Git).'

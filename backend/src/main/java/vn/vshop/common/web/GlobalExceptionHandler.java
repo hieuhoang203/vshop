@@ -32,7 +32,9 @@ public class GlobalExceptionHandler {
                             HttpStatus.NOT_FOUND;
                     case ACCOUNT_SUSPENDED -> HttpStatus.FORBIDDEN;
                     case CARRIER_UNAVAILABLE -> HttpStatus.BAD_GATEWAY;
-                    case REGISTRATION_UNAVAILABLE -> HttpStatus.SERVICE_UNAVAILABLE;
+                    case REGISTRATION_UNAVAILABLE, EMAIL_DELIVERY_UNAVAILABLE ->
+                            HttpStatus.SERVICE_UNAVAILABLE;
+                    case TOO_MANY_REQUESTS -> HttpStatus.TOO_MANY_REQUESTS;
                     case INVALID_CATALOG_FILTER,
                             INVALID_PRODUCT_INPUT,
                             INVALID_STOCK_INPUT,

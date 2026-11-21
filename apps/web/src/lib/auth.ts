@@ -12,6 +12,11 @@ import {
   storeSession,
 } from "./session-store";
 
+/** Confidential client behind the in-site sign-in form; its secret exists only on this server. */
+export const DIRECT_CLIENT = "vshop-web-direct";
+const directSecret = () => process.env.KEYCLOAK_WEB_DIRECT_SECRET ?? "";
+export const directLoginEnabled = () => directSecret().length > 0;
+
 export const SESSION_COOKIE = "vshop_session";
 export const FLOW_COOKIE = "vshop_oidc_flow";
 /** Absolute session lifetime regardless of activity. */
@@ -63,6 +68,8 @@ export type Session = {
   mfa: boolean;
 };
 type StoredSession = Session & {
+  /** Set when the session came from the in-site sign-in form instead of the Keycloak page. */
+  client?: typeof DIRECT_CLIENT;
   refreshToken: string;
   /** Access token expiry, epoch seconds. */
   accessExp: number;
@@ -109,6 +116,7 @@ export async function createSession(
     refresh_expires_in?: number;
   },
   verified: { token: JWTPayload; identity: JWTPayload; roles: string[] },
+  client?: typeof DIRECT_CLIENT,
 ) {
   const sessionId = newSessionId();
   const record: StoredSession = {
@@ -122,6 +130,7 @@ export async function createSession(
     name: String(verified.identity.name || verified.identity.preferred_username || "Tài khoản"),
     roles: verified.roles,
     mfa: hasSecondFactor(verified.token),
+    ...(client ? { client } : {}),
   };
   await writeRecord(sessionId, record, Number(tokens.refresh_expires_in) || DEFAULT_IDLE_SECONDS);
   return sessionId;
@@ -163,7 +172,7 @@ async function refresh(sessionId: string): Promise<StoredSession | null> {
       signal: AbortSignal.timeout(5000),
       body: new URLSearchParams({
         grant_type: "refresh_token",
-        client_id: "vshop-web",
+        ...clientParams(record.client),
         refresh_token: record.refreshToken,
       }),
     });
@@ -199,6 +208,89 @@ async function refresh(sessionId: string): Promise<StoredSession | null> {
   } finally {
     await releaseRefreshLock(sessionId, lock).catch(() => {});
   }
+}
+
+const clientParams = (client?: typeof DIRECT_CLIENT): Record<string, string> =>
+  client ? { client_id: DIRECT_CLIENT, client_secret: directSecret() } : { client_id: "vshop-web" };
+
+export type DirectLogin =
+  | { ok: true; sessionId: string }
+  /** "invalid": wrong email or password. "browser": this account must use the Keycloak page. */
+  | { ok: false; reason: "invalid" | "browser" | "unavailable" };
+
+/**
+ * Signs a buyer or seller in from the in-site form (password grant with the confidential client).
+ * Administrators are refused here and sent to the Keycloak page, which enforces their second
+ * factor; the API also refuses admin calls without it, so this is not the only guard.
+ */
+export async function directLogin(email: string, password: string): Promise<DirectLogin> {
+  if (!directLoginEnabled()) return { ok: false, reason: "unavailable" };
+  try {
+    const response = await fetch(`${issuer()}/protocol/openid-connect/token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+      body: new URLSearchParams({
+        grant_type: "password",
+        client_id: DIRECT_CLIENT,
+        client_secret: directSecret(),
+        username: email,
+        password,
+        scope: "openid profile email",
+      }),
+    });
+    if (response.status >= 500) return { ok: false, reason: "unavailable" };
+    if (!response.ok) {
+      const error = (await response.json().catch(() => ({}))) as { error_description?: string };
+      // A pending required action (for example a forced password change) needs the browser page.
+      return {
+        ok: false,
+        reason: /not fully set up/i.test(error.error_description ?? "") ? "browser" : "invalid",
+      };
+    }
+    const tokens = await response.json();
+    const token = await verifyAccessToken(tokens.access_token);
+    const identity = (
+      await jwtVerify(tokens.id_token, keys(), {
+        issuer: issuer(),
+        audience: DIRECT_CLIENT,
+        algorithms: ["RS256"],
+      })
+    ).payload;
+    if (identity.sub !== token.sub || !tokens.refresh_token)
+      return { ok: false, reason: "unavailable" };
+    const roles = rolesOf(token);
+    if (roles.includes("ADMIN") || !roles.some((r) => r === "BUYER" || r === "SELLER")) {
+      await endDirectSession(tokens.refresh_token).catch(() => {});
+      return { ok: false, reason: roles.includes("ADMIN") ? "browser" : "invalid" };
+    }
+    return {
+      ok: true,
+      sessionId: await createSession(tokens, { token, identity, roles }, DIRECT_CLIENT),
+    };
+  } catch {
+    return { ok: false, reason: "unavailable" };
+  }
+}
+
+/** Ends the Keycloak session behind a direct sign-in (no browser round trip needed). */
+async function endDirectSession(refreshToken: string) {
+  await fetch(`${issuer()}/protocol/openid-connect/logout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+    body: new URLSearchParams({ ...clientParams(DIRECT_CLIENT), refresh_token: refreshToken }),
+  });
+}
+
+/** True when the session came from the in-site form; its Keycloak session is ended here. */
+export async function signOutDirect(sessionId: string): Promise<boolean> {
+  const record = await readRecord(sessionId);
+  if (!record || record.client !== DIRECT_CLIENT) return false;
+  await endDirectSession(record.refreshToken).catch(() => {});
+  return true;
 }
 
 /** Current session or null. Memoised per request so layout, page and API calls share one read. */

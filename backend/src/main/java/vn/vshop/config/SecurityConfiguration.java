@@ -149,7 +149,8 @@ public class SecurityConfiguration {
                                         // service validates every field again.
                                         .requestMatchers(
                                                 org.springframework.http.HttpMethod.POST,
-                                                "/api/v1/auth/register")
+                                                "/api/v1/auth/register",
+                                                "/api/v1/auth/forgot-password")
                                         .permitAll()
                                         .requestMatchers("/api/v1/admin/**")
                                         .access(this::adminWithSecondFactor)
@@ -167,6 +168,7 @@ public class SecurityConfiguration {
                                                 "/api/v1/me/addresses",
                                                 "/api/v1/me/notifications/**",
                                                 "/api/v1/me/email-notifications",
+                                                "/api/v1/me/email-verification",
                                                 "/api/v1/me/notifications")
                                         .hasAnyRole("BUYER", "SELLER")
                                         .requestMatchers("/api/v1/me")

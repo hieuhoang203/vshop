@@ -20,7 +20,10 @@ export function AccountScreen() {
             : "Khám phá và lưu món ngay. Đăng nhập khi bạn muốn tạo gian hàng."}
         </Txt>
         {!auth.profile && (
-          <Button title="Đăng nhập VShop" busy={auth.busy} onPress={() => void auth.signIn()} />
+          <>
+            <Button title="Đăng nhập VShop" busy={auth.busy} onPress={() => void auth.signIn()} />
+            <Button title="Tạo tài khoản" secondary onPress={() => router.push("/register")} />
+          </>
         )}
       </View>
       {auth.error && (

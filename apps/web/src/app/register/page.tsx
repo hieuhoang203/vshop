@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Gift, PackageCheck, ShieldCheck, Truck } from "lucide-react";
 import { getSession } from "@/lib/auth";
+import { captchaEnabled, captchaSiteKey } from "@/lib/captcha";
 import { RegisterForm } from "@/components/auth/register-form";
 
 export const metadata = { title: "Đăng ký tài khoản" };
@@ -30,7 +31,7 @@ export default async function Register() {
           ))}
         </ul>
       </aside>
-      <RegisterForm />
+      <RegisterForm captchaSiteKey={captchaEnabled() ? captchaSiteKey() : ""} />
     </div>
   );
 }

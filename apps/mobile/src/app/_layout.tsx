@@ -75,6 +75,10 @@ export default function RootLayout() {
                 name="seller"
                 options={{ title: "Gian hàng của tôi", headerBackButtonDisplayMode: "minimal" }}
               />
+              <Stack.Screen
+                name="register"
+                options={{ title: "Đăng ký", headerBackButtonDisplayMode: "minimal" }}
+              />
               <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
             </Stack>
           </SavedProvider>
